@@ -1,3 +1,4 @@
+
 'use client';
 import type { Application } from '@/types';
 
@@ -45,10 +46,10 @@ export function updateApplicationStatus(id: string, status: Application['status'
     if (remarks) applications[appIndex].remarks = remarks;
     if (status === 'approved') {
       applications[appIndex].approvalDate = new Date().toISOString();
-      if(!applications[appIndex].voterId) { // Generate Voter ID if not present
+      if(!applications[appIndex].voterId) { 
         applications[appIndex].voterId = `VID-${applications[appIndex].id.substring(0,4)}-${new Date().getTime().toString().slice(-5)}`;
       }
-      if(!applications[appIndex].precinct) { // Assign mock precinct
+      if(!applications[appIndex].precinct) { 
          applications[appIndex].precinct = `Precinct ${Math.floor(Math.random() * 1000) + 1}`;
       }
     }
@@ -59,7 +60,6 @@ export function updateApplicationStatus(id: string, status: Application['status'
   return undefined;
 }
 
-// Utility to add some sample data if the store is empty
 export function seedInitialData() {
   if (typeof window === 'undefined') return;
   const apps = getApplications();
@@ -67,24 +67,64 @@ export function seedInitialData() {
     const sampleApplications: Application[] = [
       {
         id: 'APP-001',
-        personalInfo: { firstName: 'Juan', lastName: 'Dela Cruz', dob: '1990-01-15', gender: 'male', placeOfBirth: 'Manila', citizenship: 'Filipino', contactNumber: '09171234567', email: 'juan.delacruz@example.com' },
-        addressDetails: { houseNoStreet: '123 Rizal St', barangay: 'Pembo', cityMunicipality: 'Makati', province: 'Metro Manila', zipCode: '1218' },
+        personalInfo: { 
+          firstName: 'Juan', lastName: 'Dela Cruz', middleName: 'Protacio',
+          sex: 'male', dob: '1990-01-15', 
+          placeOfBirthCityMun: 'Manila', placeOfBirthProvince: 'Metro Manila',
+          citizenshipType: 'byBirth', 
+          contactNumber: '09171234567', email: 'juan.delacruz@example.com',
+          residencyYearsCityMun: 5, residencyMonthsCityMun: 6, residencyYearsPhilippines: 30,
+          professionOccupation: 'Engineer', tin: '123-456-789-000'
+        },
+        addressDetails: { 
+          houseNoStreet: '123 Rizal St', barangay: 'Pembo', cityMunicipality: 'Makati', 
+          province: 'Metro Manila', zipCode: '1218',
+          yearsOfResidency: 5, monthsOfResidency: 6
+        },
+        civilDetails: { 
+          civilStatus: 'single', 
+          fatherFirstName: 'Pedro', fatherLastName: 'Dela Cruz', 
+          motherFirstName: 'Maria', motherLastName: 'Santos' 
+        },
+        specialNeeds: {
+          isIlliterate: false, isPwd: false, isIndigenousPerson: false,
+          prefersGroundFloor: false, isSenior: false
+        },
         applicationType: 'register',
-        civilDetails: { civilStatus: 'single', fatherFirstName: 'Pedro', fatherLastName: 'Dela Cruz', motherFirstName: 'Maria', motherLastName: 'Santos' },
+        biometricsFile: "Captured on-site",
         status: 'pending',
-        submissionDate: new Date(Date.now() - 86400000 * 5).toISOString(), // 5 days ago
+        submissionDate: new Date(Date.now() - 86400000 * 5).toISOString(), 
         classification: { applicantType: 'new registration', confidence: 0.95, reason: 'All fields indicate a new applicant.'}
       },
       {
         id: 'APP-002',
-        personalInfo: { firstName: 'Maria', lastName: 'Clara', middleName: 'Santos', dob: '1985-05-20', gender: 'female', placeOfBirth: 'Cebu City', citizenship: 'Filipino' },
-        addressDetails: { houseNoStreet: '456 Bonifacio Ave', barangay: 'Lahug', cityMunicipality: 'Cebu City', province: 'Cebu', zipCode: '6000' },
+        personalInfo: { 
+          firstName: 'Maria', lastName: 'Clara', middleName: 'Santos',
+          sex: 'female', dob: '1985-05-20', 
+          placeOfBirthCityMun: 'Cebu City', placeOfBirthProvince: 'Cebu',
+          citizenshipType: 'byBirth',
+          professionOccupation: 'Doctor'
+        },
+        addressDetails: { 
+          houseNoStreet: '456 Bonifacio Ave', barangay: 'Lahug', cityMunicipality: 'Cebu City', 
+          province: 'Cebu', zipCode: '6000',
+          yearsOfResidency: 2, monthsOfResidency: 0
+        },
+        oldAddressDetails: { 
+            houseNoStreet: '789 Aguinaldo St', barangay: 'Kamputhaw', cityMunicipality: 'Cebu City', 
+            province: 'Cebu', zipCode: '6000' 
+        },
+        civilDetails: { 
+            civilStatus: 'married', spouseName: 'Jose Rizal', 
+            fatherFirstName: 'Santiago', fatherLastName: 'Santos', 
+            motherFirstName: 'Teodora', motherLastName: 'Alonso' 
+        },
+        specialNeeds: { 
+            isSenior: true, isPwd: false, isIndigenousPerson: false, isIlliterate: false, prefersGroundFloor: true 
+        },
         applicationType: 'transfer',
-        oldAddressDetails: { houseNoStreet: '789 Aguinaldo St', barangay: 'Kamputhaw', cityMunicipality: 'Cebu City', province: 'Cebu', zipCode: '6000' },
-        civilDetails: { civilStatus: 'married', spouseName: 'Jose Rizal', fatherFirstName: 'Santiago', fatherLastName: 'Santos', motherFirstName: 'Teodora', motherLastName: 'Alonso' },
-        specialNeeds: { isSenior: true, isPwd: false, prefersGroundFloor: true, isIlliterate: false },
         status: 'approved',
-        submissionDate: new Date(Date.now() - 86400000 * 10).toISOString(), // 10 days ago
+        submissionDate: new Date(Date.now() - 86400000 * 10).toISOString(), 
         approvalDate: new Date(Date.now() - 86400000 * 2).toISOString(),
         voterId: 'VID-APP002-54321',
         precinct: 'Precinct 007B',
@@ -92,18 +132,38 @@ export function seedInitialData() {
       },
        {
         id: 'APP-003',
-        personalInfo: { firstName: 'Andres', lastName: 'Bonifacio', dob: '1970-11-30', gender: 'male', placeOfBirth: 'Tondo, Manila', citizenship: 'Filipino' },
-        addressDetails: { houseNoStreet: '101 Katipunan Rd', barangay: 'Loyola Heights', cityMunicipality: 'Quezon City', province: 'Metro Manila', zipCode: '1108' },
-        applicationType: 'register',
-        civilDetails: { civilStatus: 'widowed', fatherFirstName: 'Santiago', fatherLastName: 'Bonifacio', motherFirstName: 'Catalina', motherLastName: 'de Castro' },
-        specialNeeds: { isSenior: true, isPwd: true, disabilityType: 'Mobility Impairment', assistorName: 'Oryang', prefersGroundFloor: true, isIlliterate: false },
+        personalInfo: { 
+            firstName: 'Andres', lastName: 'Bonifacio', 
+            sex: 'male', dob: '1970-11-30', 
+            placeOfBirthCityMun: 'Tondo', placeOfBirthProvince: 'Manila',
+            citizenshipType: 'byBirth',
+            professionOccupation: 'Revolutionary'
+        },
+        addressDetails: { 
+            houseNoStreet: '101 Katipunan Rd', barangay: 'Loyola Heights', cityMunicipality: 'Quezon City', 
+            province: 'Metro Manila', zipCode: '1108',
+            yearsOfResidency: 10 
+        },
+        civilDetails: { 
+            civilStatus: 'married', spouseName: 'Gregoria de Jesus',
+            fatherFirstName: 'Santiago', fatherLastName: 'Bonifacio', 
+            motherFirstName: 'Catalina', motherLastName: 'de Castro' 
+        },
+        specialNeeds: { 
+            isSenior: true, isPwd: true, disabilityType: 'Mobility Impairment', 
+            assistorName: 'Oryang', assistorRelationship: 'Spouse', assistorAddress: 'Same as applicant',
+            prefersGroundFloor: true, isIlliterate: false, isIndigenousPerson: false
+        },
+        applicationType: 'reactivation',
+        reactivationReasons: ['failedToVote'],
+        reactivationEvidence: 'Affidavit of intent to vote.',
         status: 'rejected',
         submissionDate: new Date(Date.now() - 86400000 * 3).toISOString(),
         remarks: 'Incomplete supporting documents for PWD status.',
-        classification: { applicantType: 'new registration', confidence: 0.90, reason: 'Standard new registration details.'}
+        classification: { applicantType: 'reactivation', confidence: 0.90, reason: 'Applicant selected failed to vote as reason.'}
       }
     ];
     sampleApplications.forEach(app => saveApplication(app));
-    memoryStore = [...sampleApplications]; // Update memory store
+    memoryStore = [...sampleApplications];
   }
 }

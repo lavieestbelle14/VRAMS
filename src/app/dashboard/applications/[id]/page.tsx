@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, CheckCircle, Edit, FileText, User, MapPin, CalendarDays, Briefcase, Accessibility, Brain, Save, XCircle, MessageSquare } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Edit, FileText, User, MapPin, CalendarDays, Briefcase, Accessibility, Brain, Save, XCircle, MessageSquare, Building, Users, ShieldCheck, ListChecks, Edit3, RefreshCcw } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function ApplicationDetailsPage() {
@@ -43,25 +43,28 @@ export default function ApplicationDetailsPage() {
         title: `Application ${newStatus}`,
         description: `Application ID ${updatedApp.id} has been ${newStatus}.`,
       });
-      if (newStatus === 'approved' || newStatus === 'rejected') {
-        // Potentially disable further edits or navigate away
-      }
     } else {
        toast({ title: 'Error', description: 'Failed to update status.', variant: 'destructive' });
     }
   };
   
-  const DetailItem = ({ label, value, icon }: { label: string; value?: string | number | null | boolean; icon?: React.ElementType }) => {
+  const DetailItem = ({ label, value, icon, isBoolean = false }: { label: string; value?: string | number | null | boolean | string[]; icon?: React.ElementType; isBoolean?: boolean }) => {
     const IconComponent = icon;
-    if (value === null || typeof value === 'undefined' || value === '') return null;
+    if (value === null || typeof value === 'undefined' || (typeof value === 'string' && value === '') || (Array.isArray(value) && value.length === 0) ) return null;
+    
+    let displayValue = String(value);
+    if (isBoolean) {
+        displayValue = value ? 'Yes' : 'No';
+    } else if (Array.isArray(value)) {
+        displayValue = value.join(', ');
+    }
+
     return (
       <div className="mb-2">
         <Label className="text-sm font-semibold text-muted-foreground flex items-center">
           {IconComponent && <IconComponent className="mr-2 h-4 w-4" />} {label}
         </Label>
-        <p className="text-sm">
-          {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value)}
-        </p>
+        <p className="text-sm">{displayValue}</p>
       </div>
     );
   };
@@ -84,6 +87,25 @@ export default function ApplicationDetailsPage() {
   }
   
   const { personalInfo: pi, addressDetails: ad, civilDetails: cd, specialNeeds: sn, oldAddressDetails: oad } = application;
+
+  const applicationTypeLabels: Record<Application['applicationType'] | '', string> = {
+      'register': 'New Registration',
+      'transfer': 'Transfer of Registration',
+      'reactivation': 'Reactivation of Registration',
+      'changeCorrection': 'Change of Name/Correction of Entries',
+      'inclusionReinstatement': 'Inclusion of Records/Reinstatement of Name',
+      '': 'Unknown Type'
+  };
+  const reactivationReasonLabels: Record<string, string> = {
+    sentenced: 'Sentenced - imprisonment >= 1 year',
+    disloyalty: 'Convicted - disloyalty',
+    insaneIncompetent: 'Declared insane/incompetent',
+    failedToVote: 'Failed to vote (2 successive elections)',
+    lossOfCitizenship: 'Loss of Filipino citizenship',
+    exclusionByCourt: 'Exclusion by court order',
+    failureToValidate: 'Failure to Validate',
+  };
+
 
   return (
     <div className="space-y-6">
@@ -108,60 +130,117 @@ export default function ApplicationDetailsPage() {
             <CardHeader><CardTitle className="flex items-center"><User className="mr-2"/>Personal Information</CardTitle></CardHeader>
             <CardContent>
               <DetailItem label="Full Name" value={`${pi.firstName} ${pi.middleName || ''} ${pi.lastName}`} />
+              <DetailItem label="Sex" value={pi.sex} />
               <DetailItem label="Date of Birth" value={format(new Date(pi.dob), 'PPP')} />
-              <DetailItem label="Gender" value={pi.gender} />
-              <DetailItem label="Place of Birth" value={pi.placeOfBirth} />
-              <DetailItem label="Citizenship" value={pi.citizenship} />
+              <DetailItem label="Place of Birth (City/Mun)" value={pi.placeOfBirthCityMun} />
+              <DetailItem label="Place of Birth (Province)" value={pi.placeOfBirthProvince} />
               <DetailItem label="Contact Number" value={pi.contactNumber} />
               <DetailItem label="Email" value={pi.email} />
+              <DetailItem label="Profession/Occupation" value={pi.professionOccupation} />
+              <DetailItem label="TIN" value={pi.tin} />
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="flex items-center"><MapPin className="mr-2"/>Address Details</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="flex items-center"><ShieldCheck className="mr-2"/>Citizenship</CardTitle></CardHeader>
             <CardContent>
-              <DetailItem label="Address" value={`${ad.houseNoStreet}, ${ad.barangay}, ${ad.cityMunicipality}, ${ad.province}, ${ad.zipCode}`} />
-              <DetailItem label="Years of Residency" value={ad.yearsOfResidency} />
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader><CardTitle className="flex items-center"><Briefcase className="mr-2"/>Civil Details</CardTitle></CardHeader>
-            <CardContent>
-              <DetailItem label="Civil Status" value={cd.civilStatus} />
-              {cd.civilStatus === 'married' && <DetailItem label="Spouse's Name" value={cd.spouseName} />}
-              <DetailItem label="Father's Name" value={`${cd.fatherFirstName} ${cd.fatherLastName}`} />
-              <DetailItem label="Mother's Name" value={`${cd.motherFirstName} ${cd.motherLastName}`} />
-            </CardContent>
-          </Card>
-
-          <Card className="lg:col-span-1">
-            <CardHeader><CardTitle className="flex items-center"><FileText className="mr-2"/>Application Info</CardTitle></CardHeader>
-            <CardContent>
-              <DetailItem label="Application Type" value={application.applicationType} />
-              <DetailItem label="Biometrics Data" value={application.biometricsFile || 'N/A'} />
-              {application.applicationType === 'transfer' && oad && (
+              <DetailItem label="Citizenship Basis" value={pi.citizenshipType} />
+              {(pi.citizenshipType === 'naturalized' || pi.citizenshipType === 'reacquired') && (
                 <>
-                  <h4 className="font-semibold mt-4 mb-2">Previous Address (Transfer)</h4>
-                  <DetailItem label="Old Address" value={`${oad.houseNoStreet}, ${oad.barangay}, ${oad.cityMunicipality}, ${oad.province}, ${oad.zipCode}`} />
-                  <DetailItem label="Years at Old Address" value={oad.yearsOfResidency} />
+                  <DetailItem label="Naturalization/Reacquisition Date" value={pi.naturalizationDate ? format(new Date(pi.naturalizationDate), 'PPP') : 'N/A'} />
+                  <DetailItem label="Certificate No./Order of Approval" value={pi.naturalizationCertNo} />
                 </>
               )}
             </CardContent>
           </Card>
+          
+          <Card>
+            <CardHeader><CardTitle className="flex items-center"><MapPin className="mr-2"/>Current Address</CardTitle></CardHeader>
+            <CardContent>
+              <DetailItem label="Address" value={`${ad.houseNoStreet}, ${ad.barangay}, ${ad.cityMunicipality}, ${ad.province}, ${ad.zipCode}`} />
+              <DetailItem label="Years at Current Address" value={ad.yearsOfResidency} />
+              <DetailItem label="Months at Current Address" value={ad.monthsOfResidency} />
+            </CardContent>
+          </Card>
 
-          {sn && (Object.values(sn).some(v => v) || sn.tribe) && (
+           <Card>
+            <CardHeader><CardTitle className="flex items-center"><Building className="mr-2"/>Period of Residence</CardTitle></CardHeader>
+            <CardContent>
+              <DetailItem label="Years in City/Municipality" value={pi.residencyYearsCityMun} />
+              <DetailItem label="Months in City/Municipality" value={pi.residencyMonthsCityMun} />
+              <DetailItem label="Years in Philippines" value={pi.residencyYearsPhilippines} />
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader><CardTitle className="flex items-center"><Users className="mr-2"/>Civil & Family Details</CardTitle></CardHeader>
+            <CardContent>
+              <DetailItem label="Civil Status" value={cd.civilStatus} />
+              {cd.civilStatus === 'married' && <DetailItem label="Spouse's Name" value={cd.spouseName} />}
+              <DetailItem label="Father's Full Name" value={`${cd.fatherFirstName} ${cd.fatherLastName}`} />
+              <DetailItem label="Mother's Full Name" value={`${cd.motherFirstName} ${cd.motherLastName}`} />
+            </CardContent>
+          </Card>
+
+          <Card className="lg:col-span-1">
+            <CardHeader><CardTitle className="flex items-center"><FileText className="mr-2"/>Application Type & Biometrics</CardTitle></CardHeader>
+            <CardContent>
+              <DetailItem label="Application Type" value={applicationTypeLabels[application.applicationType || '']} />
+              <DetailItem label="Biometrics Data Status" value={application.biometricsFile || 'N/A'} />
+            </CardContent>
+          </Card>
+
+          {application.applicationType === 'transfer' && oad && (
+            <Card className="lg:col-span-2">
+              <CardHeader><CardTitle className="flex items-center"><MapPin className="mr-2 text-orange-500"/>Previous Address (Transfer)</CardTitle></CardHeader>
+              <CardContent>
+                <DetailItem label="Old Address" value={`${oad.houseNoStreet}, ${oad.barangay}, ${oad.cityMunicipality}, ${oad.province}, ${oad.zipCode}`} />
+              </CardContent>
+            </Card>
+          )}
+
+          {application.applicationType === 'reactivation' && (
+            <Card className="lg:col-span-2">
+              <CardHeader><CardTitle className="flex items-center"><RefreshCcw className="mr-2 text-blue-500"/>Reactivation Details</CardTitle></CardHeader>
+              <CardContent>
+                <DetailItem label="Reasons for Deactivation" value={application.reactivationReasons?.map(r => reactivationReasonLabels[r] || r).join('; ')} />
+                <DetailItem label="Evidence Ground No Longer Exists" value={application.reactivationEvidence} />
+              </CardContent>
+            </Card>
+          )}
+          
+          {application.applicationType === 'changeCorrection' && (
+            <Card className="lg:col-span-2">
+              <CardHeader><CardTitle className="flex items-center"><Edit3 className="mr-2 text-purple-500"/>Change/Correction Details</CardTitle></CardHeader>
+              <CardContent>
+                <DetailItem label="Present Data/Information" value={application.presentData} />
+                <DetailItem label="New/Corrected Data/Information" value={application.newCorrectedData} />
+              </CardContent>
+            </Card>
+          )}
+           {application.applicationType === 'inclusionReinstatement' && (
+            <Card className="lg:col-span-2">
+              <CardHeader><CardTitle className="flex items-center"><ListChecks className="mr-2 text-green-500"/>Inclusion/Reinstatement</CardTitle></CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Application for inclusion of records in the book of voters or reinstatement of name in the list of voters.</p>
+              </CardContent>
+            </Card>
+          )}
+
+
+          {sn && (Object.values(sn).some(v => v) || sn.assistorName) && (
              <Card className="lg:col-span-1">
-                <CardHeader><CardTitle className="flex items-center"><Accessibility className="mr-2"/>Special Needs</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="flex items-center"><Accessibility className="mr-2"/>Special Needs & Assistance</CardTitle></CardHeader>
                 <CardContent>
-                    <DetailItem label="Illiterate" value={sn.isIlliterate} />
-                    <DetailItem label="Senior Citizen" value={sn.isSenior} />
-                    <DetailItem label="PWD" value={sn.isPwd} />
+                    <DetailItem label="Illiterate" value={sn.isIlliterate} isBoolean/>
+                    <DetailItem label="Senior Citizen" value={sn.isSenior} isBoolean />
+                    <DetailItem label="PWD" value={sn.isPwd} isBoolean />
                     {sn.isPwd && <DetailItem label="Disability Type" value={sn.disabilityType} />}
-                    <DetailItem label="Tribe/Indigenous Group" value={sn.tribe} />
+                    <DetailItem label="Indigenous Person" value={sn.isIndigenousPerson} isBoolean/>
                     <DetailItem label="Assistor's Name" value={sn.assistorName} />
+                    <DetailItem label="Assistor's Relationship" value={sn.assistorRelationship} />
                     <DetailItem label="Assistor's Address" value={sn.assistorAddress} />
-                    <DetailItem label="Prefers Ground Floor Voting" value={sn.prefersGroundFloor} />
+                    <DetailItem label="Prefers Ground Floor Voting" value={sn.prefersGroundFloor} isBoolean />
                 </CardContent>
             </Card>
           )}
@@ -178,7 +257,7 @@ export default function ApplicationDetailsPage() {
           )}
           
           {(application.status === 'approved' || application.status === 'rejected' || application.remarks) && (
-            <Card className={application.status === 'approved' ? "lg:col-span-3" : "lg:col-span-3"}>
+            <Card className="lg:col-span-3">
               <CardHeader><CardTitle className="flex items-center"><MessageSquare className="mr-2"/>Officer Remarks & Outcome</CardTitle></CardHeader>
               <CardContent>
                 {application.status === 'approved' && (
