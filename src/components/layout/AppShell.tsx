@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { LayoutDashboard, Files, LogOut, Settings, UserCircle } from 'lucide-react';
+import Image from 'next/image';
 
 interface NavItem {
   href: string;
@@ -42,9 +43,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Sidebar side="left" variant="sidebar" collapsible="icon">
         <SidebarHeader className="p-4">
           <Link href="/dashboard" className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-8 w-8 text-sidebar-foreground">
-              <path d="M12 2L2 7V17L12 22L22 17V7L12 2ZM19.535 7.523L12 11.618L4.465 7.523L12 3.382L19.535 7.523ZM4 16.11V9.036L11 12.833V19.618L4 16.11ZM13 19.618V12.833L20 9.036V16.11L13 19.618Z" />
-            </svg>
+            <Image 
+              src="https://placehold.co/32x32.png" 
+              alt="VRAMS Logo" 
+              width={32} 
+              height={32} 
+              data-ai-hint="VRAMS logo ballot box sun"
+              className="text-sidebar-foreground" 
+            />
             <span className="text-xl font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">VRAMS</span>
           </Link>
         </SidebarHeader>
