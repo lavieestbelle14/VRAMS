@@ -31,7 +31,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: '/public/home', label: 'Home', icon: Home, tooltip: 'Home' },
-  { href: '/public/apply', label: 'New Application', icon: FilePlus2, tooltip: 'Submit New Application' }, 
+  { href: '/public/apply', label: 'New Application', icon: FilePlus2, tooltip: 'Submit New Application' },
   { href: '/public/track-status', label: 'Track Application', icon: FileSearch, tooltip: 'Track Application Status' },
 ];
 
@@ -44,13 +44,12 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
       <Sidebar side="left" variant="sidebar" collapsible="icon">
         <SidebarHeader className="p-4">
           <Link href="/public/home" className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
-            <Image 
-              src="https://placehold.co/32x32.png" 
-              alt="VRAMS Logo" 
-              width={32} 
-              height={32} 
-              data-ai-hint="VRAMS logo ballot box sun"
-              className="text-sidebar-foreground"
+            <Image
+              src="https://placehold.co/32x32.png"
+              alt="VRAMS Logo"
+              width={32}
+              height={32}
+              data-ai-hint="COMELEC seal"
             />
             <span className="text-xl font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">VRAMS</span>
           </Link>

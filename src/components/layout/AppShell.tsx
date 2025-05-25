@@ -43,13 +43,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Sidebar side="left" variant="sidebar" collapsible="icon">
         <SidebarHeader className="p-4">
           <Link href="/dashboard" className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
-            <Image 
-              src="https://placehold.co/32x32.png" 
-              alt="VRAMS Logo" 
-              width={32} 
-              height={32} 
-              data-ai-hint="VRAMS logo ballot box sun"
-              className="text-sidebar-foreground" 
+            <Image
+              src="https://placehold.co/32x32.png"
+              alt="VRAMS Logo"
+              width={32}
+              height={32}
+              data-ai-hint="COMELEC seal"
             />
             <span className="text-xl font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">VRAMS</span>
           </Link>

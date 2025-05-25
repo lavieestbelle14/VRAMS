@@ -12,13 +12,12 @@ export default function AuthPage() { // Renamed to AuthPage for clarity
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="mb-8 text-center">
         <div className="flex items-center justify-center mb-4">
-            <Image 
-              src="https://placehold.co/64x64.png" 
-              alt="VRAMS Logo" 
-              width={64} 
-              height={64} 
-              data-ai-hint="VRAMS logo ballot box sun"
-              className="text-primary"
+            <Image
+              src="https://placehold.co/64x64.png"
+              alt="VRAMS Logo"
+              width={64}
+              height={64}
+              data-ai-hint="COMELEC seal"
             />
         </div>
         <h1 className="text-4xl font-bold text-primary">VRAMS Portal</h1>
