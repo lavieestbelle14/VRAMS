@@ -189,7 +189,7 @@ export function ApplicationFormFields() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField control={form.control} name="lastName" render={({ field }) => (<FormItem><FormLabel>Last Name</FormLabel><FormControl><Input placeholder="Dela Cruz" {...field} /></FormControl><FormMessage /></FormItem>)} />
               <FormField control={form.control} name="firstName" render={({ field }) => (<FormItem><FormLabel>First Name</FormLabel><FormControl><Input placeholder="Juan" {...field} /></FormControl><FormMessage /></FormItem>)} />
-              <FormField control={form.control} name="middleName" render={({ field }) => (<FormItem><FormLabel>Middle Name (Optional)</FormLabel><FormControl><Input placeholder="Santos" {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="middleName" render={({ field }) => (<FormItem><FormLabel>Middle Name (Optional)</FormLabel><FormControl><Input placeholder="Santos" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField control={form.control} name="sex" render={({ field }) => (
@@ -216,8 +216,8 @@ export function ApplicationFormFields() {
                 <FormField control={form.control} name="placeOfBirthCityMun" render={({ field }) => (<FormItem><FormLabel>Place of Birth (City/Municipality)</FormLabel><FormControl><Input placeholder="Manila" {...field} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField control={form.control} name="placeOfBirthProvince" render={({ field }) => (<FormItem><FormLabel>Place of Birth (Province)</FormLabel><FormControl><Input placeholder="Metro Manila" {...field} /></FormControl><FormMessage /></FormItem>)} />
             </div>
-            <FormField control={form.control} name="contactNumber" render={({ field }) => (<FormItem><FormLabel>Contact No. (Optional)</FormLabel><FormControl><Input placeholder="09123456789" {...field} /></FormControl><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email (Optional)</FormLabel><FormControl><Input type="email" placeholder="juan.delacruz@example.com" {...field} /></FormControl><FormMessage /></FormItem>)} />
+            <FormField control={form.control} name="contactNumber" render={({ field }) => (<FormItem><FormLabel>Contact No. (Optional)</FormLabel><FormControl><Input placeholder="09123456789" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
+            <FormField control={form.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email (Optional)</FormLabel><FormControl><Input type="email" placeholder="juan.delacruz@example.com" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
           </>
         ))}
 
@@ -248,7 +248,7 @@ export function ApplicationFormFields() {
                             <Calendar mode="single" selected={field.value ? new Date(field.value): undefined} onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : '')} captionLayout="dropdown-buttons" fromYear={1900} toYear={new Date().getFullYear()} initialFocus />
                         </PopoverContent></Popover><FormMessage />
                         </FormItem>)} />
-                    <FormField control={form.control} name="naturalizationCertNo" render={({ field }) => (<FormItem><FormLabel>Certificate No./Order of Approval</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="naturalizationCertNo" render={({ field }) => (<FormItem><FormLabel>Certificate No./Order of Approval</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
                 </div>
             )}
            </>
@@ -264,8 +264,8 @@ export function ApplicationFormFields() {
             </div>
              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField control={form.control} name="zipCode" render={({ field }) => (<FormItem><FormLabel>Zip Code</FormLabel><FormControl><Input placeholder="1218" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField control={form.control} name="yearsOfResidency" render={({ field }) => (<FormItem><FormLabel>Years at Current Address</FormLabel><FormControl><Input type="number" placeholder="5" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField control={form.control} name="monthsOfResidency" render={({ field }) => (<FormItem><FormLabel>Months at Current Address</FormLabel><FormControl><Input type="number" placeholder="3" min="0" max="11" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="yearsOfResidency" render={({ field }) => (<FormItem><FormLabel>Years at Current Address</FormLabel><FormControl><Input type="number" placeholder="5" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="monthsOfResidency" render={({ field }) => (<FormItem><FormLabel>Months at Current Address</FormLabel><FormControl><Input type="number" placeholder="3" min="0" max="11" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
             </div>
           </>
         ))}
@@ -274,17 +274,17 @@ export function ApplicationFormFields() {
             <>
                 <Label className="text-sm font-medium">In the City/Municipality</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="residencyYearsCityMun" render={({ field }) => (<FormItem><FormLabel>No. of Years</FormLabel><FormControl><Input type="number" placeholder="10" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="residencyMonthsCityMun" render={({ field }) => (<FormItem><FormLabel>No. of Months</FormLabel><FormControl><Input type="number" placeholder="6" min="0" max="11" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="residencyYearsCityMun" render={({ field }) => (<FormItem><FormLabel>No. of Years</FormLabel><FormControl><Input type="number" placeholder="10" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="residencyMonthsCityMun" render={({ field }) => (<FormItem><FormLabel>No. of Months</FormLabel><FormControl><Input type="number" placeholder="6" min="0" max="11" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
                 </div>
-                <FormField control={form.control} name="residencyYearsPhilippines" render={({ field }) => (<FormItem><FormLabel>In the Philippines (No. of Years)</FormLabel><FormControl><Input type="number" placeholder="25" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="residencyYearsPhilippines" render={({ field }) => (<FormItem><FormLabel>In the Philippines (No. of Years)</FormLabel><FormControl><Input type="number" placeholder="25" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
             </>
         ))}
 
         {formSection("Profession / Occupation & TIN", "", (
             <>
-                <FormField control={form.control} name="professionOccupation" render={({ field }) => (<FormItem><FormLabel>Profession / Occupation (Optional)</FormLabel><FormControl><Input placeholder="Engineer" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField control={form.control} name="tin" render={({ field }) => (<FormItem><FormLabel>TIN (Optional)</FormLabel><FormControl><Input placeholder="123-456-789-000" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="professionOccupation" render={({ field }) => (<FormItem><FormLabel>Profession / Occupation (Optional)</FormLabel><FormControl><Input placeholder="Engineer" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="tin" render={({ field }) => (<FormItem><FormLabel>TIN (Optional)</FormLabel><FormControl><Input placeholder="123-456-789-000" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
             </>
         ))}
         
@@ -296,7 +296,7 @@ export function ApplicationFormFields() {
                   <SelectContent><SelectItem value="single">Single</SelectItem><SelectItem value="married">Married</SelectItem></SelectContent>
               </Select><FormMessage /></FormItem>)} />
             {civilStatus === 'married' && (
-              <FormField control={form.control} name="spouseName" render={({ field }) => (<FormItem><FormLabel>Spouse's Full Name</FormLabel><FormControl><Input placeholder="Maria Clara Dela Cruz" {...field} /></FormControl><FormMessage /></FormItem>)} />
+              <FormField control={form.control} name="spouseName" render={({ field }) => (<FormItem><FormLabel>Spouse's Full Name</FormLabel><FormControl><Input placeholder="Maria Clara Dela Cruz" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField control={form.control} name="fatherFirstName" render={({ field }) => (<FormItem><FormLabel>Father's First Name</FormLabel><FormControl><Input placeholder="Pedro" {...field} /></FormControl><FormMessage /></FormItem>)} />
@@ -319,13 +319,13 @@ export function ApplicationFormFields() {
                 <FormField control={form.control} name="prefersGroundFloor" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-3 space-y-0 p-2 border rounded-md"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="font-normal">Prefers Ground Floor Voting</FormLabel></FormItem>)} />
             </div>
             {isPwd && (
-                 <FormField control={form.control} name="disabilityType" render={({ field }) => (<FormItem><FormLabel>Type of Disability</FormLabel><FormControl><Input placeholder="e.g., Visual Impairment, Mobility" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                 <FormField control={form.control} name="disabilityType" render={({ field }) => (<FormItem><FormLabel>Type of Disability</FormLabel><FormControl><Input placeholder="e.g., Visual Impairment, Mobility" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
             )}
-            <FormField control={form.control} name="assistorName" render={({ field }) => (<FormItem><FormLabel>Assistor's Full Name (If any)</FormLabel><FormControl><Input placeholder="Full name of assistor" {...field} /></FormControl><FormMessage /></FormItem>)} />
+            <FormField control={form.control} name="assistorName" render={({ field }) => (<FormItem><FormLabel>Assistor's Full Name (If any)</FormLabel><FormControl><Input placeholder="Full name of assistor" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
             { assistorName && (
-                <FormField control={form.control} name="assistorRelationship" render={({ field }) => (<FormItem><FormLabel>Assistor's Relationship</FormLabel><FormControl><Input placeholder="e.g., Spouse, Child, Guardian" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="assistorRelationship" render={({ field }) => (<FormItem><FormLabel>Assistor's Relationship</FormLabel><FormControl><Input placeholder="e.g., Spouse, Child, Guardian" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
             )}
-            <FormField control={form.control} name="assistorAddress" render={({ field }) => (<FormItem><FormLabel>Assistor's Address (If any)</FormLabel><FormControl><Textarea placeholder="Full address of assistor" {...field} /></FormControl><FormMessage /></FormItem>)} />
+            <FormField control={form.control} name="assistorAddress" render={({ field }) => (<FormItem><FormLabel>Assistor's Address (If any)</FormLabel><FormControl><Textarea placeholder="Full address of assistor" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
           </>
         ))}
 
@@ -346,13 +346,13 @@ export function ApplicationFormFields() {
               <>
                 <Separator className="my-4" />
                 <h4 className="text-md font-semibold mb-2">Previous Address Details (For Transfer)</h4>
-                <FormField control={form.control} name="transferHouseNoStreet" render={({ field }) => (<FormItem><FormLabel>House No. / Street / Subdivision</FormLabel><FormControl><Input placeholder="456 Bonifacio St" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="transferHouseNoStreet" render={({ field }) => (<FormItem><FormLabel>House No. / Street / Subdivision</FormLabel><FormControl><Input placeholder="456 Bonifacio St" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField control={form.control} name="transferBarangay" render={({ field }) => (<FormItem><FormLabel>Barangay</FormLabel><FormControl><Input placeholder="San Antonio" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="transferCityMunicipality" render={({ field }) => (<FormItem><FormLabel>City / Municipality</FormLabel><FormControl><Input placeholder="Pasig City" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="transferProvince" render={({ field }) => (<FormItem><FormLabel>Province</FormLabel><FormControl><Input placeholder="Metro Manila" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="transferBarangay" render={({ field }) => (<FormItem><FormLabel>Barangay</FormLabel><FormControl><Input placeholder="San Antonio" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="transferCityMunicipality" render={({ field }) => (<FormItem><FormLabel>City / Municipality</FormLabel><FormControl><Input placeholder="Pasig City" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="transferProvince" render={({ field }) => (<FormItem><FormLabel>Province</FormLabel><FormControl><Input placeholder="Metro Manila" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
                 </div>
-                <FormField control={form.control} name="transferZipCode" render={({ field }) => (<FormItem><FormLabel>Zip Code</FormLabel><FormControl><Input placeholder="1600" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="transferZipCode" render={({ field }) => (<FormItem><FormLabel>Zip Code</FormLabel><FormControl><Input placeholder="1600" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
               </>
             )}
 
@@ -392,7 +392,7 @@ export function ApplicationFormFields() {
                             <FormMessage />
                         </FormItem>
                     )} />
-                     <FormField control={form.control} name="reactivationEvidence" render={({ field }) => (<FormItem className="mt-4"><FormLabel>Evidence Ground No Longer Exists (e.g., Certification/Order of the Court)</FormLabel><FormControl><Textarea placeholder="Describe or reference attached documents" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                     <FormField control={form.control} name="reactivationEvidence" render={({ field }) => (<FormItem className="mt-4"><FormLabel>Evidence Ground No Longer Exists (e.g., Certification/Order of the Court)</FormLabel><FormControl><Textarea placeholder="Describe or reference attached documents" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
                 </>
             )}
 
@@ -400,8 +400,8 @@ export function ApplicationFormFields() {
                  <>
                     <Separator className="my-4" />
                     <h4 className="text-md font-semibold mb-2">Change/Correction Details</h4>
-                    <FormField control={form.control} name="presentData" render={({ field }) => (<FormItem><FormLabel>Present Data/Information</FormLabel><FormControl><Textarea placeholder="Current information on record" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="newCorrectedData" render={({ field }) => (<FormItem><FormLabel>New/Corrected Data/Information</FormLabel><FormControl><Textarea placeholder="Updated/Corrected information" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="presentData" render={({ field }) => (<FormItem><FormLabel>Present Data/Information</FormLabel><FormControl><Textarea placeholder="Current information on record" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="newCorrectedData" render={({ field }) => (<FormItem><FormLabel>New/Corrected Data/Information</FormLabel><FormControl><Textarea placeholder="Updated/Corrected information" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
                     <FormDescription>Attach required supporting documents such as Certified Copy or Certificate of Court Order or Certificate of Live Birth, and others.</FormDescription>
                  </>
             )}
@@ -418,7 +418,7 @@ export function ApplicationFormFields() {
             <Separator className="my-4" />
             <FormField control={form.control} name="biometricsFile" render={({ field }) => (
                 <FormItem><FormLabel>Biometrics Data (Thumbprints/Signatures)</FormLabel>
-                <FormControl><Input type="text" placeholder="e.g., Captured on-site" {...field} /></FormControl>
+                <FormControl><Input type="text" placeholder="e.g., Captured on-site" {...field} value={field.value ?? ''} /></FormControl>
                 <FormDescription>Indicate status of biometrics capture. Actual capture is done on-site.</FormDescription>
                 <FormMessage /></FormItem>)} />
           </>
@@ -440,5 +440,3 @@ export function ApplicationFormFields() {
     </Form>
   );
 }
-
-    
