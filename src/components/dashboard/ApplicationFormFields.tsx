@@ -24,7 +24,7 @@ import { useRouter } from 'next/navigation';
 import { saveApplication } from '@/lib/applicationStore';
 import { classifyApplicantType, type ClassifyApplicantTypeInput } from '@/ai/flows/classify-applicant-type';
 
-constREACTIVATION_REASONS = [
+const REACTIVATION_REASONS = [
   { id: 'sentenced', label: 'Sentenced by final judgment to suffer imprisonment for not less than one (1) year.' },
   { id: 'disloyalty', label: 'Convicted by final judgment of a crime involving disloyalty to the duly constituted government.' },
   { id: 'insaneIncompetent', label: 'Declared by competent authority to be insane or incompetent.' },
@@ -124,7 +124,6 @@ export function ApplicationFormFields() {
         newApplication.oldAddressDetails = { // Previous address
           houseNoStreet: data.transferHouseNoStreet!, barangay: data.transferBarangay!, cityMunicipality: data.transferCityMunicipality!,
           province: data.transferProvince!, zipCode: data.transferZipCode!,
-          // years/months at old address not explicitly on CEF-1, usually handled by dates of residency or separate questions
         };
       }
       if (data.applicationType === 'reactivation') {
@@ -148,7 +147,6 @@ export function ApplicationFormFields() {
             data.isSenior && "Senior Citizen", data.prefersGroundFloor && "Prefers Ground Floor Voting",
             data.assistorName && `Assisted by ${data.assistorName} (${data.assistorRelationship || 'N/A'})`
         ].filter(Boolean).join(', ') || 'None',
-        // Adding new conditional data for better classification
         previousAddressInfo: data.applicationType === 'transfer' ? `${data.transferHouseNoStreet}, ${data.transferBarangay}` : undefined,
         reactivationInfo: data.applicationType === 'reactivation' ? `Reasons: ${data.reactivationReasons?.join(', ')}` : undefined,
         changeCorrectionInfo: data.applicationType === 'changeCorrection' ? `Present: ${data.presentData}, New: ${data.newCorrectedData}` : undefined,
@@ -442,3 +440,5 @@ export function ApplicationFormFields() {
     </Form>
   );
 }
+
+    
