@@ -1,8 +1,9 @@
+
 'use client';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ApplicationDataTable } from '@/components/dashboard/ApplicationDataTable';
-import { FilePlus2, Files } from 'lucide-react'; // Added Files here
+import { FilePlus2, Files } from 'lucide-react'; // FilePlus2 might be unused after removal, but keeping for now
 import { useEffect, useState } from 'react';
 import type { Application } from '@/types';
 import { getApplications, seedInitialData } from '@/lib/applicationStore';
@@ -41,11 +42,7 @@ export default function DashboardPage() {
             Manage and track voter applications efficiently.
           </p>
         </div>
-        <Link href="/dashboard/apply" passHref>
-          <Button>
-            <FilePlus2 className="mr-2 h-4 w-4" /> New Application
-          </Button>
-        </Link>
+        {/* "New Application" button removed from here */}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
