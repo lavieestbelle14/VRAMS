@@ -1,3 +1,4 @@
+
 'use client'; // Required for AppShell and auth checks
 import type { ReactNode } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
@@ -6,14 +7,17 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth(); // Added user here
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/'); // Redirect to login if not authenticated
+    if (!isLoading) {
+      // If not loading, and either not authenticated or user is not an officer
+      if (!isAuthenticated || user?.role !== 'officer') {
+        router.push('/'); // Redirect to login
+      }
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, user, router]);
 
   if (isLoading) {
      return <div className="flex h-screen items-center justify-center"><svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -22,7 +26,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
    </svg></div>;
   }
 
-  if (!isAuthenticated) {
+  // Also check user role here before rendering
+  if (!isAuthenticated || user?.role !== 'officer') {
     // This helps prevent flash of content before redirect effect runs
     return null; 
   }

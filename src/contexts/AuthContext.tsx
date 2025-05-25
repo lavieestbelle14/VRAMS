@@ -1,22 +1,29 @@
+
 'use client';
 import type { ReactNode } from 'react';
-import { createContext, useContext, useState, useEffect, useCallback }
-from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+
+type UserRole = 'officer' | 'public';
+
+interface User {
+  username: string; // This will store the email
+  role: UserRole;
+}
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (redirectTo?: string) => void;
+  login: (details: { username: string, role: UserRole }) => void;
   logout: () => void;
   isLoading: boolean;
-  user: { username: string } | null; // Basic user info
+  user: User | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<{ username: string } | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
@@ -27,8 +34,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedAuth = localStorage.getItem('vrams_auth');
     const storedUser = localStorage.getItem('vrams_user');
     if (storedAuth === 'true' && storedUser) {
+      const parsedUser = JSON.parse(storedUser) as User;
       setIsAuthenticated(true);
-      setUser(JSON.parse(storedUser));
+      setUser(parsedUser);
     } else {
       setIsAuthenticated(false);
       setUser(null);
@@ -41,24 +49,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [checkAuth]);
 
   useEffect(() => {
-    if (!isLoading) {
-      if (isAuthenticated && pathname === '/') {
-        router.push('/dashboard');
-      } else if (!isAuthenticated && !publicPaths.includes(pathname)) {
-        router.push('/');
+    if (!isLoading && user) { // Check user existence
+      if (isAuthenticated) {
+        if (user.role === 'officer' && (pathname === '/' || pathname.startsWith('/public'))) {
+          router.push('/dashboard');
+        } else if (user.role === 'public' && (pathname === '/' || pathname.startsWith('/dashboard'))) {
+          router.push('/public/home');
+        }
+      }
+    } else if (!isLoading && !isAuthenticated && !publicPaths.includes(pathname)) {
+      // If not loading, not authenticated, and not on a public path, redirect to login
+      if (!pathname.startsWith('/public')) { // Allow access to /public for non-authed users if layouts handle it
+         router.push('/');
       }
     }
-  }, [isAuthenticated, isLoading, pathname, router, publicPaths]);
+  }, [isAuthenticated, isLoading, user, pathname, router, publicPaths]);
 
 
-  const login = (redirectTo: string = '/dashboard') => {
-    // Mock login, in real app, verify credentials
-    const mockUser = { username: 'election.officer@comelec.gov.ph' };
+  const login = (details: { username: string, role: UserRole }) => {
     setIsAuthenticated(true);
-    setUser(mockUser);
+    setUser({ username: details.username, role: details.role });
     localStorage.setItem('vrams_auth', 'true');
-    localStorage.setItem('vrams_user', JSON.stringify(mockUser));
-    router.push(redirectTo);
+    localStorage.setItem('vrams_user', JSON.stringify({ username: details.username, role: details.role }));
+
+    if (details.role === 'officer') {
+      router.push('/dashboard');
+    } else {
+      router.push('/public/home');
+    }
   };
 
   const logout = () => {
@@ -75,7 +93,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
   </svg></div>;
   }
-
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, user, login, logout, isLoading }}>

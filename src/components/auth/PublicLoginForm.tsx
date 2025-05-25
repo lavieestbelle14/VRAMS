@@ -5,30 +5,29 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/contexts/AuthContext';
 import { LogIn } from 'lucide-react';
 
-const loginSchema = z.object({
+const publicLoginSchema = z.object({
   email: z.string().email({ message: 'Invalid email address' }),
-  password: z.string().min(1, { message: 'Password is required' }),
+  password: z.string().min(1, { message: 'Password is required' }), // Kept for structural similarity, can be adapted later
 });
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type PublicLoginFormValues = z.infer<typeof publicLoginSchema>;
 
-export function LoginForm() {
+export function PublicLoginForm() {
   const { login } = useAuth();
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm<PublicLoginFormValues>({
+    resolver: zodResolver(publicLoginSchema),
     defaultValues: {
       email: '',
       password: '',
     },
   });
 
-  function onSubmit(data: LoginFormValues) {
-    login({ username: data.email, role: 'officer' }); 
+  function onSubmit(data: PublicLoginFormValues) {
+    login({ username: data.email, role: 'public' });
   }
 
   return (
@@ -41,7 +40,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="officer@comelec.gov.ph" {...field} />
+                <Input type="email" placeholder="user@example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -63,6 +62,9 @@ export function LoginForm() {
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
           <LogIn className="mr-2 h-4 w-4" /> Login
         </Button>
+         <p className="text-xs text-center text-muted-foreground pt-2">
+            Login to check application status (feature coming soon).
+          </p>
       </form>
     </Form>
   );

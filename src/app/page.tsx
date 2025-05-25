@@ -1,6 +1,9 @@
+
 'use client';
 import { LoginForm } from '@/components/auth/LoginForm';
+import { PublicLoginForm } from '@/components/auth/PublicLoginForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function LoginPage() {
   return (
@@ -16,16 +19,24 @@ export default function LoginPage() {
       </div>
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader>
-          <CardTitle className="text-2xl">Officer Login</CardTitle>
-          <CardDescription>Enter your credentials to access the system.</CardDescription>
+          <CardTitle className="text-2xl text-center">Login</CardTitle>
+          <CardDescription className="text-center">Select your login type.</CardDescription>
         </CardHeader>
         <CardContent>
-          <LoginForm />
+          <Tabs defaultValue="officer" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="officer">Officer</TabsTrigger>
+              <TabsTrigger value="public">Public User</TabsTrigger>
+            </TabsList>
+            <TabsContent value="officer" className="pt-4">
+              <LoginForm />
+            </TabsContent>
+            <TabsContent value="public" className="pt-4">
+              <PublicLoginForm />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
-      <p className="mt-8 text-sm text-muted-foreground">
-        For election officers only. Public status tracking is not yet available.
-      </p>
     </div>
   );
 }
