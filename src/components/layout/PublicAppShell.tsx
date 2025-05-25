@@ -49,7 +49,7 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
               alt="VRAMS Logo"
               width={32}
               height={32}
-              data-ai-hint="COMELEC seal"
+              data-ai-hint="VRAMS logo"
             />
             <span className="text-xl font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">VRAMS</span>
           </Link>

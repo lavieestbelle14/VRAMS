@@ -1,3 +1,4 @@
+
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -9,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, CheckCircle, Edit, FileText, User, MapPin, CalendarDays, Briefcase, Wheelchair, Brain, Save, XCircle, MessageSquare } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Edit, FileText, User, MapPin, CalendarDays, Briefcase, Accessibility, Brain, Save, XCircle, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function ApplicationDetailsPage() {
@@ -151,7 +152,7 @@ export default function ApplicationDetailsPage() {
 
           {sn && (Object.values(sn).some(v => v) || sn.tribe) && (
              <Card className="lg:col-span-1">
-                <CardHeader><CardTitle className="flex items-center"><Wheelchair className="mr-2"/>Special Needs</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="flex items-center"><Accessibility className="mr-2"/>Special Needs</CardTitle></CardHeader>
                 <CardContent>
                     <DetailItem label="Illiterate" value={sn.isIlliterate} />
                     <DetailItem label="Senior Citizen" value={sn.isSenior} />
