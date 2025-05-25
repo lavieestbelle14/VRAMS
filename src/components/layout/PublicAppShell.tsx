@@ -45,7 +45,7 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
         <SidebarHeader className="p-4">
           <Link href="/public/home" className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
             <Image
-              src="/vrams-logo.png"
+              src="/logo draft.png"
               alt="VRAMS Logo"
               width={32}
               height={32}
