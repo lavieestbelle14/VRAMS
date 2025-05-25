@@ -1,47 +1,68 @@
 
 'use client';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import type { Application } from '@/types';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { getApplicationById } from '@/lib/applicationStore';
+import type { Application } from '@/types';
 import { format } from 'date-fns';
-import { Search, User, CalendarDays, FileTextIcon, CheckCircle, XCircle, ListChecks, Info } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Search, User, CalendarDays, FileText, CheckCircle, XCircle, Info, ShieldHalf } from 'lucide-react';
+
+const trackStatusSchema = z.object({
+  applicationId: z.string().min(1, { message: 'Application ID is required' }),
+});
+
+type TrackStatusFormValues = z.infer<typeof trackStatusSchema>;
+
+const DetailItem = ({ label, value, icon }: { label: string; value?: string | number | null; icon?: React.ElementType }) => {
+    const IconComponent = icon;
+    if (value === null || typeof value === 'undefined' || value === '') return null;
+    return (
+      <div className="mb-3">
+        <p className="text-sm font-semibold text-muted-foreground flex items-center">
+         {IconComponent && <IconComponent className="mr-2 h-4 w-4" />} {label}
+        </p>
+        <p className="text-md">{String(value)}</p>
+      </div>
+    );
+};
+
 
 export default function TrackStatusPage() {
-  const [applicationId, setApplicationId] = useState('');
   const [application, setApplication] = useState<Application | null>(null);
+  const [notFound, setNotFound] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [searched, setSearched] = useState(false);
 
-  const handleTrackApplication = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!applicationId.trim()) {
-      setError('Please enter an Application ID.');
-      setApplication(null);
-      setSearched(true);
-      return;
-    }
+  const form = useForm<TrackStatusFormValues>({
+    resolver: zodResolver(trackStatusSchema),
+    defaultValues: {
+      applicationId: '',
+    },
+  });
+
+  function onSubmit(data: TrackStatusFormValues) {
     setIsLoading(true);
-    setError(null);
     setApplication(null);
-    setSearched(true);
-
-    // Simulate API call delay
+    setNotFound(false);
+    
+    // Simulate API delay for better UX
     setTimeout(() => {
-      const appData = getApplicationById(applicationId.trim());
+      const appData = getApplicationById(data.applicationId.trim());
       if (appData) {
         setApplication(appData);
       } else {
-        setError(`Application with ID "${applicationId.trim()}" not found. Please check the ID and try again.`);
+        setNotFound(true);
       }
       setIsLoading(false);
     }, 500);
-  };
+  }
 
   const getStatusVariant = (status: Application['status']) => {
     switch (status) {
@@ -52,147 +73,125 @@ export default function TrackStatusPage() {
       default: return 'outline';
     }
   };
-
-  const DetailItem = ({ label, value, icon }: { label: string; value?: string | React.ReactNode; icon?: React.ElementType }) => {
-    const IconComponent = icon;
-    if (value === null || typeof value === 'undefined' || value === '') return null;
-    return (
-      <div className="mb-3">
-        <Label className="text-sm font-semibold text-muted-foreground flex items-center">
-          {IconComponent && <IconComponent className="mr-2 h-4 w-4" />} {label}
-        </Label>
-        <div className="text-sm pt-1">{value}</div>
-      </div>
-    );
+  
+  const applicationTypeLabels: Record<Application['applicationType'] | '', string> = {
+      'register': 'New Registration',
+      'transfer': 'Transfer of Registration',
+      'reactivation': 'Reactivation of Registration',
+      'changeCorrection': 'Change of Name/Correction of Entries',
+      'inclusionReinstatement': 'Inclusion of Records/Reinstatement of Name',
+      '': 'Unknown Type'
   };
-
 
   return (
     <div className="space-y-6">
-      <Card className="w-full max-w-2xl mx-auto">
+      <Card className="max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle className="text-2xl">Track Your Application Status</CardTitle>
-          <CardDescription>Enter your application reference number to view its current status.</CardDescription>
+          <CardTitle className="text-2xl">Track Application Status</CardTitle>
+          <CardDescription>Enter your application ID to check its current status.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleTrackApplication} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="applicationId">Application ID</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="applicationId"
-                  value={applicationId}
-                  onChange={(e) => {
-                    setApplicationId(e.target.value);
-                    setSearched(false); // Reset searched state on input change
-                    setError(null); // Clear error on input change
-                  }}
-                  placeholder="Enter your Application ID (e.g., APP-001)"
-                />
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? (
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                  ) : (
-                    <Search className="mr-2 h-4 w-4" />
-                  )}
-                  Track
-                </Button>
-              </div>
-            </div>
-          </form>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="applicationId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Application ID</FormLabel>
+                    <FormControl>
+                      <div className="flex">
+                        <Input placeholder="e.g., APP-123456" {...field} className="rounded-r-none" />
+                        <Button type="submit" className="rounded-l-none" disabled={isLoading}>
+                          {isLoading ? (
+                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                          ) : (
+                            <Search className="h-4 w-4" />
+                          )}
+                           <span className="ml-2 hidden sm:inline">Track</span>
+                        </Button>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </form>
+          </Form>
         </CardContent>
       </Card>
 
-      {isLoading && (
-        <div className="flex justify-center items-center py-10">
-          <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <p className="ml-2 text-muted-foreground">Fetching application status...</p>
-        </div>
-      )}
-
-      {error && !isLoading && (
-        <Card className="w-full max-w-2xl mx-auto border-destructive">
-            <CardHeader className="flex-row items-center gap-2">
-                 <XCircle className="h-6 w-6 text-destructive" />
-                <CardTitle className="text-destructive">Tracking Error</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p>{error}</p>
-            </CardContent>
-        </Card>
-      )}
-
-      {application && !isLoading && !error && (
-        <Card className="w-full max-w-2xl mx-auto">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ListChecks className="h-6 w-6 text-primary" />
-              Application Status: {application.id}
-            </CardTitle>
-            <CardDescription>
-              Current status of your voter registration application.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <DetailItem label="Applicant Name" value={`${application.personalInfo.firstName} ${application.personalInfo.lastName}`} icon={User} />
-            <DetailItem label="Submission Date" value={format(new Date(application.submissionDate), 'PPP, p')} icon={CalendarDays} />
-            <DetailItem label="Application Type" value={<span className="capitalize">{application.applicationType}</span>} icon={FileTextIcon} />
-            <DetailItem 
-              label="Current Status" 
-              value={<Badge variant={getStatusVariant(application.status)} className="text-sm capitalize">{application.status}</Badge>} 
-              icon={Info} 
-            />
-
-            {application.status === 'approved' && (
-              <>
-                <hr className="my-4"/>
-                <DetailItem label="Voter ID" value={application.voterId} icon={CheckCircle} />
-                <DetailItem label="Precinct Number" value={application.precinct} icon={CheckCircle} />
-                {application.approvalDate && 
-                  <DetailItem label="Approval Date" value={format(new Date(application.approvalDate), 'PPP, p')} icon={CalendarDays} />
-                }
-                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md text-sm text-green-700">
-                  Congratulations! Your application has been approved. Your Voter ID and Precinct Number are listed above.
+      {application && (
+        <Card className="max-w-2xl mx-auto mt-6 shadow-lg">
+          <CardHeader className="border-b">
+            <div className="flex justify-between items-start">
+                <div>
+                    <CardTitle className="text-xl">Application Found</CardTitle>
+                    <CardDescription>Status for Application ID: <span className="font-semibold text-primary">{application.id}</span></CardDescription>
                 </div>
+                <Badge variant={getStatusVariant(application.status)} className="text-sm capitalize">
+                    {application.status}
+                </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+            <DetailItem label="Applicant Name" value={`${application.personalInfo.firstName} ${application.personalInfo.lastName}`} icon={User} />
+            <DetailItem label="Submission Date" value={format(new Date(application.submissionDate), 'PPP')} icon={CalendarDays} />
+            <DetailItem label="Application Type" value={applicationTypeLabels[application.applicationType || '']} icon={FileText} />
+            
+            {application.status === 'approved' && application.voterId && (
+              <DetailItem label="Voter ID" value={application.voterId} icon={CheckCircle} />
+            )}
+            {application.status === 'approved' && application.precinct && (
+              <DetailItem label="Precinct No." value={application.precinct} icon={Info} />
+            )}
+            {application.status === 'approved' && application.approvalDate && (
+              <DetailItem label="Approval Date" value={format(new Date(application.approvalDate), 'PPP')} icon={CalendarDays} />
+            )}
+            {application.classification && (
+              <>
+                <DetailItem label="AI Classified Type" value={application.classification.applicantType} icon={ShieldHalf} />
+                <DetailItem label="AI Classification Confidence" value={`${(application.classification.confidence * 100).toFixed(0)}%`} icon={Info} />
               </>
             )}
-
-            {application.status === 'rejected' && (
-               <>
-                <hr className="my-4"/>
-                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
-                  <p>Your application could not be approved at this time.</p>
-                  <p className="mt-1">Reason: {application.remarks || "Please contact your local election office for more details."}</p>
-                </div>
-               </>
-            )}
-
-            {(application.status === 'pending' || application.status === 'reviewing') && (
-                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-700">
-                    Your application is currently <span className="font-semibold">{application.status}</span>. Please check back later for updates.
-                </div>
-            )}
           </CardContent>
-        </Card>
-      )}
-      
-      {searched && !application && !isLoading && !error && (
-        <Card className="w-full max-w-2xl mx-auto">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Info className="h-6 w-6 text-muted-foreground"/>No Application Found</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p className="text-muted-foreground">No application details to display for ID: "{applicationId}". Please verify the ID or submit an application.</p>
-            </CardContent>
+            {(application.status === 'pending' || application.status === 'reviewing') && (
+                <CardContent className="pt-0">
+                     <Alert>
+                        <Info className="h-4 w-4" />
+                        <AlertTitle>Status: {application.status.charAt(0).toUpperCase() + application.status.slice(1)}</AlertTitle>
+                        <AlertDescription>
+                            Your application is currently being processed. Please check back later for updates.
+                        </AlertDescription>
+                    </Alert>
+                </CardContent>
+            )}
+             {application.status === 'rejected' && (
+                <CardContent className="pt-0">
+                     <Alert variant="destructive">
+                        <XCircle className="h-4 w-4" />
+                        <AlertTitle>Status: Rejected</AlertTitle>
+                        <AlertDescription>
+                            Unfortunately, your application was not approved. Please contact your local election office for more details if needed.
+                        </AlertDescription>
+                    </Alert>
+                </CardContent>
+            )}
         </Card>
       )}
 
+      {notFound && (
+        <Alert variant="destructive" className="max-w-2xl mx-auto mt-6">
+          <XCircle className="h-4 w-4" />
+          <AlertTitle>Application Not Found</AlertTitle>
+          <AlertDescription>
+            The Application ID you entered could not be found. Please check the ID and try again.
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 }
