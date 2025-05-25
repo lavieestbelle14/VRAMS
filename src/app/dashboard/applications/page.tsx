@@ -1,8 +1,9 @@
+
 'use client';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ApplicationDataTable } from '@/components/dashboard/ApplicationDataTable';
-import { FilePlus2, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react'; // Removed FilePlus2
 import { useEffect, useState } from 'react';
 import type { Application } from '@/types';
 import { getApplications, seedInitialData } from '@/lib/applicationStore';
@@ -40,11 +41,7 @@ export default function AllApplicationsPage() {
           <Button variant="outline" onClick={() => router.push('/dashboard')}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
           </Button>
-          <Link href="/dashboard/apply" passHref>
-            <Button>
-              <FilePlus2 className="mr-2 h-4 w-4" /> New Application
-            </Button>
-          </Link>
+          {/* "New Application" button removed from here */}
         </div>
       </div>
       
