@@ -13,7 +13,7 @@ export default function AuthPage() { // Renamed to AuthPage for clarity
       <div className="mb-8 text-center">
         <div className="flex items-center justify-center mb-4">
             <Image
-              src="/logo draft.png"
+              src="/vrams-logo.png"
               alt="VRAMS Logo"
               width={64}
               height={64}
