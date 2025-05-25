@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ApplicationDataTable } from '@/components/dashboard/ApplicationDataTable';
-import { FilePlus2 } from 'lucide-react';
+import { FilePlus2, Files } from 'lucide-react'; // Added Files here
 import { useEffect, useState } from 'react';
 import type { Application } from '@/types';
 import { getApplications, seedInitialData } from '@/lib/applicationStore';
