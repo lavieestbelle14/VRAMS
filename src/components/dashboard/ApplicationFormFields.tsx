@@ -1,3 +1,4 @@
+
 'use client';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -90,7 +91,7 @@ export function ApplicationFormFields() {
         civilDetails: `Status: ${data.civilStatus}, Spouse: ${data.spouseName || 'N/A'}, Father: ${data.fatherFirstName} ${data.fatherLastName}, Mother: ${data.motherFirstName} ${data.motherLastName}`,
         specialSectorNeeds: Object.entries(specialNeeds)
           .filter(([key, value]) => value === true || (typeof value === 'string' && value.length > 0))
-          .map(([key, value]) => `${key.replace(/([A-Z])/g, ' $1').trim()}: ${value}`) // Format key
+          .map(([key, value]) => `${key.replace(/([A-Z])/g, ' $1').trim()}: ${value}`) 
           .join(', ') || 'None',
       };
       
@@ -101,10 +102,10 @@ export function ApplicationFormFields() {
 
       toast({
         title: "Application Submitted",
-        description: `Application ID: ${newApplication.id} successfully submitted and classified as ${classificationResult.applicantType}.`,
+        description: `Application ID: ${newApplication.id} successfully submitted and classified as ${classificationResult.applicantType}. You can track its status.`,
       });
       form.reset();
-      router.push('/dashboard');
+      router.push('/public/home'); // Redirect to public home page
 
     } catch (error) {
       console.error("Error submitting application:", error);

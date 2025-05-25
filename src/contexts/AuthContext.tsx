@@ -38,8 +38,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { toast } = useToast();
 
-  const publicPaths = ['/']; // Login/Signup page is public
-
   const getMockUsersDB = (): StoredUser[] => {
     if (typeof window === 'undefined') return [];
     const db = localStorage.getItem(USERS_DB_KEY);
@@ -62,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuthStatus = useCallback(() => {
     setIsLoading(true);
-    seedInitialUsers(); // Ensure default officer exists
+    seedInitialUsers(); 
     const storedUser = localStorage.getItem(CURRENT_USER_KEY);
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser) as AuthenticatedUser;
@@ -79,25 +77,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuthStatus();
   }, [checkAuthStatus]);
 
-  useEffect(() => {
-    if (!isLoading) {
-      if (isAuthenticated && user) {
-        if (user.role === 'officer' && (pathname === '/' || pathname.startsWith('/public'))) {
-          router.push('/dashboard');
-        } else if (user.role === 'public' && (pathname === '/' || pathname.startsWith('/dashboard'))) {
-          router.push('/public/home');
+ useEffect(() => {
+    if (isLoading) return;
+
+    const isOfficerPath = pathname.startsWith('/dashboard');
+    const isPublicAuthenticatedPath = ['/public/home', '/public/apply', '/public/track-status'].some(p => pathname.startsWith(p));
+    const isAuthPage = pathname === '/';
+
+    if (isAuthenticated && user) {
+      // User is authenticated
+      if (user.role === 'officer') {
+        if (!isOfficerPath) {
+            // Officer trying to access public authenticated or auth page, redirect to dashboard
+            if (isPublicAuthenticatedPath || isAuthPage) router.push('/dashboard');
         }
-      } else if (!isAuthenticated && !publicPaths.includes(pathname) && !pathname.startsWith('/public')) {
-        router.push('/');
+      } else if (user.role === 'public') {
+         if (isOfficerPath) {
+            router.push('/public/home'); // Public user trying to access officer page, redirect to public home
+         } else if (isAuthPage) {
+            router.push('/public/home'); // Public user on auth page (e.g. already logged in), redirect to public home
+         }
       }
+    } else {
+      // User is NOT authenticated
+      if (isOfficerPath || isPublicAuthenticatedPath) {
+        router.push('/'); // Trying to access any protected route (officer or public authenticated), redirect to login
+      }
+      // If on isAuthPage or other truly public unauthenticated page, do nothing.
     }
-  }, [isAuthenticated, isLoading, user, pathname, router, publicPaths]);
+  }, [isAuthenticated, isLoading, user, pathname, router]);
+
 
   const login = (email: string, passwordAttempt: string, intendedRole: UserRole) => {
     const users = getMockUsersDB();
     const foundUser = users.find(u => u.username.toLowerCase() === email.toLowerCase());
 
-    if (foundUser && foundUser.passwordHash === passwordAttempt) { // Plain text comparison for mock
+    if (foundUser && foundUser.passwordHash === passwordAttempt) { 
       if (foundUser.role !== intendedRole) {
         toast({ title: 'Login Failed', description: `Please use the ${intendedRole === 'officer' ? 'Officer' : 'Public User'} login tab.`, variant: 'destructive' });
         return;
@@ -107,11 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsAuthenticated(true);
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(authenticatedUser));
       toast({ title: 'Login Successful', description: `Welcome, ${authenticatedUser.username}!` });
-      if (foundUser.role === 'officer') {
-        router.push('/dashboard');
-      } else {
-        router.push('/public/home');
-      }
+      // Redirection is handled by the useEffect above
     } else {
       toast({ title: 'Login Failed', description: 'Invalid email or password.', variant: 'destructive' });
     }
@@ -138,8 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     saveMockUsersDB(users);
     
     toast({ title: 'Sign Up Successful!', description: 'You can now log in.' });
-    // Automatically log in the new user
-    login(email, passwordAttempt, 'public');
+    login(email, passwordAttempt, 'public'); // Automatically log in the new user
   };
 
   const logout = () => {

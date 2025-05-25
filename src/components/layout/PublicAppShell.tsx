@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
-import { Home, FileSearch, LogOut, Settings, UserCircle } from 'lucide-react';
+import { Home, FileSearch, LogOut, UserCircle, FilePlus2 } from 'lucide-react'; // Added FilePlus2
 
 interface NavItem {
   href: string;
@@ -30,6 +30,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: '/public/home', label: 'Home', icon: Home, tooltip: 'Home' },
+  { href: '/public/apply', label: 'New Application', icon: FilePlus2, tooltip: 'Submit New Application' }, // New Item
   { href: '/public/track-status', label: 'Track Application', icon: FileSearch, tooltip: 'Track Application Status' },
 ];
 
@@ -92,12 +93,6 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{user?.username || 'Public User'}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {/* Add public user specific settings later if needed */}
-              {/* <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator /> */}
               <DropdownMenuItem onClick={logout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Logout</span>
