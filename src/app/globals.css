@@ -8,34 +8,34 @@ body {
 
 @layer base {
   :root {
-    --background: 220 17% 95%; /* #F0F2F5 Light Gray */
-    --foreground: 220 10% 20%; /* Dark Gray for text */
+    --background: 220 20% 97%; /* Very light cool gray */
+    --foreground: 220 10% 15%; /* Dark cool gray for text */
 
-    --muted: 220 15% 88%; /* Lighter gray for muted elements */
-    --muted-foreground: 220 10% 45%; /* Darker gray for muted text */
+    --muted: 220 15% 92%; /* Lighter gray for muted elements */
+    --muted-foreground: 220 10% 45%; /* Medium gray for muted text */
 
     --popover: 0 0% 100%; /* White */
-    --popover-foreground: 220 10% 20%; /* Dark Gray */
+    --popover-foreground: 220 10% 15%; /* Dark cool gray */
 
     --card: 0 0% 100%; /* White */
-    --card-foreground: 220 10% 20%; /* Dark Gray */
+    --card-foreground: 220 10% 15%; /* Dark cool gray */
 
-    --border: 220 15% 80%; /* Slightly darker gray for borders */
-    --input: 220 15% 88%; /* Lighter gray for input backgrounds */
+    --border: 220 15% 85%; /* Light gray for borders */
+    --input: 220 15% 94%; /* Very light gray for input backgrounds */
 
-    --primary: 231 48% 48%; /* #3F51B5 Deep Blue */
-    --primary-foreground: 210 20% 98%; /* Light text on primary */
+    --primary: 208 100% 30%; /* COMELEC Blue */
+    --primary-foreground: 0 0% 100%; /* White text on primary */
 
-    --secondary: 220 15% 92%; /* Lighter gray for secondary elements */
-    --secondary-foreground: 231 48% 48%; /* Primary color for secondary text */
+    --secondary: 210 40% 90%; /* Light muted blue-gray */
+    --secondary-foreground: 208 100% 30%; /* Primary blue for text/icons on secondary */
 
-    --accent: 122 39% 49%; /* #4CAF50 Muted Teal */
-    --accent-foreground: 210 20% 98%; /* Light text on accent */
+    --accent: 47 98% 54%; /* COMELEC Yellow/Gold */
+    --accent-foreground: 208 100% 10%; /* Very dark blue for text on accent */
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --ring: 231 48% 48%; /* Primary color for focus rings */
+    --ring: 208 100% 40%; /* Brighter COMELEC Blue for focus rings */
 
     --radius: 0.5rem;
     
@@ -45,22 +45,22 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
 
-    /* Sidebar specific theme variables from ui/sidebar.tsx */
-    --sidebar-background: 231 48% 48%; /* Deep Blue */
-    --sidebar-foreground: 210 20% 98%;  /* Light Text */
+    /* Sidebar specific theme variables */
+    --sidebar-background: 208 100% 30%; /* COMELEC Blue */
+    --sidebar-foreground: 0 0% 100%;  /* White Text */
     
-    --sidebar-primary: 210 20% 98%; /* Text color for active item (Light) */
-    --sidebar-primary-foreground: 231 48% 40%; /* Background for active item (Darker Blue) */
+    --sidebar-primary: 0 0% 100%; /* Text color for active item (White) */
+    --sidebar-primary-foreground: 208 100% 20%; /* Background for active item (Darker COMELEC Blue) */
 
-    --sidebar-accent: 231 48% 44%; /* Background for hovered item (Slightly different Blue) */
-    --sidebar-accent-foreground: 210 20% 98%; /* Text color for hovered item (Light) */
+    --sidebar-accent: 208 100% 38%; /* Background for hovered item (Lighter COMELEC Blue) */
+    --sidebar-accent-foreground: 0 0% 100%; /* Text color for hovered item (White) */
     
-    --sidebar-border: 231 48% 35%;   /* Border color within sidebar */
-    --sidebar-ring: 122 39% 49%;     /* Accent Teal for focus rings on sidebar items */
+    --sidebar-border: 208 100% 15%;   /* Border color within sidebar (Darkest COMELEC Blue) */
+    --sidebar-ring: 47 98% 54%;     /* COMELEC Yellow/Gold for focus rings on sidebar items */
   }
 
   .dark {
-    /* Keeping dark mode variables, but focusing on light theme implementation */
+    /* Dark mode variables - can be adjusted later if dark mode is a priority */
     --background: 220 10% 10%;
     --foreground: 210 20% 98%;
     --muted: 220 10% 15%;
@@ -71,15 +71,15 @@ body {
     --card-foreground: 210 20% 98%;
     --border: 220 10% 20%;
     --input: 220 10% 20%;
-    --primary: 231 48% 52%; 
+    --primary: 208 100% 40%; 
     --primary-foreground: 220 10% 10%;
     --secondary: 220 10% 12%;
     --secondary-foreground: 210 20% 98%;
-    --accent: 122 39% 53%; 
+    --accent: 47 98% 60%; 
     --accent-foreground: 220 10% 10%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --ring: 231 48% 52%;
+    --ring: 208 100% 40%;
     
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
@@ -87,14 +87,14 @@ body {
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
 
-    --sidebar-background: 231 48% 25%; 
-    --sidebar-foreground: 210 20% 90%;  
-    --sidebar-primary: 210 20% 98%; 
-    --sidebar-primary-foreground: 231 48% 35%; 
-    --sidebar-accent: 231 48% 30%; 
-    --sidebar-accent-foreground: 210 20% 98%;
-    --sidebar-border: 231 48% 20%;   
-    --sidebar-ring: 122 39% 53%;     
+    --sidebar-background: 208 100% 20%; 
+    --sidebar-foreground: 0 0% 90%;  
+    --sidebar-primary: 0 0% 98%; 
+    --sidebar-primary-foreground: 208 100% 30%; 
+    --sidebar-accent: 208 100% 25%; 
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 208 100% 10%;   
+    --sidebar-ring: 47 98% 60%;     
   }
 }
 
