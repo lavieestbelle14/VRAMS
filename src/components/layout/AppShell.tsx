@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
-import { LayoutDashboard, Files, LogOut, Settings, UserCircle } from 'lucide-react'; // Removed FilePlus2
+import { LayoutDashboard, Files, LogOut, Settings, UserCircle } from 'lucide-react';
 
 interface NavItem {
   href: string;
@@ -30,7 +30,6 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, tooltip: 'Dashboard' },
-  // { href: '/dashboard/apply', label: 'New Application', icon: FilePlus2, tooltip: 'New Application' }, // Removed
   { href: '/dashboard/applications', label: 'All Applications', icon: Files, tooltip: 'All Applications' },
 ];
 
