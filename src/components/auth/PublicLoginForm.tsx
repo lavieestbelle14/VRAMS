@@ -9,9 +9,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useAuth } from '@/contexts/AuthContext';
 import { LogIn } from 'lucide-react';
 
+// Re-using the same schema as LoginForm
 const publicLoginSchema = z.object({
   email: z.string().email({ message: 'Invalid email address' }),
-  password: z.string().min(1, { message: 'Password is required' }), // Kept for structural similarity, can be adapted later
+  password: z.string().min(1, { message: 'Password is required' }),
 });
 
 type PublicLoginFormValues = z.infer<typeof publicLoginSchema>;
@@ -27,7 +28,7 @@ export function PublicLoginForm() {
   });
 
   function onSubmit(data: PublicLoginFormValues) {
-    login({ username: data.email, role: 'public' });
+    login(data.email, data.password, 'public');
   }
 
   return (
@@ -60,11 +61,8 @@ export function PublicLoginForm() {
           )}
         />
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-          <LogIn className="mr-2 h-4 w-4" /> Login
+          <LogIn className="mr-2 h-4 w-4" /> Login as Public User
         </Button>
-         <p className="text-xs text-center text-muted-foreground pt-2">
-            Login to check application status (feature coming soon).
-          </p>
       </form>
     </Form>
   );

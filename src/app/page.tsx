@@ -2,10 +2,11 @@
 'use client';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { PublicLoginForm } from '@/components/auth/PublicLoginForm';
+import { SignUpForm } from '@/components/auth/SignUpForm'; // Import SignUpForm
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-export default function LoginPage() {
+export default function AuthPage() { // Renamed to AuthPage for clarity
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="mb-8 text-center">
@@ -19,20 +20,24 @@ export default function LoginPage() {
       </div>
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader>
-          <CardTitle className="text-2xl text-center">Login</CardTitle>
-          <CardDescription className="text-center">Select your login type.</CardDescription>
+          <CardTitle className="text-2xl text-center">Access Your Account</CardTitle>
+          <CardDescription className="text-center">Login or sign up to continue.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="officer" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="officer">Officer</TabsTrigger>
-              <TabsTrigger value="public">Public User</TabsTrigger>
+          <Tabs defaultValue="public-login" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="officer-login">Officer Login</TabsTrigger>
+              <TabsTrigger value="public-login">Public Login</TabsTrigger>
+              <TabsTrigger value="sign-up">Sign Up</TabsTrigger>
             </TabsList>
-            <TabsContent value="officer" className="pt-4">
+            <TabsContent value="officer-login" className="pt-4">
               <LoginForm />
             </TabsContent>
-            <TabsContent value="public" className="pt-4">
+            <TabsContent value="public-login" className="pt-4">
               <PublicLoginForm />
+            </TabsContent>
+            <TabsContent value="sign-up" className="pt-4">
+              <SignUpForm />
             </TabsContent>
           </Tabs>
         </CardContent>

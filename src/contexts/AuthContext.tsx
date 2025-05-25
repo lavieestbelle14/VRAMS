@@ -3,87 +3,149 @@
 import type { ReactNode } from 'react';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 
 type UserRole = 'officer' | 'public';
 
-interface User {
+interface AuthenticatedUser {
   username: string; // This will store the email
   role: UserRole;
 }
 
+interface StoredUser extends AuthenticatedUser {
+  passwordHash: string; // For a mock system, this will be plain text. In real app, a hash.
+}
+
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (details: { username: string, role: UserRole }) => void;
+  login: (email: string, passwordAttempt: string, intendedRole: UserRole) => void;
+  signUp: (email: string, passwordAttempt: string, confirmPasswordAttempt: string) => void;
   logout: () => void;
   isLoading: boolean;
-  user: User | null;
+  user: AuthenticatedUser | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const USERS_DB_KEY = 'vrams_users_db';
+const CURRENT_USER_KEY = 'vrams_current_user';
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+  const { toast } = useToast();
 
-  const publicPaths = ['/']; // Login page is public
+  const publicPaths = ['/']; // Login/Signup page is public
 
-  const checkAuth = useCallback(() => {
-    const storedAuth = localStorage.getItem('vrams_auth');
-    const storedUser = localStorage.getItem('vrams_user');
-    if (storedAuth === 'true' && storedUser) {
-      const parsedUser = JSON.parse(storedUser) as User;
-      setIsAuthenticated(true);
-      setUser(parsedUser);
-    } else {
-      setIsAuthenticated(false);
-      setUser(null);
+  const getMockUsersDB = (): StoredUser[] => {
+    if (typeof window === 'undefined') return [];
+    const db = localStorage.getItem(USERS_DB_KEY);
+    return db ? JSON.parse(db) : [];
+  };
+
+  const saveMockUsersDB = (users: StoredUser[]) => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(USERS_DB_KEY, JSON.stringify(users));
+  };
+
+  const seedInitialUsers = useCallback(() => {
+    let users = getMockUsersDB();
+    if (users.length === 0) {
+      users.push({ username: 'officer@comelec.gov.ph', passwordHash: 'password123', role: 'officer' });
+      saveMockUsersDB(users);
     }
-    setIsLoading(false);
   }, []);
 
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+
+  const checkAuthStatus = useCallback(() => {
+    setIsLoading(true);
+    seedInitialUsers(); // Ensure default officer exists
+    const storedUser = localStorage.getItem(CURRENT_USER_KEY);
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser) as AuthenticatedUser;
+      setUser(parsedUser);
+      setIsAuthenticated(true);
+    } else {
+      setUser(null);
+      setIsAuthenticated(false);
+    }
+    setIsLoading(false);
+  }, [seedInitialUsers]);
 
   useEffect(() => {
-    if (!isLoading && user) { // Check user existence
-      if (isAuthenticated) {
+    checkAuthStatus();
+  }, [checkAuthStatus]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (isAuthenticated && user) {
         if (user.role === 'officer' && (pathname === '/' || pathname.startsWith('/public'))) {
           router.push('/dashboard');
         } else if (user.role === 'public' && (pathname === '/' || pathname.startsWith('/dashboard'))) {
           router.push('/public/home');
         }
-      }
-    } else if (!isLoading && !isAuthenticated && !publicPaths.includes(pathname)) {
-      // If not loading, not authenticated, and not on a public path, redirect to login
-      if (!pathname.startsWith('/public')) { // Allow access to /public for non-authed users if layouts handle it
-         router.push('/');
+      } else if (!isAuthenticated && !publicPaths.includes(pathname) && !pathname.startsWith('/public')) {
+        router.push('/');
       }
     }
   }, [isAuthenticated, isLoading, user, pathname, router, publicPaths]);
 
+  const login = (email: string, passwordAttempt: string, intendedRole: UserRole) => {
+    const users = getMockUsersDB();
+    const foundUser = users.find(u => u.username.toLowerCase() === email.toLowerCase());
 
-  const login = (details: { username: string, role: UserRole }) => {
-    setIsAuthenticated(true);
-    setUser({ username: details.username, role: details.role });
-    localStorage.setItem('vrams_auth', 'true');
-    localStorage.setItem('vrams_user', JSON.stringify({ username: details.username, role: details.role }));
-
-    if (details.role === 'officer') {
-      router.push('/dashboard');
+    if (foundUser && foundUser.passwordHash === passwordAttempt) { // Plain text comparison for mock
+      if (foundUser.role !== intendedRole) {
+        toast({ title: 'Login Failed', description: `Please use the ${intendedRole === 'officer' ? 'Officer' : 'Public User'} login tab.`, variant: 'destructive' });
+        return;
+      }
+      const authenticatedUser: AuthenticatedUser = { username: foundUser.username, role: foundUser.role };
+      setUser(authenticatedUser);
+      setIsAuthenticated(true);
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(authenticatedUser));
+      toast({ title: 'Login Successful', description: `Welcome, ${authenticatedUser.username}!` });
+      if (foundUser.role === 'officer') {
+        router.push('/dashboard');
+      } else {
+        router.push('/public/home');
+      }
     } else {
-      router.push('/public/home');
+      toast({ title: 'Login Failed', description: 'Invalid email or password.', variant: 'destructive' });
     }
   };
 
+  const signUp = (email: string, passwordAttempt: string, confirmPasswordAttempt: string) => {
+    if (passwordAttempt !== confirmPasswordAttempt) {
+      toast({ title: 'Sign Up Failed', description: 'Passwords do not match.', variant: 'destructive' });
+      return;
+    }
+    if (passwordAttempt.length < 6) {
+       toast({ title: 'Sign Up Failed', description: 'Password must be at least 6 characters.', variant: 'destructive' });
+       return;
+    }
+
+    const users = getMockUsersDB();
+    if (users.some(u => u.username.toLowerCase() === email.toLowerCase())) {
+      toast({ title: 'Sign Up Failed', description: 'Email already registered.', variant: 'destructive' });
+      return;
+    }
+
+    const newUser: StoredUser = { username: email, passwordHash: passwordAttempt, role: 'public' };
+    users.push(newUser);
+    saveMockUsersDB(users);
+    
+    toast({ title: 'Sign Up Successful!', description: 'You can now log in.' });
+    // Automatically log in the new user
+    login(email, passwordAttempt, 'public');
+  };
+
   const logout = () => {
-    setIsAuthenticated(false);
     setUser(null);
-    localStorage.removeItem('vrams_auth');
-    localStorage.removeItem('vrams_user');
+    setIsAuthenticated(false);
+    localStorage.removeItem(CURRENT_USER_KEY);
     router.push('/');
   };
   
@@ -95,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, signUp, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

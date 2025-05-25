@@ -7,27 +7,32 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogIn } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 
-const loginSchema = z.object({
+const signUpSchema = z.object({
   email: z.string().email({ message: 'Invalid email address' }),
-  password: z.string().min(1, { message: 'Password is required' }),
+  password: z.string().min(6, { message: 'Password must be at least 6 characters long' }),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'], // Path to field to display the error
 });
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type SignUpFormValues = z.infer<typeof signUpSchema>;
 
-export function LoginForm() {
-  const { login } = useAuth();
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+export function SignUpForm() {
+  const { signUp } = useAuth();
+  const form = useForm<SignUpFormValues>({
+    resolver: zodResolver(signUpSchema),
     defaultValues: {
       email: '',
       password: '',
+      confirmPassword: '',
     },
   });
 
-  function onSubmit(data: LoginFormValues) {
-    login(data.email, data.password, 'officer'); 
+  function onSubmit(data: SignUpFormValues) {
+    signUp(data.email, data.password, data.confirmPassword);
   }
 
   return (
@@ -40,7 +45,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="officer@comelec.gov.ph" {...field} />
+                <Input type="email" placeholder="user@example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -59,8 +64,21 @@ export function LoginForm() {
             </FormItem>
           )}
         />
+        <FormField
+          control={form.control}
+          name="confirmPassword"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Confirm Password</FormLabel>
+              <FormControl>
+                <Input type="password" placeholder="••••••••" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-          <LogIn className="mr-2 h-4 w-4" /> Login as Officer
+          <UserPlus className="mr-2 h-4 w-4" /> Sign Up
         </Button>
       </form>
     </Form>
