@@ -10,6 +10,8 @@ type UserRole = 'officer' | 'public';
 interface AuthenticatedUser {
   username: string; // This will store the email
   role: UserRole;
+  firstName?: string;
+  lastName?: string;
 }
 
 interface StoredUser extends AuthenticatedUser {
@@ -19,7 +21,7 @@ interface StoredUser extends AuthenticatedUser {
 interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, passwordAttempt: string, intendedRole: UserRole) => void;
-  signUp: (email: string, passwordAttempt: string, confirmPasswordAttempt: string) => void;
+  signUp: (firstName: string, lastName: string, email: string, passwordAttempt: string, confirmPasswordAttempt: string) => void;
   logout: () => void;
   isLoading: boolean;
   user: AuthenticatedUser | null;
@@ -51,8 +53,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const seedInitialUsers = useCallback(() => {
     let users = getMockUsersDB();
-    if (users.length === 0) {
-      users.push({ username: 'officer@comelec.gov.ph', passwordHash: 'password123', role: 'officer' });
+    if (!users.some(u => u.username.toLowerCase() === 'officer@comelec.gov.ph')) {
+      users.push({ 
+        username: 'officer@comelec.gov.ph', 
+        passwordHash: 'password123', 
+        role: 'officer',
+        firstName: 'Election', // Default name for officer
+        lastName: 'Officer'
+      });
       saveMockUsersDB(users);
     }
   }, []);
@@ -81,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (isLoading) return;
 
     const isOfficerPath = pathname.startsWith('/dashboard');
-    const isPublicAuthenticatedPath = ['/public/home', '/public/apply', '/public/track-status'].some(p => pathname.startsWith(p));
+    const isPublicAuthenticatedPath = ['/public/home', '/public/apply', '/public/track-status', '/public/application-submitted'].some(p => pathname.startsWith(p));
     const isAuthPage = pathname === '/';
 
     if (isAuthenticated && user) {
@@ -117,18 +125,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         toast({ title: 'Login Failed', description: `Please use the ${intendedRole === 'officer' ? 'Officer' : 'Public User'} login tab.`, variant: 'destructive' });
         return;
       }
-      const authenticatedUser: AuthenticatedUser = { username: foundUser.username, role: foundUser.role };
+      // Ensure firstName and lastName are part of the authenticatedUser object
+      const authenticatedUser: AuthenticatedUser = { 
+        username: foundUser.username, 
+        role: foundUser.role,
+        firstName: foundUser.firstName, // Load firstName
+        lastName: foundUser.lastName   // Load lastName
+      };
       setUser(authenticatedUser);
       setIsAuthenticated(true);
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(authenticatedUser));
-      toast({ title: 'Login Successful', description: `Welcome, ${authenticatedUser.username}!` });
+      toast({ title: 'Login Successful', description: `Welcome, ${authenticatedUser.firstName || authenticatedUser.username}!` });
       // Redirection is handled by the useEffect above
     } else {
       toast({ title: 'Login Failed', description: 'Invalid email or password.', variant: 'destructive' });
     }
   };
 
-  const signUp = (email: string, passwordAttempt: string, confirmPasswordAttempt: string) => {
+  const signUp = (firstName: string, lastName: string, email: string, passwordAttempt: string, confirmPasswordAttempt: string) => {
     if (passwordAttempt !== confirmPasswordAttempt) {
       toast({ title: 'Sign Up Failed', description: 'Passwords do not match.', variant: 'destructive' });
       return;
@@ -144,12 +158,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const newUser: StoredUser = { username: email, passwordHash: passwordAttempt, role: 'public' };
+    const newUser: StoredUser = { 
+      firstName, 
+      lastName, 
+      username: email, 
+      passwordHash: passwordAttempt, 
+      role: 'public' 
+    };
     users.push(newUser);
     saveMockUsersDB(users);
     
     toast({ title: 'Sign Up Successful!', description: 'You can now log in.' });
-    login(email, passwordAttempt, 'public'); // Automatically log in the new user
+    // Automatically log in the new user
+    const authenticatedUser: AuthenticatedUser = { 
+      username: newUser.username, 
+      role: newUser.role,
+      firstName: newUser.firstName,
+      lastName: newUser.lastName
+    };
+    setUser(authenticatedUser);
+    setIsAuthenticated(true);
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(authenticatedUser));
+    // Redirection is handled by the useEffect above
   };
 
   const logout = () => {

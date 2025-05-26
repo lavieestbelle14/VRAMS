@@ -10,6 +10,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { UserPlus } from 'lucide-react';
 
 const signUpSchema = z.object({
+  firstName: z.string().min(1, { message: 'First name is required' }),
+  lastName: z.string().min(1, { message: 'Last name is required' }),
   email: z.string().email({ message: 'Invalid email address' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters long' }),
   confirmPassword: z.string(),
@@ -25,6 +27,8 @@ export function SignUpForm() {
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
+      firstName: '',
+      lastName: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -32,12 +36,38 @@ export function SignUpForm() {
   });
 
   function onSubmit(data: SignUpFormValues) {
-    signUp(data.email, data.password, data.confirmPassword);
+    signUp(data.firstName, data.lastName, data.email, data.password, data.confirmPassword);
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4"> {/* Reduced space-y for more compact form */}
+        <FormField
+          control={form.control}
+          name="firstName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>First Name</FormLabel>
+              <FormControl>
+                <Input placeholder="Juan" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="lastName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Last Name</FormLabel>
+              <FormControl>
+                <Input placeholder="Dela Cruz" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="email"

@@ -32,12 +32,25 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: '/public/home', label: 'Home', icon: Home, tooltip: 'Home' },
   { href: '/public/apply', label: 'New Application', icon: FilePlus2, tooltip: 'Submit New Application' },
-  { href: '/public/track-status', label: 'Track Application', icon: FileSearch, tooltip: 'Track Application Status' },
+  { href: '/public/track-status', label: 'Track Application Status', icon: FileSearch, tooltip: 'Track Application Status' },
 ];
 
 export function PublicAppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
+
+  const getAvatarFallback = () => {
+    if (user?.firstName && user?.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    }
+    if (user?.firstName) {
+      return user.firstName.substring(0, 2).toUpperCase();
+    }
+    if (user?.username) {
+      return user.username.substring(0, 2).toUpperCase();
+    }
+    return <UserCircle size={20}/>;
+  };
 
   return (
     <SidebarProvider defaultOpen>
@@ -90,13 +103,13 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="https://placehold.co/40x40.png" alt="User Avatar" data-ai-hint="user avatar" />
                   <AvatarFallback>
-                    {user?.username ? user.username.substring(0, 2).toUpperCase() : <UserCircle size={20}/>}
+                    {getAvatarFallback()}
                   </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{user?.username || 'Public User'}</DropdownMenuLabel>
+              <DropdownMenuLabel>{user?.firstName || user?.username || 'Public User'}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={logout}>
                 <LogOut className="mr-2 h-4 w-4" />

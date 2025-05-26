@@ -38,6 +38,19 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
 
+  const getAvatarFallback = () => {
+    if (user?.firstName && user?.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    }
+    if (user?.firstName) {
+      return user.firstName.substring(0, 2).toUpperCase();
+    }
+    if (user?.username) { // Fallback for officer default or if names aren't set
+      return user.username.substring(0, 2).toUpperCase();
+    }
+    return <UserCircle size={20}/>;
+  };
+
   return (
     <SidebarProvider defaultOpen>
       <Sidebar side="left" variant="sidebar" collapsible="icon">
@@ -89,13 +102,13 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="https://placehold.co/40x40.png" alt="User Avatar" data-ai-hint="user avatar" />
                   <AvatarFallback>
-                    {user?.username ? user.username.substring(0, 2).toUpperCase() : <UserCircle size={20}/>}
+                    {getAvatarFallback()}
                   </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{user?.username || 'Officer'}</DropdownMenuLabel>
+              <DropdownMenuLabel>{user?.firstName || user?.username || 'Officer'}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <Settings className="mr-2 h-4 w-4" />
