@@ -49,11 +49,12 @@ body {
     --sidebar-background: 208 100% 30%; /* COMELEC Blue */
     --sidebar-foreground: 0 0% 100%;  /* White Text */
     
-    --sidebar-primary: 0 0% 100%; /* Text color for active item (White) */
-    --sidebar-primary-foreground: 208 100% 20%; /* Background for active item (Darker COMELEC Blue) */
+    /* Active item uses sidebar-accent now for consistency with hover */
+    --sidebar-primary: var(--sidebar-accent-foreground); /* Text color for active item (dark blue on yellow) */
+    --sidebar-primary-foreground: var(--sidebar-accent); /* Background for active item (Yellow/Gold) */
 
-    --sidebar-accent: 208 100% 38%; /* Background for hovered item (Lighter COMELEC Blue) */
-    --sidebar-accent-foreground: 0 0% 100%; /* Text color for hovered item (White) */
+    --sidebar-accent: 47 98% 54%; /* Background for hovered/active item (COMELEC Yellow/Gold) */
+    --sidebar-accent-foreground: 208 100% 10%; /* Text color for hovered/active item (Very dark blue) */
     
     --sidebar-border: 208 100% 15%;   /* Border color within sidebar (Darkest COMELEC Blue) */
     --sidebar-ring: 47 98% 54%;     /* COMELEC Yellow/Gold for focus rings on sidebar items */
@@ -89,10 +90,10 @@ body {
 
     --sidebar-background: 208 100% 20%; 
     --sidebar-foreground: 0 0% 90%;  
-    --sidebar-primary: 0 0% 98%; 
-    --sidebar-primary-foreground: 208 100% 30%; 
-    --sidebar-accent: 208 100% 25%; 
-    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-primary: var(--sidebar-accent-foreground); 
+    --sidebar-primary-foreground: var(--sidebar-accent); 
+    --sidebar-accent: 47 98% 60%; 
+    --sidebar-accent-foreground: 220 10% 10%;
     --sidebar-border: 208 100% 10%;   
     --sidebar-ring: 47 98% 60%;     
   }
