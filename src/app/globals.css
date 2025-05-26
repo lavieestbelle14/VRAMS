@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -105,5 +106,37 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-hide, .print-hide * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  #printable-receipt-area, #printable-receipt-area * {
+    visibility: visible !important;
+  }
+  #printable-receipt-area {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 10px !important; /* Add some padding for print */
+    border: none !important; /* Remove any borders from the area itself */
+    box-shadow: none !important;
+  }
+   #printable-receipt-area .border-dotted {
+    border-style: dotted !important; /* Ensure dotted lines print */
+  }
+  /* Ensure card within printable area takes full width and has minimal styling */
+   #printable-receipt-area > .shadcn-card { /* Assuming Card component has a known class or use direct child selector */
+    border: 1px solid #ccc !important; /* Light border for the receipt itself */
+    box-shadow: none !important;
+    padding: 15px !important;
   }
 }
