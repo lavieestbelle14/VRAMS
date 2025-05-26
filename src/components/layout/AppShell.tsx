@@ -21,6 +21,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useAuth } from '@/contexts/AuthContext';
 import { LayoutDashboard, Files, LogOut, Settings, UserCircle } from 'lucide-react';
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
 
 interface NavItem {
   href: string;
@@ -37,6 +38,11 @@ const navItems: NavItem[] = [
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
+  const [logoSrc, setLogoSrc] = useState('/logo.png');
+
+  useEffect(() => {
+    setLogoSrc(`/logo.png?t=${new Date().getTime()}`);
+  }, []);
 
   const getAvatarFallback = () => {
     if (user?.firstName && user?.lastName) {
@@ -57,10 +63,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         <SidebarHeader className="p-4">
           <Link href="/dashboard" className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
             <Image
-              src="/logo.png"
-              alt="VRAMS Logo"
+              src={logoSrc}
+              alt="VRAMS official seal"
               width={32}
               height={32}
+              key={logoSrc} // Force re-render
               data-ai-hint="VRAMS official seal"
             />
             <span className="text-xl font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">VRAMS</span>

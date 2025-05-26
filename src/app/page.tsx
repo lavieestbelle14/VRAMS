@@ -6,17 +6,25 @@ import { SignUpForm } from '@/components/auth/SignUpForm'; // Import SignUpForm
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
 
 export default function AuthPage() { // Renamed to AuthPage for clarity
+  const [logoSrc, setLogoSrc] = useState('/logo.png');
+
+  useEffect(() => {
+    setLogoSrc(`/logo.png?t=${new Date().getTime()}`);
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="mb-8 text-center">
         <div className="flex items-center justify-center mb-4">
             <Image
-              src="/logo.png"
-              alt="VRAMS Logo"
+              src={logoSrc}
+              alt="VRAMS official seal"
               width={64}
               height={64}
+              key={logoSrc} // Force re-render if src changes
               data-ai-hint="VRAMS official seal"
             />
         </div>
