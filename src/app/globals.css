@@ -124,19 +124,21 @@ body {
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
-    width: 100% !important;
-    margin: 0 !important;
+    width: 100% !important; /* Ensure it takes full width of the page */
+    margin: 0 !important; /* Reset margins */
     padding: 10px !important; /* Add some padding for print */
     border: none !important; /* Remove any borders from the area itself */
     box-shadow: none !important;
   }
-   #printable-receipt-area .border-dotted {
+   #printable-receipt-area .border-dashed {
     border-style: dotted !important; /* Ensure dotted lines print */
   }
   /* Ensure card within printable area takes full width and has minimal styling */
-   #printable-receipt-area > .shadcn-card { /* Assuming Card component has a known class or use direct child selector */
+   #printable-receipt-area > .shadcn-card { /* Use direct child selector for the Card */
     border: 1px solid #ccc !important; /* Light border for the receipt itself */
     box-shadow: none !important;
     padding: 15px !important;
+    width: 100% !important; /* Make card take full width of its container */
+    margin: 0 auto !important; /* Center it if necessary, but full width is likely better */
   }
 }
