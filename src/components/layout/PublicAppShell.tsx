@@ -40,9 +40,14 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const [logoSrc, setLogoSrc] = useState('/logo.png');
+  const [avatarKey, setAvatarKey] = useState(Date.now()); // For cache busting if needed
+
 
   useEffect(() => {
+    // Add timestamp to logoSrc to attempt cache busting
     setLogoSrc(`/logo.png?t=${new Date().getTime()}`);
+    // Optionally, update avatarKey if avatar image source might also be cached aggressively
+    // setAvatarKey(Date.now());
   }, []);
 
   const getAvatarFallback = () => {
@@ -68,7 +73,7 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
               alt="VRAMS official seal"
               width={32}
               height={32}
-              key={logoSrc} // Force re-render
+              key={logoSrc} 
               data-ai-hint="VRAMS official seal"
             />
             <span className="text-xl font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">VRAMS</span>
@@ -108,7 +113,7 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="https://placehold.co/40x40.png" alt="User Avatar" data-ai-hint="person avatar" />
+                  <AvatarImage src="https://placehold.co/40x40.png" alt="User Avatar" data-ai-hint="person silhouette" key={avatarKey}/>
                   <AvatarFallback>
                     {getAvatarFallback()}
                   </AvatarFallback>
