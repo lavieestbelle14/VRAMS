@@ -38,7 +38,7 @@ export default function ApplicationDetailsPage() {
     if (!application) return;
     const updatedApp = updateApplicationStatus(application.id, newStatus, remarks);
     if (updatedApp) {
-      setApplication(updatedApp);
+      setApplication(updatedApp); // Update local state to reflect changes
       toast({
         title: `Application ${newStatus}`,
         description: `Application ID ${updatedApp.id} has been ${newStatus}.`,
@@ -50,7 +50,7 @@ export default function ApplicationDetailsPage() {
   
   const DetailItem = ({ label, value, icon, isBoolean = false }: { label: string; value?: string | number | null | boolean | string[]; icon?: React.ElementType; isBoolean?: boolean }) => {
     const IconComponent = icon;
-    if (value === null || typeof value === 'undefined' || (typeof value === 'string' && value === '') || (Array.isArray(value) && value.length === 0) ) return null;
+    if (value === null || typeof value === 'undefined' || (typeof value === 'string' && value.trim() === '') || (Array.isArray(value) && value.length === 0) ) return null;
     
     let displayValue = String(value);
     if (isBoolean) {
@@ -106,6 +106,16 @@ export default function ApplicationDetailsPage() {
     failureToValidate: 'Failure to Validate',
   };
 
+  const getStatusBadgeVariant = (status: Application['status']) => {
+    switch (status) {
+      case 'approved': return 'default'; // Greenish (or primary if not customized)
+      case 'rejected': return 'destructive'; // Red
+      case 'pending': return 'secondary'; // Greyish
+      case 'reviewing': return 'outline'; // Yellowish/Orangish
+      default: return 'secondary';
+    }
+  }
+
 
   return (
     <div className="space-y-6">
@@ -121,7 +131,7 @@ export default function ApplicationDetailsPage() {
               Submitted on: {format(new Date(application.submissionDate), 'PPP p')}
             </CardDescription>
           </div>
-          <Badge variant={application.status === 'approved' ? 'default' : application.status === 'rejected' ? 'destructive' : 'secondary'} className="text-lg capitalize">
+          <Badge variant={getStatusBadgeVariant(application.status)} className="text-lg capitalize">
             {application.status}
           </Badge>
         </CardHeader>
@@ -273,7 +283,7 @@ export default function ApplicationDetailsPage() {
           )}
         </CardContent>
 
-        {application.status === 'pending' || application.status === 'reviewing' ? (
+        {(application.status === 'pending' || application.status === 'reviewing') ? (
           <CardFooter className="flex-col items-start space-y-4 pt-6 border-t">
              <div>
                 <Label htmlFor="remarks" className="text-lg font-semibold">Add/Update Remarks</Label>

@@ -1,3 +1,4 @@
+
 'use client';
 import Link from 'next/link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -16,15 +17,15 @@ export function ApplicationDataTable({ applications }: ApplicationDataTableProps
   const getStatusVariant = (status: Application['status']) => {
     switch (status) {
       case 'approved':
-        return 'default'; // default is primary color
+        return 'default'; // default is primary color (blueish in this theme)
       case 'pending':
-        return 'secondary';
+        return 'secondary'; // light greyish
       case 'rejected':
-        return 'destructive';
+        return 'destructive'; // red
       case 'reviewing':
-        return 'outline'; // a distinct color, maybe set to warning?
+        return 'outline'; // This will use accent for hover, default border. We can customize specific 'warning' variant if needed.
       default:
-        return 'outline';
+        return 'secondary';
     }
   };
 

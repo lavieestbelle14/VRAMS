@@ -43,7 +43,8 @@ export function updateApplicationStatus(id: string, status: Application['status'
   const appIndex = applications.findIndex(app => app.id === id);
   if (appIndex > -1) {
     applications[appIndex].status = status;
-    if (remarks) applications[appIndex].remarks = remarks;
+    if (remarks !== undefined) applications[appIndex].remarks = remarks; // Store empty string if provided
+    
     if (status === 'approved') {
       applications[appIndex].approvalDate = new Date().toISOString();
       if(!applications[appIndex].voterId) { 
@@ -52,6 +53,11 @@ export function updateApplicationStatus(id: string, status: Application['status'
       if(!applications[appIndex].precinct) { 
          applications[appIndex].precinct = `Precinct ${Math.floor(Math.random() * 1000) + 1}`;
       }
+    } else if (status === 'rejected') {
+      // Optionally clear voterId/precinct if rejecting an approved application
+      // applications[appIndex].voterId = undefined;
+      // applications[appIndex].precinct = undefined;
+      // applications[appIndex].approvalDate = undefined;
     }
     localStorage.setItem(APPLICATIONS_KEY, JSON.stringify(applications));
     memoryStore = [...applications];
@@ -94,7 +100,8 @@ export function seedInitialData() {
         biometricsFile: "Captured on-site",
         status: 'pending',
         submissionDate: new Date(Date.now() - 86400000 * 5).toISOString(), 
-        classification: { applicantType: 'new registration', confidence: 0.95, reason: 'All fields indicate a new applicant.'}
+        classification: { applicantType: 'new registration', confidence: 0.95, reason: 'All fields indicate a new applicant.'},
+        remarks: 'Awaiting initial review.'
       },
       {
         id: 'APP-002',
@@ -128,7 +135,8 @@ export function seedInitialData() {
         approvalDate: new Date(Date.now() - 86400000 * 2).toISOString(),
         voterId: 'VID-APP002-54321',
         precinct: 'Precinct 007B',
-        classification: { applicantType: 'transfer', confidence: 0.98, reason: 'Application type is transfer and old address provided.'}
+        classification: { applicantType: 'transfer', confidence: 0.98, reason: 'Application type is transfer and old address provided.'},
+        remarks: 'All documents verified. Approved for transfer.'
       },
        {
         id: 'APP-003',
@@ -159,8 +167,38 @@ export function seedInitialData() {
         reactivationEvidence: 'Affidavit of intent to vote.',
         status: 'rejected',
         submissionDate: new Date(Date.now() - 86400000 * 3).toISOString(),
-        remarks: 'Incomplete supporting documents for PWD status.',
+        remarks: 'Incomplete supporting documents for PWD status. Evidence for reactivation grounds insufficient.',
         classification: { applicantType: 'reactivation', confidence: 0.90, reason: 'Applicant selected failed to vote as reason.'}
+      },
+      {
+        id: 'APP-004',
+        personalInfo: { 
+          firstName: 'Gabriela', lastName: 'Silang', middleName: 'Cariño',
+          sex: 'female', dob: '1988-03-19', 
+          placeOfBirthCityMun: 'Santa', placeOfBirthProvince: 'Ilocos Sur',
+          citizenshipType: 'byBirth',
+          professionOccupation: 'Teacher'
+        },
+        addressDetails: { 
+          houseNoStreet: 'Brgy. Magsaysay', barangay: 'Magsaysay', cityMunicipality: 'Santa', 
+          province: 'Ilocos Sur', zipCode: '2703',
+          yearsOfResidency: 3, monthsOfResidency: 2
+        },
+        civilDetails: { 
+          civilStatus: 'single', 
+          fatherFirstName: 'Tomas', fatherLastName: 'Cariño', 
+          motherFirstName: 'Maria', motherLastName: 'Josefa' 
+        },
+        specialNeeds: {
+          isIlliterate: false, isPwd: false, isIndigenousPerson: true,
+          prefersGroundFloor: false, isSenior: false
+        },
+        applicationType: 'register',
+        biometricsFile: "Pending capture",
+        status: 'reviewing', // Example of reviewing status
+        submissionDate: new Date(Date.now() - 86400000 * 1).toISOString(), 
+        classification: { applicantType: 'new registration', confidence: 0.92, reason: 'Standard new registration criteria met.'},
+        remarks: 'Initial check done. Pending biometrics capture verification.'
       }
     ];
     sampleApplications.forEach(app => saveApplication(app));
