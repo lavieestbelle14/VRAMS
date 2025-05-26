@@ -39,23 +39,22 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const [logoSrc, setLogoSrc] = useState('/logo.png');
-  const [avatarKey, setAvatarKey] = useState(Date.now()); // For cache busting if needed
+  const [avatarKey, setAvatarKey] = useState(Date.now()); 
 
   useEffect(() => {
-    // Add timestamp to logoSrc to attempt cache busting
     setLogoSrc(`/logo.png?t=${new Date().getTime()}`);
-    // Optionally, update avatarKey if avatar image source might also be cached aggressively
-    // setAvatarKey(Date.now()); 
   }, []);
 
   const getAvatarFallback = () => {
+    // For officer, if names are generic like "Election Officer", a generic fallback is fine.
+    if (user?.role === 'officer') return "EO"; 
     if (user?.firstName && user?.lastName) {
       return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
     }
     if (user?.firstName) {
       return user.firstName.substring(0, 2).toUpperCase();
     }
-    if (user?.username) { // Fallback for officer default or if names aren't set
+    if (user?.username) { 
       return user.username.substring(0, 2).toUpperCase();
     }
     return <UserCircle size={20}/>;
@@ -119,7 +118,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{user?.firstName || user?.username || 'Officer'}</DropdownMenuLabel>
+              <DropdownMenuLabel>Welcome, Officer!</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <Settings className="mr-2 h-4 w-4" />

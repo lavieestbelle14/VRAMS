@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, CheckCircle, Edit, FileText, User, MapPin, CalendarDays, Briefcase, Accessibility, Brain, Save, XCircle, MessageSquare, Building, Users, ShieldCheck, ListChecks, Edit3, RefreshCcw } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Edit, FileText, User, MapPin, CalendarDays, Briefcase, Accessibility, Save, XCircle, MessageSquare, Building, Users, ShieldCheck, ListChecks, Edit3, RefreshCcw } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function ApplicationDetailsPage() {
@@ -38,7 +38,7 @@ export default function ApplicationDetailsPage() {
     if (!application) return;
     const updatedApp = updateApplicationStatus(application.id, newStatus, remarks);
     if (updatedApp) {
-      setApplication(updatedApp); // Update local state to reflect changes
+      setApplication(updatedApp); 
       toast({
         title: `Application ${newStatus}`,
         description: `Application ID ${updatedApp.id} has been ${newStatus}.`,
@@ -108,10 +108,10 @@ export default function ApplicationDetailsPage() {
 
   const getStatusBadgeVariant = (status: Application['status']) => {
     switch (status) {
-      case 'approved': return 'default'; // Greenish (or primary if not customized)
-      case 'rejected': return 'destructive'; // Red
-      case 'pending': return 'secondary'; // Greyish
-      case 'reviewing': return 'outline'; // Yellowish/Orangish
+      case 'approved': return 'default'; 
+      case 'rejected': return 'destructive'; 
+      case 'pending': return 'secondary'; 
+      case 'reviewing': return 'outline'; 
       default: return 'secondary';
     }
   }
@@ -252,17 +252,6 @@ export default function ApplicationDetailsPage() {
                     <DetailItem label="Assistor's Address" value={sn.assistorAddress} />
                     <DetailItem label="Prefers Ground Floor Voting" value={sn.prefersGroundFloor} isBoolean />
                 </CardContent>
-            </Card>
-          )}
-
-          {application.classification && (
-            <Card className="lg:col-span-1">
-              <CardHeader><CardTitle className="flex items-center"><Brain className="mr-2"/>AI Classification</CardTitle></CardHeader>
-              <CardContent>
-                <DetailItem label="Classified Type" value={application.classification.applicantType} />
-                <DetailItem label="Confidence" value={`${(application.classification.confidence * 100).toFixed(0)}%`} />
-                <DetailItem label="Reason" value={application.classification.reason} />
-              </CardContent>
             </Card>
           )}
           
