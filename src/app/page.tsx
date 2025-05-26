@@ -50,3 +50,4 @@ export default function AuthPage() { // Renamed to AuthPage for clarity
     </div>
   );
 }
+
