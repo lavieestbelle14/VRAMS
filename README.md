@@ -1,4 +1,4 @@
-# 🗳Voter Registration and Application Management System (VRAMS)
+# Voter Registration and Application Management System (VRAMS)
 
 **A Database Project for COMP 010 - Information Management**  
 *Polytechnic University of the Philippines – College of Computer and Information Sciences*  
