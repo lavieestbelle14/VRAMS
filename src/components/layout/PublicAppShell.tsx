@@ -62,7 +62,7 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
               alt="VRAMS Logo"
               width={32}
               height={32}
-              data-ai-hint="VRAMS logo"
+              data-ai-hint="VRAMS official seal"
             />
             <span className="text-xl font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">VRAMS</span>
           </Link>

@@ -17,7 +17,7 @@ export default function AuthPage() { // Renamed to AuthPage for clarity
               alt="VRAMS Logo"
               width={64}
               height={64}
-              data-ai-hint="VRAMS logo"
+              data-ai-hint="VRAMS official seal"
             />
         </div>
         <h1 className="text-4xl font-bold text-primary">VRAMS Portal</h1>
