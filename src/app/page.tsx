@@ -6,7 +6,6 @@ import { SignUpForm } from '@/components/auth/SignUpForm'; // Import SignUpForm
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
 
 export default function AuthPage() { // Renamed to AuthPage for clarity
   const logoSrc = "/logo.png"; // Initialize directly

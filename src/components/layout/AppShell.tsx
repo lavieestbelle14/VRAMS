@@ -21,7 +21,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useAuth } from '@/contexts/AuthContext';
 import { LayoutDashboard, Files, LogOut, Settings, UserCircle } from 'lucide-react';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
 
 interface NavItem {
   href: string;
@@ -38,14 +37,7 @@ const navItems: NavItem[] = [
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
-  const [avatarKey, setAvatarKey] = useState(Date.now());
-  const logoSrc = "/logo.png"; // Initialize directly
-
-  useEffect(() => {
-    // Force re-render of AvatarImage if the src might be cached by browser aggressively
-    setAvatarKey(Date.now());
-  }, [user]);
-
+  const logoSrc = "/logo.png"; 
 
   const getAvatarFallback = () => {
     if (user?.role === 'officer') return "EO";
@@ -110,7 +102,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/avatar-silhouette.png" alt="User Avatar" data-ai-hint="person silhouette" key={avatarKey} />
+                  <AvatarImage src="/avatar-silhouette.png" alt="User Avatar" data-ai-hint="person silhouette" />
                   <AvatarFallback>
                     {getAvatarFallback()}
                   </AvatarFallback>
