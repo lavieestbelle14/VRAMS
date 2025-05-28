@@ -1,114 +1,147 @@
 
 'use client';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { FilePlus2, FileSearch, User, Pin, Link as LinkIcon, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import Link from 'next/link';
-import { FileSearch, FilePlus2, PinOff, Eye } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-
-const getPinnedApplicationsKey = (username: string | undefined) => {
-  if (!username) return null;
-  return `pinned_applications_${username}`;
-};
+import { useRouter } from 'next/navigation'; // Import useRouter
 
 export default function PublicHomePage() {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const router = useRouter(); // Initialize useRouter
   const [pinnedApplications, setPinnedApplications] = useState<string[]>([]);
 
-  const loadPinnedApplications = () => {
-    if (user && user.username) {
-      const key = getPinnedApplicationsKey(user.username);
-      if (key) {
-        const storedPinnedApps = JSON.parse(localStorage.getItem(key) || '[]');
-        setPinnedApplications(storedPinnedApps);
-      }
-    }
+  const getPinnedApplicationsKey = () => {
+    return user ? `pinned_applications_${user.username}` : null;
   };
 
   useEffect(() => {
-    loadPinnedApplications();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    const key = getPinnedApplicationsKey();
+    if (key && typeof window !== 'undefined') {
+      const storedPinned = localStorage.getItem(key);
+      if (storedPinned) {
+        setPinnedApplications(JSON.parse(storedPinned));
+      }
+    }
   }, [user]);
 
-  const handleUnpin = (appId: string) => {
-    if (user && user.username) {
-      const key = getPinnedApplicationsKey(user.username);
-      if (!key) return;
-
-      let pinnedApps: string[] = JSON.parse(localStorage.getItem(key) || '[]');
-      pinnedApps = pinnedApps.filter(id => id !== appId);
-      localStorage.setItem(key, JSON.stringify(pinnedApps));
-      setPinnedApplications(pinnedApps);
-      toast({ title: 'Application Unpinned', description: `${appId} has been unpinned from your dashboard.` });
+  const unpinApplication = (appId: string) => {
+    const key = getPinnedApplicationsKey();
+    if (key && typeof window !== 'undefined') {
+      const updatedPinned = pinnedApplications.filter(id => id !== appId);
+      localStorage.setItem(key, JSON.stringify(updatedPinned));
+      setPinnedApplications(updatedPinned);
     }
   };
 
+  const handleViewPinnedApp = (appId: string) => {
+    router.push(`/public/track-status?id=${appId}`);
+  };
+
   return (
-    <div className="space-y-8">
-      <Card className="shadow-lg">
+    <div className="space-y-6">
+      {/* Welcome Banner */}
+      <Card className="bg-primary text-primary-foreground shadow-lg">
         <CardHeader>
-          <CardTitle className="text-3xl font-bold text-primary">
-            Welcome, {user?.firstName || user?.username || 'Valued Applicant'}!
+          <CardTitle className="text-3xl flex items-center">
+            <User className="mr-3 h-8 w-8" />
+            Welcome, {user?.firstName || 'User'}!
           </CardTitle>
-          <CardDescription className="text-lg">
-            Manage your voter registration application with ease.
+          <CardDescription className="text-primary-foreground/90 text-lg">
+            Your gateway to voter registration services.
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Link href="/public/apply" passHref>
-            <Button variant="default" size="lg" className="w-full py-8 text-lg shadow-md hover:shadow-lg transition-shadow">
-              <FilePlus2 className="mr-3 h-8 w-8" /> Submit New Application
-            </Button>
-          </Link>
-          <Link href="/public/track-status" passHref>
-            <Button variant="outline" size="lg" className="w-full py-8 text-lg shadow-md hover:shadow-lg transition-shadow">
-              <FileSearch className="mr-3 h-8 w-8" /> Track Application Status
-            </Button>
-          </Link>
+        <CardContent>
+          <p className="text-primary-foreground/80">
+            Here you can submit a new voter registration application or track the status of your existing applications.
+          </p>
         </CardContent>
       </Card>
 
-      {pinnedApplications.length > 0 && (
-        <Card>
+      {/* Main Action Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="shadow-md hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle>Pinned Applications</CardTitle>
-            <CardDescription>Quickly access your saved application references.</CardDescription>
+            <CardTitle className="flex items-center text-xl">
+              <FilePlus2 className="mr-2 h-6 w-6 text-primary" />
+              Submit New Application
+            </CardTitle>
+            <CardDescription>
+              Fill out and submit your voter registration form online.
+            </CardDescription>
           </CardHeader>
           <CardContent>
+            <Button asChild className="w-full">
+              <Link href="/public/apply">Go to Application Form</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-md hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <CardTitle className="flex items-center text-xl">
+              <FileSearch className="mr-2 h-6 w-6 text-primary" />
+              Track Application Status
+            </CardTitle>
+            <CardDescription>
+              Check the current status of your submitted application using your reference ID.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild className="w-full">
+              <Link href="/public/track-status">Track My Application</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Pinned Applications Card */}
+      <Card className="shadow-md">
+        <CardHeader>
+          <CardTitle className="flex items-center text-xl">
+            <Pin className="mr-2 h-6 w-6 text-primary" />
+            Pinned Applications
+          </CardTitle>
+          <CardDescription>
+            Quick access to your saved application references.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {pinnedApplications.length > 0 ? (
             <ul className="space-y-3">
               {pinnedApplications.map((appId) => (
-                <li key={appId} className="flex items-center justify-between p-3 border rounded-md hover:bg-muted/50">
-                  <span className="font-medium">{appId}</span>
-                  <div className="flex items-center space-x-2">
-                    <Link href={`/public/track-status?id=${appId}`} passHref>
-                      <Button variant="ghost" size="sm" aria-label={`View ${appId}`}>
-                        <Eye className="h-4 w-4" />
-                         <span className="ml-2 hidden sm:inline">View</span>
-                      </Button>
-                    </Link>
-                    <Button variant="ghost" size="sm" onClick={() => handleUnpin(appId)} aria-label={`Unpin ${appId}`}>
-                      <PinOff className="h-4 w-4 text-destructive" />
-                       <span className="ml-2 hidden sm:inline">Unpin</span>
+                <li key={appId} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
+                  <div className="flex items-center">
+                    <LinkIcon className="mr-2 h-5 w-5 text-primary/80" />
+                    <span className="font-medium">{appId}</span>
+                  </div>
+                  <div className="space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleViewPinnedApp(appId)}
+                    >
+                      View Details
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => unpinApplication(appId)}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="mr-1 h-4 w-4" /> Unpin
                     </Button>
                   </div>
                 </li>
               ))}
             </ul>
-          </CardContent>
-        </Card>
-      )}
-
-      <Card className="bg-secondary/50">
-        <CardHeader>
-          <CardTitle>Important Reminders</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <p>✓ Ensure all information provided in your application is accurate and truthful.</p>
-          <p>✓ Keep your Application ID safe. You will need it to track your application status.</p>
-          <p>✓ Check your application status regularly for updates from the Election Registration Board (ERB).</p>
+          ) : (
+            <p className="text-muted-foreground text-center py-4">
+              You haven't pinned any applications yet. You can pin an application from the submission confirmation page or the status tracking page.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>
