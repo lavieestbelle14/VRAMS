@@ -3,27 +3,75 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ApplicationDataTable } from '@/components/dashboard/ApplicationDataTable';
-import { FilePlus2, Files } from 'lucide-react'; // FilePlus2 might be unused after removal, but keeping for now
-import { useEffect, useState } from 'react';
+import { Files, BarChart3, PieChartIcon } from 'lucide-react';
+import { useEffect, useState, useMemo } from 'react';
 import type { Application } from '@/types';
 import { getApplications, seedInitialData } from '@/lib/applicationStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from "@/components/ui/chart";
+import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, Legend as RechartsLegend, Cell } from 'recharts';
+import { format, subDays, eachDayOfInterval, startOfDay, isSameDay } from 'date-fns';
 
 export default function DashboardPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    seedInitialData(); // Add sample data if none exists
+    seedInitialData(); 
     setApplications(getApplications());
     setIsLoading(false);
   }, []);
 
-  const summaryCounts = applications.reduce((acc, app) => {
-    acc[app.status] = (acc[app.status] || 0) + 1;
-    acc.total = (acc.total || 0) + 1;
-    return acc;
-  }, { pending: 0, approved: 0, rejected: 0, reviewing: 0, total: 0 } as Record<Application['status'] | 'total', number>);
+  const summaryCounts = useMemo(() => {
+    return applications.reduce((acc, app) => {
+      acc[app.status] = (acc[app.status] || 0) + 1;
+      acc.total = (acc.total || 0) + 1;
+      return acc;
+    }, { pending: 0, approved: 0, rejected: 0, reviewing: 0, total: 0 } as Record<Application['status'] | 'total', number>);
+  }, [applications]);
+
+  const statusChartData = useMemo(() => {
+    return [
+      { name: 'Pending', value: summaryCounts.pending, fill: 'hsl(var(--chart-1))' },
+      { name: 'Reviewing', value: summaryCounts.reviewing, fill: 'hsl(var(--chart-2))' },
+      { name: 'Approved', value: summaryCounts.approved, fill: 'hsl(var(--chart-3))' },
+      { name: 'Rejected', value: summaryCounts.rejected, fill: 'hsl(var(--chart-4))' },
+    ].filter(item => item.value > 0);
+  }, [summaryCounts]);
+
+  const submissionsLast7DaysData = useMemo(() => {
+    const today = startOfDay(new Date());
+    const last7Days = eachDayOfInterval({
+      start: subDays(today, 6),
+      end: today,
+    });
+
+    return last7Days.map(day => {
+      const count = applications.filter(app => isSameDay(parseISO(app.submissionDate), day)).length;
+      return {
+        date: format(day, 'MMM dd'),
+        count: count,
+      };
+    });
+  }, [applications]);
+  
+  const statusChartConfig = {
+    value: { label: "Applications" },
+    pending: { label: "Pending", color: "hsl(var(--chart-1))" },
+    reviewing: { label: "Reviewing", color: "hsl(var(--chart-2))" },
+    approved: { label: "Approved", color: "hsl(var(--chart-3))" },
+    rejected: { label: "Rejected", color: "hsl(var(--chart-4))" },
+  } satisfies import("@/components/ui/chart").ChartConfig;
+
+  const submissionsChartConfig = {
+    count: { label: "Submissions", color: "hsl(var(--primary))" },
+  } satisfies import("@/components/ui/chart").ChartConfig;
 
 
   if (isLoading) {
@@ -42,7 +90,6 @@ export default function DashboardPage() {
             Manage and track voter applications efficiently.
           </p>
         </div>
-        {/* "New Application" button removed from here */}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -97,11 +144,55 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center"><PieChartIcon className="mr-2 h-5 w-5"/>Applications by Status</CardTitle>
+            <CardDescription>Distribution of current application statuses.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {statusChartData.length > 0 ? (
+              <ChartContainer config={statusChartConfig} className="mx-auto aspect-square max-h-[250px]">
+                <PieChart>
+                  <ChartTooltip content={<ChartTooltipContent nameKey="name" hideLabel />} />
+                  <Pie data={statusChartData} dataKey="value" nameKey="name" labelLine={false} label={({ percent, name }) => `${name}: ${(percent * 100).toFixed(0)}%`}>
+                     {statusChartData.map((entry) => (
+                        <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+                      ))}
+                  </Pie>
+                  <ChartLegend content={<ChartLegendContent nameKey="name" />} className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center" />
+                </PieChart>
+              </ChartContainer>
+            ) : (
+              <p className="text-center text-muted-foreground">No data available for status chart.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center"><BarChart3 className="mr-2 h-5 w-5"/>Submissions - Last 7 Days</CardTitle>
+            <CardDescription>Number of applications submitted daily.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={submissionsChartConfig} className="h-[250px] w-full">
+              <BarChart data={submissionsLast7DaysData} accessibilityLayer>
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="date" tickLine={false} tickMargin={10} axisLine={false} />
+                <YAxis allowDecimals={false} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="count" fill="var(--color-count)" radius={4} />
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
       
       <Card>
         <CardHeader>
-          <CardTitle>Recent Applications</CardTitle>
-          <CardDescription>Overview of the latest voter applications.</CardDescription>
+          <CardTitle>Application Management</CardTitle>
+          <CardDescription>Filter, sort, and manage all voter applications.</CardDescription>
         </CardHeader>
         <CardContent>
           <ApplicationDataTable applications={applications} />
@@ -109,4 +200,9 @@ export default function DashboardPage() {
       </Card>
     </div>
   );
+}
+
+function parseISO(dateString: string): Date {
+    const date = new Date(dateString);
+    return date;
 }

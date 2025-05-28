@@ -1,5 +1,6 @@
 
 'use client';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { applicationFormSchema, type ApplicationFormValues } from '@/schemas/applicationSchema';
@@ -18,13 +19,13 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { CalendarIcon, Save } from "lucide-react";
+import { CalendarIcon, Save, Trash2 } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { saveApplication } from '@/lib/applicationStore';
 import { classifyApplicantType, type ClassifyApplicantTypeInput } from '@/ai/flows/classify-applicant-type';
 
-// REMOVED: const REACTIVATION_REASONS = [ ... ];
+const DRAFT_STORAGE_KEY = 'vrams_application_draft_v2'; // Changed key to V2 due to schema changes
 
 export function ApplicationFormFields() {
   const { toast } = useToast();
@@ -35,7 +36,7 @@ export function ApplicationFormFields() {
       // Personal Info
       firstName: '', lastName: '', middleName: '',
       sex: '', dob: '', placeOfBirthCityMun: '', placeOfBirthProvince: '',
-      citizenshipType: '', naturalizationDate: undefined, naturalizationCertNo: '', // Ensure date can be undefined
+      citizenshipType: '', naturalizationDate: undefined, naturalizationCertNo: '', 
       contactNumber: '', email: '',
       residencyYearsCityMun: undefined, residencyMonthsCityMun: undefined, residencyYearsPhilippines: undefined,
       professionOccupation: '', tin: '',
@@ -59,10 +60,69 @@ export function ApplicationFormFields() {
 
       // Conditional fields
       transferHouseNoStreet: '', transferBarangay: '', transferCityMunicipality: '', transferProvince: '', transferZipCode: '',
-      // REMOVED: reactivationReasons: [], reactivationEvidence: '',
-      // REMOVED: presentData: '', newCorrectedData: '',
     },
   });
+
+  // Auto-save draft to localStorage
+  useEffect(() => {
+    const subscription = form.watch((values) => {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(values));
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  // Load draft from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (savedDraft) {
+        try {
+          const draftValues = JSON.parse(savedDraft);
+          // Ensure dates are correctly formatted if they exist
+          if (draftValues.dob && typeof draftValues.dob === 'string') {
+             draftValues.dob = format(new Date(draftValues.dob), "yyyy-MM-dd");
+          }
+          if (draftValues.naturalizationDate && typeof draftValues.naturalizationDate === 'string') {
+             draftValues.naturalizationDate = format(new Date(draftValues.naturalizationDate), "yyyy-MM-dd");
+          }
+          form.reset(draftValues);
+          toast({ title: "Draft Loaded", description: "Your previous application draft has been loaded." });
+        } catch (error) {
+          console.error("Failed to parse draft:", error);
+          localStorage.removeItem(DRAFT_STORAGE_KEY); // Clear corrupted draft
+        }
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.reset]); // form.reset is stable
+
+  const handleClearDraft = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+    }
+    form.reset({ // Reset to initial default values
+      firstName: '', lastName: '', middleName: '',
+      sex: '', dob: '', placeOfBirthCityMun: '', placeOfBirthProvince: '',
+      citizenshipType: '', naturalizationDate: undefined, naturalizationCertNo: '', 
+      contactNumber: '', email: '',
+      residencyYearsCityMun: undefined, residencyMonthsCityMun: undefined, residencyYearsPhilippines: undefined,
+      professionOccupation: '', tin: '',
+      houseNoStreet: '', barangay: '', cityMunicipality: '', province: '', zipCode: '',
+      yearsOfResidency: undefined, monthsOfResidency: undefined,
+      civilStatus: '', spouseName: '',
+      fatherFirstName: '', fatherLastName: '', motherFirstName: '', motherLastName: '',
+      isIlliterate: false, isPwd: false, isIndigenousPerson: false, disabilityType: '',
+      assistorName: '', assistorRelationship: '', assistorAddress: '',
+      prefersGroundFloor: false, isSenior: false,
+      applicationType: '',
+      biometricsFile: 'For on-site capture', 
+      transferHouseNoStreet: '', transferBarangay: '', transferCityMunicipality: '', transferProvince: '', transferZipCode: '',
+    });
+    toast({ title: "Draft Cleared", description: "The application form has been reset." });
+  };
+
 
   const applicationType = form.watch('applicationType');
   const civilStatus = form.watch('civilStatus');
@@ -118,11 +178,7 @@ export function ApplicationFormFields() {
           province: data.transferProvince!, zipCode: data.transferZipCode!,
         };
       }
-      // REMOVED logic for reactivation and changeCorrection
-      // if (data.applicationType === 'reactivation') { ... }
-      // if (data.applicationType === 'changeCorrection') { ... }
-
-      // AI Classification
+      
       const classificationInput: ClassifyApplicantTypeInput = {
         personalInfo: `${data.firstName} ${data.lastName}, DOB: ${data.dob}, Sex: ${data.sex}, Citizenship: ${data.citizenshipType}, Profession: ${data.professionOccupation || 'N/A'}`,
         addressDetails: `${data.houseNoStreet}, ${data.barangay}, ${data.cityMunicipality}, ${data.province}. Residency: ${data.yearsOfResidency || 0}yr ${data.monthsOfResidency || 0}mo.`,
@@ -135,7 +191,6 @@ export function ApplicationFormFields() {
             data.assistorName && `Assisted by ${data.assistorName} (${data.assistorRelationship || 'N/A'})`
         ].filter(Boolean).join(', ') || 'None',
         previousAddressInfo: data.applicationType === 'transfer' ? `${data.transferHouseNoStreet}, ${data.transferBarangay}` : undefined,
-        // REMOVED: reactivationInfo and changeCorrectionInfo
       };
       
       const classificationResult = await classifyApplicantType(classificationInput);
@@ -143,11 +198,15 @@ export function ApplicationFormFields() {
 
       saveApplication(newApplication);
 
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(DRAFT_STORAGE_KEY); // Clear draft on successful submission
+      }
+
       toast({
         title: "Application Submitted!",
         description: `Application ID: ${newApplication.id}. You will be redirected to a confirmation page.`,
       });
-      form.reset();
+      form.reset(); // Reset form to blank state
       router.push(`/public/application-submitted/${newApplication.id}`);
 
     } catch (error) {
@@ -179,7 +238,7 @@ export function ApplicationFormFields() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField control={form.control} name="sex" render={({ field }) => (
-                <FormItem><FormLabel>Sex</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormItem><FormLabel>Sex</FormLabel><Select onValueChange={field.onChange} value={field.value ?? ''}>
                     <FormControl><SelectTrigger><SelectValue placeholder="Select sex" /></SelectTrigger></FormControl>
                     <SelectContent><SelectItem value="male">Male</SelectItem><SelectItem value="female">Female</SelectItem></SelectContent>
                 </Select><FormMessage /></FormItem>)} />
@@ -210,7 +269,7 @@ export function ApplicationFormFields() {
         {formSection("Citizenship", "", (
            <>
             <FormField control={form.control} name="citizenshipType" render={({ field }) => (
-                <FormItem><FormLabel>Citizenship Basis</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormItem><FormLabel>Citizenship Basis</FormLabel><Select onValueChange={field.onChange} value={field.value ?? ''}>
                     <FormControl><SelectTrigger><SelectValue placeholder="Select citizenship basis" /></SelectTrigger></FormControl>
                     <SelectContent>
                         <SelectItem value="byBirth">By Birth</SelectItem>
@@ -277,7 +336,7 @@ export function ApplicationFormFields() {
         {formSection("Civil Status & Parents", "", (
           <>
             <FormField control={form.control} name="civilStatus" render={({ field }) => (
-              <FormItem><FormLabel>Civil Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormItem><FormLabel>Civil Status</FormLabel><Select onValueChange={field.onChange} value={field.value ?? ''}>
                   <FormControl><SelectTrigger><SelectValue placeholder="Select civil status" /></SelectTrigger></FormControl>
                   <SelectContent><SelectItem value="single">Single</SelectItem><SelectItem value="married">Married</SelectItem></SelectContent>
               </Select><FormMessage /></FormItem>)} />
@@ -319,10 +378,9 @@ export function ApplicationFormFields() {
           <>
             <FormField control={form.control} name="applicationType" render={({ field }) => (
               <FormItem className="space-y-3"><FormLabel>Select Application Type</FormLabel>
-                <FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex flex-col space-y-1">
+                <FormControl><RadioGroup onValueChange={field.onChange} value={field.value ?? ''} className="flex flex-col space-y-1">
                     <FormItem className="flex items-center space-x-3 space-y-0"><FormControl><RadioGroupItem value="register" /></FormControl><FormLabel className="font-normal">New Registration</FormLabel></FormItem>
                     <FormItem className="flex items-center space-x-3 space-y-0"><FormControl><RadioGroupItem value="transfer" /></FormControl><FormLabel className="font-normal">Transfer of Registration Record</FormLabel></FormItem>
-                    {/* REMOVED RadioGroupItems for reactivation, changeCorrection, inclusionReinstatement */}
                 </RadioGroup></FormControl><FormMessage />
               </FormItem>)} />
 
@@ -339,10 +397,6 @@ export function ApplicationFormFields() {
                 <FormField control={form.control} name="transferZipCode" render={({ field }) => (<FormItem><FormLabel>Zip Code</FormLabel><FormControl><Input placeholder="1600" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
               </>
             )}
-
-            {/* REMOVED conditional rendering for reactivationDetails */}
-            {/* REMOVED conditional rendering for changeCorrectionDetails */}
-            {/* REMOVED conditional rendering for inclusionReinstatementDetails */}
             
             <Separator className="my-4" />
             <FormField control={form.control} name="biometricsFile" render={({ field }) => (
@@ -354,7 +408,9 @@ export function ApplicationFormFields() {
         ))}
         
         <div className="flex justify-end space-x-2 pt-6">
-            <Button type="button" variant="outline" onClick={() => form.reset()}>Reset Form</Button>
+            <Button type="button" variant="outline" onClick={handleClearDraft}>
+              <Trash2 className="mr-2 h-4 w-4" /> Clear Draft & Reset
+            </Button>
             <Button type="submit" disabled={form.formState.isSubmitting}>
               {form.formState.isSubmitting ? (
                 <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
