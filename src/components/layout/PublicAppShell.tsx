@@ -39,16 +39,17 @@ const navItems: NavItem[] = [
 export function PublicAppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
-  const [logoSrc, setLogoSrc] = useState('/logo.png');
-  const [avatarKey, setAvatarKey] = useState(Date.now()); // For cache busting if needed
+  const [logoSrc, setLogoSrc] = useState('');
+  const [avatarKey, setAvatarKey] = useState(Date.now()); 
 
 
   useEffect(() => {
-    // Add timestamp to logoSrc to attempt cache busting
     setLogoSrc(`/logo.png?t=${new Date().getTime()}`);
-    // Optionally, update avatarKey if avatar image source might also be cached aggressively
-    // setAvatarKey(Date.now());
   }, []);
+  
+  useEffect(() => {
+    setAvatarKey(Date.now());
+  }, [user]);
 
   const getAvatarFallback = () => {
     if (user?.firstName && user?.lastName) {
@@ -102,9 +103,9 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background px-4 sm:px-6">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-background px-4 sm:px-6"> {/* z-index was 10, now 30 */}
           <div className="flex items-center gap-2">
-             <SidebarTrigger className="md:hidden" />
+             <SidebarTrigger /> {/* Removed md:hidden */}
              <h1 className="text-lg font-semibold hidden sm:block">
               {navItems.find(item => pathname.startsWith(item.href))?.label || 'VRAMS Public Portal'}
             </h1>

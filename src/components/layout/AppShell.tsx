@@ -38,15 +38,21 @@ const navItems: NavItem[] = [
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
-  const [logoSrc, setLogoSrc] = useState('/logo.png');
+  const [logoSrc, setLogoSrc] = useState('');
   const [avatarKey, setAvatarKey] = useState(Date.now()); 
 
   useEffect(() => {
     setLogoSrc(`/logo.png?t=${new Date().getTime()}`);
   }, []);
+  
+  useEffect(() => {
+    // Force re-render of AvatarImage if the src might be cached by browser aggressively
+    // This is a simple way to try and bust cache for the avatar if it doesn't update
+    setAvatarKey(Date.now());
+  }, [user]);
+
 
   const getAvatarFallback = () => {
-    // For officer, if names are generic like "Election Officer", a generic fallback is fine.
     if (user?.role === 'officer') return "EO"; 
     if (user?.firstName && user?.lastName) {
       return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
@@ -99,9 +105,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background px-4 sm:px-6">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-background px-4 sm:px-6"> {/* z-index was 10, now 30 (same as sidebar for consistency) - sidebar.tsx now has z-30 for its fixed part too */}
           <div className="flex items-center gap-2">
-             <SidebarTrigger className="md:hidden" />
+             <SidebarTrigger /> {/* Removed md:hidden */}
              <h1 className="text-lg font-semibold hidden sm:block">
               {navItems.find(item => pathname.startsWith(item.href))?.label || 'VRAMS Portal'}
             </h1>
