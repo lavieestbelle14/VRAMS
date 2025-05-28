@@ -25,7 +25,19 @@ import { useRouter } from 'next/navigation';
 import { saveApplication } from '@/lib/applicationStore';
 import { classifyApplicantType, type ClassifyApplicantTypeInput } from '@/ai/flows/classify-applicant-type';
 
-const DRAFT_STORAGE_KEY = 'vrams_application_draft_v2'; // Changed key to V2 due to schema changes
+const DRAFT_STORAGE_KEY = 'vrams_application_draft_v2';
+const LAST_SUBMITTED_FINGERPRINT_KEY = 'vrams_last_submitted_fingerprint_v1';
+
+// Helper function to generate a fingerprint for form data
+const generateFingerprint = (data: Partial<ApplicationFormValues>): string => {
+  const relevantData = [
+    data.firstName,
+    data.lastName,
+    data.dob,
+    data.applicationType,
+  ].map(val => String(val ?? '').toLowerCase().trim()).join('-');
+  return relevantData;
+};
 
 export function ApplicationFormFields() {
   const { toast } = useToast();
@@ -76,22 +88,35 @@ export function ApplicationFormFields() {
   // Load draft from localStorage on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
-      if (savedDraft) {
+      const savedDraftString = localStorage.getItem(DRAFT_STORAGE_KEY);
+      const lastSubmittedFingerprint = localStorage.getItem(LAST_SUBMITTED_FINGERPRINT_KEY);
+
+      if (savedDraftString) {
         try {
-          const draftValues = JSON.parse(savedDraft);
-          // Ensure dates are correctly formatted if they exist
-          if (draftValues.dob && typeof draftValues.dob === 'string') {
-             draftValues.dob = format(new Date(draftValues.dob), "yyyy-MM-dd");
+          const draftValues = JSON.parse(savedDraftString);
+          const draftFingerprint = generateFingerprint(draftValues);
+
+          if (lastSubmittedFingerprint && draftFingerprint === lastSubmittedFingerprint) {
+            // This draft matches the last successfully submitted form, so clear it.
+            localStorage.removeItem(DRAFT_STORAGE_KEY);
+            localStorage.removeItem(LAST_SUBMITTED_FINGERPRINT_KEY);
+            form.reset(); // Reset to initial default empty values
+            toast({ title: "Form Cleared", description: "Previously submitted application draft has been cleared." });
+          } else {
+            // Load the draft as it's different or no submission fingerprint exists
+            if (draftValues.dob && typeof draftValues.dob === 'string') {
+               draftValues.dob = format(new Date(draftValues.dob), "yyyy-MM-dd");
+            }
+            if (draftValues.naturalizationDate && typeof draftValues.naturalizationDate === 'string') {
+               draftValues.naturalizationDate = format(new Date(draftValues.naturalizationDate), "yyyy-MM-dd");
+            }
+            form.reset(draftValues);
+            toast({ title: "Draft Loaded", description: "Your previous application draft has been loaded." });
           }
-          if (draftValues.naturalizationDate && typeof draftValues.naturalizationDate === 'string') {
-             draftValues.naturalizationDate = format(new Date(draftValues.naturalizationDate), "yyyy-MM-dd");
-          }
-          form.reset(draftValues);
-          toast({ title: "Draft Loaded", description: "Your previous application draft has been loaded." });
         } catch (error) {
           console.error("Failed to parse draft:", error);
           localStorage.removeItem(DRAFT_STORAGE_KEY); // Clear corrupted draft
+          localStorage.removeItem(LAST_SUBMITTED_FINGERPRINT_KEY); // Also clear fingerprint if draft was corrupt
         }
       }
     }
@@ -101,6 +126,7 @@ export function ApplicationFormFields() {
   const handleClearDraft = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(DRAFT_STORAGE_KEY);
+      localStorage.removeItem(LAST_SUBMITTED_FINGERPRINT_KEY); // Also clear the fingerprint
     }
     form.reset({ // Reset to initial default values
       firstName: '', lastName: '', middleName: '',
@@ -196,10 +222,18 @@ export function ApplicationFormFields() {
       const classificationResult = await classifyApplicantType(classificationInput);
       newApplication.classification = classificationResult;
 
+      // Store fingerprint of successfully submitted data
+      if (typeof window !== 'undefined') {
+        const submittedFingerprint = generateFingerprint(data);
+        localStorage.setItem(LAST_SUBMITTED_FINGERPRINT_KEY, submittedFingerprint);
+      }
+      
       saveApplication(newApplication);
 
+      // This draft is now considered "submitted", so remove it from draft storage.
+      // The fingerprint logic on next load will prevent this exact data from reloading.
       if (typeof window !== 'undefined') {
-        localStorage.removeItem(DRAFT_STORAGE_KEY); // Clear draft on successful submission
+        localStorage.removeItem(DRAFT_STORAGE_KEY); 
       }
 
       toast({
