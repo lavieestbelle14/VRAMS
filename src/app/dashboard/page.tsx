@@ -15,7 +15,7 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from "@/components/ui/chart";
-import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, Legend as RechartsLegend, Cell } from 'recharts';
+import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, Legend as RechartsLegend, Cell, CartesianGrid } from 'recharts'; // Added CartesianGrid
 import { format, subDays, eachDayOfInterval, startOfDay, isSameDay } from 'date-fns';
 
 export default function DashboardPage() {
@@ -206,3 +206,4 @@ function parseISO(dateString: string): Date {
     const date = new Date(dateString);
     return date;
 }
+
