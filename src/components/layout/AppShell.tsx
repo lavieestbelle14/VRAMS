@@ -37,7 +37,7 @@ const navItems: NavItem[] = [
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
-  const logoSrc = "/logo.png"; 
+  const logoSrc = "/vrams_logo.png"; 
 
   const getAvatarFallback = () => {
     if (user?.role === 'officer') return "EO";

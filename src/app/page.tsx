@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
 
 export default function AuthPage() { // Renamed to AuthPage for clarity
-  const logoSrc = "/logo.png"; 
+  const logoSrc = "/vrams_logo.png"; 
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">

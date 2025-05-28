@@ -38,7 +38,7 @@ const navItems: NavItem[] = [
 export function PublicAppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
-  const logoSrc = "/logo.png";
+  const logoSrc = "/vrams_logo.png";
 
   const getAvatarFallback = () => {
     if (user?.firstName && user?.lastName) {
