@@ -27,10 +27,10 @@ export function saveApplication(application: Application): void {
   if (index > -1) {
     applications[index] = application;
   } else {
-    applications.unshift(application); // Add new applications to the beginning
+    applications.unshift(application); 
   }
   localStorage.setItem(APPLICATIONS_KEY, JSON.stringify(applications));
-  memoryStore = [...applications]; // Update memory store
+  memoryStore = [...applications]; 
 }
 
 export function getApplicationById(id: string): Application | undefined {
@@ -43,7 +43,7 @@ export function updateApplicationStatus(id: string, status: Application['status'
   const appIndex = applications.findIndex(app => app.id === id);
   if (appIndex > -1) {
     applications[appIndex].status = status;
-    if (remarks !== undefined) applications[appIndex].remarks = remarks; // Store empty string if provided
+    if (remarks !== undefined) applications[appIndex].remarks = remarks; 
     
     if (status === 'approved') {
       applications[appIndex].approvalDate = new Date().toISOString();
@@ -53,11 +53,6 @@ export function updateApplicationStatus(id: string, status: Application['status'
       if(!applications[appIndex].precinct) { 
          applications[appIndex].precinct = `Precinct ${Math.floor(Math.random() * 1000) + 1}`;
       }
-    } else if (status === 'rejected') {
-      // Optionally clear voterId/precinct if rejecting an approved application
-      // applications[appIndex].voterId = undefined;
-      // applications[appIndex].precinct = undefined;
-      // applications[appIndex].approvalDate = undefined;
     }
     localStorage.setItem(APPLICATIONS_KEY, JSON.stringify(applications));
     memoryStore = [...applications];
@@ -138,40 +133,8 @@ export function seedInitialData() {
         classification: { applicantType: 'transfer', confidence: 0.98, reason: 'Application type is transfer and old address provided.'},
         remarks: 'All documents verified. Approved for transfer.'
       },
-       {
-        id: 'APP-003',
-        personalInfo: { 
-            firstName: 'Andres', lastName: 'Bonifacio', 
-            sex: 'male', dob: '1970-11-30', 
-            placeOfBirthCityMun: 'Tondo', placeOfBirthProvince: 'Manila',
-            citizenshipType: 'byBirth',
-            professionOccupation: 'Revolutionary'
-        },
-        addressDetails: { 
-            houseNoStreet: '101 Katipunan Rd', barangay: 'Loyola Heights', cityMunicipality: 'Quezon City', 
-            province: 'Metro Manila', zipCode: '1108',
-            yearsOfResidency: 10 
-        },
-        civilDetails: { 
-            civilStatus: 'married', spouseName: 'Gregoria de Jesus',
-            fatherFirstName: 'Santiago', fatherLastName: 'Bonifacio', 
-            motherFirstName: 'Catalina', motherLastName: 'de Castro' 
-        },
-        specialNeeds: { 
-            isSenior: true, isPwd: true, disabilityType: 'Mobility Impairment', 
-            assistorName: 'Oryang', assistorRelationship: 'Spouse', assistorAddress: 'Same as applicant',
-            prefersGroundFloor: true, isIlliterate: false, isIndigenousPerson: false
-        },
-        applicationType: 'reactivation',
-        reactivationReasons: ['failedToVote'],
-        reactivationEvidence: 'Affidavit of intent to vote.',
-        status: 'rejected',
-        submissionDate: new Date(Date.now() - 86400000 * 3).toISOString(),
-        remarks: 'Incomplete supporting documents for PWD status. Evidence for reactivation grounds insufficient.',
-        classification: { applicantType: 'reactivation', confidence: 0.90, reason: 'Applicant selected failed to vote as reason.'}
-      },
       {
-        id: 'APP-004',
+        id: 'APP-004', // Renamed from APP-003 as it was a Reactivation example
         personalInfo: { 
           firstName: 'Gabriela', lastName: 'Silang', middleName: 'Cariño',
           sex: 'female', dob: '1988-03-19', 
@@ -195,7 +158,7 @@ export function seedInitialData() {
         },
         applicationType: 'register',
         biometricsFile: "Pending capture",
-        status: 'reviewing', // Example of reviewing status
+        status: 'reviewing', 
         submissionDate: new Date(Date.now() - 86400000 * 1).toISOString(), 
         classification: { applicantType: 'new registration', confidence: 0.92, reason: 'Standard new registration criteria met.'},
         remarks: 'Initial check done. Pending biometrics capture verification.'

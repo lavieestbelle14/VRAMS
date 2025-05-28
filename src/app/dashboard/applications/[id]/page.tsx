@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, CheckCircle, Edit, FileText, User, MapPin, CalendarDays, Briefcase, Accessibility, Save, XCircle, MessageSquare, Building, Users, ShieldCheck, ListChecks, Edit3, RefreshCcw } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Edit, FileText, User, MapPin, CalendarDays, Briefcase, Accessibility, Save, XCircle, MessageSquare, Building, Users, ShieldCheck } from 'lucide-react'; // Removed ListChecks, Edit3, RefreshCcw
 import { format } from 'date-fns';
 
 export default function ApplicationDetailsPage() {
@@ -91,20 +91,10 @@ export default function ApplicationDetailsPage() {
   const applicationTypeLabels: Record<Application['applicationType'] | '', string> = {
       'register': 'New Registration',
       'transfer': 'Transfer of Registration',
-      'reactivation': 'Reactivation of Registration',
-      'changeCorrection': 'Change of Name/Correction of Entries',
-      'inclusionReinstatement': 'Inclusion of Records/Reinstatement of Name',
+      // REMOVED: reactivation, changeCorrection, inclusionReinstatement
       '': 'Unknown Type'
   };
-  const reactivationReasonLabels: Record<string, string> = {
-    sentenced: 'Sentenced - imprisonment >= 1 year',
-    disloyalty: 'Convicted - disloyalty',
-    insaneIncompetent: 'Declared insane/incompetent',
-    failedToVote: 'Failed to vote (2 successive elections)',
-    lossOfCitizenship: 'Loss of Filipino citizenship',
-    exclusionByCourt: 'Exclusion by court order',
-    failureToValidate: 'Failure to Validate',
-  };
+  // REMOVED: const reactivationReasonLabels = { ... };
 
   const getStatusBadgeVariant = (status: Application['status']) => {
     switch (status) {
@@ -115,7 +105,6 @@ export default function ApplicationDetailsPage() {
       default: return 'secondary';
     }
   }
-
 
   return (
     <div className="space-y-6">
@@ -146,7 +135,7 @@ export default function ApplicationDetailsPage() {
               <DetailItem label="Place of Birth (Province)" value={pi.placeOfBirthProvince} />
               <DetailItem label="Contact Number" value={pi.contactNumber} />
               <DetailItem label="Email" value={pi.email} />
-              <DetailItem label="Profession/Occupation" value={pi.professionOccupation} />
+              <DetailItem label="Profession/Occupation" value={pi.professionOccupation} icon={Briefcase}/>
               <DetailItem label="TIN" value={pi.tin} />
             </CardContent>
           </Card>
@@ -209,34 +198,9 @@ export default function ApplicationDetailsPage() {
             </Card>
           )}
 
-          {application.applicationType === 'reactivation' && (
-            <Card className="lg:col-span-2">
-              <CardHeader><CardTitle className="flex items-center"><RefreshCcw className="mr-2 text-blue-500"/>Reactivation Details</CardTitle></CardHeader>
-              <CardContent>
-                <DetailItem label="Reasons for Deactivation" value={application.reactivationReasons?.map(r => reactivationReasonLabels[r] || r).join('; ')} />
-                <DetailItem label="Evidence Ground No Longer Exists" value={application.reactivationEvidence} />
-              </CardContent>
-            </Card>
-          )}
-          
-          {application.applicationType === 'changeCorrection' && (
-            <Card className="lg:col-span-2">
-              <CardHeader><CardTitle className="flex items-center"><Edit3 className="mr-2 text-purple-500"/>Change/Correction Details</CardTitle></CardHeader>
-              <CardContent>
-                <DetailItem label="Present Data/Information" value={application.presentData} />
-                <DetailItem label="New/Corrected Data/Information" value={application.newCorrectedData} />
-              </CardContent>
-            </Card>
-          )}
-           {application.applicationType === 'inclusionReinstatement' && (
-            <Card className="lg:col-span-2">
-              <CardHeader><CardTitle className="flex items-center"><ListChecks className="mr-2 text-green-500"/>Inclusion/Reinstatement</CardTitle></CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">Application for inclusion of records in the book of voters or reinstatement of name in the list of voters.</p>
-              </CardContent>
-            </Card>
-          )}
-
+          {/* REMOVED Conditional display for Reactivation Details */}
+          {/* REMOVED Conditional display for Change/Correction Details */}
+          {/* REMOVED Conditional display for Inclusion/Reinstatement Details */}
 
           {sn && (Object.values(sn).some(v => v) || sn.assistorName) && (
              <Card className="lg:col-span-1">

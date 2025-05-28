@@ -1,12 +1,12 @@
 
 'use client';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { applicationFormSchema, type ApplicationFormValues } from '@/schemas/applicationSchema';
 import type { Application, PersonalInfo, AddressDetails, CivilDetails, SpecialNeeds } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label'; // Keep Label for general use if needed
+import { Label } from '@/components/ui/label'; 
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -24,15 +24,7 @@ import { useRouter } from 'next/navigation';
 import { saveApplication } from '@/lib/applicationStore';
 import { classifyApplicantType, type ClassifyApplicantTypeInput } from '@/ai/flows/classify-applicant-type';
 
-const REACTIVATION_REASONS = [
-  { id: 'sentenced', label: 'Sentenced by final judgment to suffer imprisonment for not less than one (1) year.' },
-  { id: 'disloyalty', label: 'Convicted by final judgment of a crime involving disloyalty to the duly constituted government.' },
-  { id: 'insaneIncompetent', label: 'Declared by competent authority to be insane or incompetent.' },
-  { id: 'failedToVote', label: 'Failed to vote in two (2) successive preceding regular elections.' },
-  { id: 'lossOfCitizenship', label: 'Loss of Filipino citizenship.' },
-  { id: 'exclusionByCourt', label: 'Exclusion by a court order.' },
-  { id: 'failureToValidate', label: 'Failure to Validate.' },
-];
+// REMOVED: const REACTIVATION_REASONS = [ ... ];
 
 export function ApplicationFormFields() {
   const { toast } = useToast();
@@ -43,7 +35,7 @@ export function ApplicationFormFields() {
       // Personal Info
       firstName: '', lastName: '', middleName: '',
       sex: '', dob: '', placeOfBirthCityMun: '', placeOfBirthProvince: '',
-      citizenshipType: '', naturalizationDate: '', naturalizationCertNo: '',
+      citizenshipType: '', naturalizationDate: undefined, naturalizationCertNo: '', // Ensure date can be undefined
       contactNumber: '', email: '',
       residencyYearsCityMun: undefined, residencyMonthsCityMun: undefined, residencyYearsPhilippines: undefined,
       professionOccupation: '', tin: '',
@@ -63,12 +55,12 @@ export function ApplicationFormFields() {
 
       // Application
       applicationType: '',
-      biometricsFile: 'For on-site capture', // Default placeholder
+      biometricsFile: 'For on-site capture', 
 
       // Conditional fields
       transferHouseNoStreet: '', transferBarangay: '', transferCityMunicipality: '', transferProvince: '', transferZipCode: '',
-      reactivationReasons: [], reactivationEvidence: '',
-      presentData: '', newCorrectedData: '',
+      // REMOVED: reactivationReasons: [], reactivationEvidence: '',
+      // REMOVED: presentData: '', newCorrectedData: '',
     },
   });
 
@@ -121,19 +113,14 @@ export function ApplicationFormFields() {
       };
 
       if (data.applicationType === 'transfer') {
-        newApplication.oldAddressDetails = { // Previous address
+        newApplication.oldAddressDetails = { 
           houseNoStreet: data.transferHouseNoStreet!, barangay: data.transferBarangay!, cityMunicipality: data.transferCityMunicipality!,
           province: data.transferProvince!, zipCode: data.transferZipCode!,
         };
       }
-      if (data.applicationType === 'reactivation') {
-        newApplication.reactivationReasons = data.reactivationReasons;
-        newApplication.reactivationEvidence = data.reactivationEvidence;
-      }
-      if (data.applicationType === 'changeCorrection') {
-        newApplication.presentData = data.presentData;
-        newApplication.newCorrectedData = data.newCorrectedData;
-      }
+      // REMOVED logic for reactivation and changeCorrection
+      // if (data.applicationType === 'reactivation') { ... }
+      // if (data.applicationType === 'changeCorrection') { ... }
 
       // AI Classification
       const classificationInput: ClassifyApplicantTypeInput = {
@@ -148,8 +135,7 @@ export function ApplicationFormFields() {
             data.assistorName && `Assisted by ${data.assistorName} (${data.assistorRelationship || 'N/A'})`
         ].filter(Boolean).join(', ') || 'None',
         previousAddressInfo: data.applicationType === 'transfer' ? `${data.transferHouseNoStreet}, ${data.transferBarangay}` : undefined,
-        reactivationInfo: data.applicationType === 'reactivation' ? `Reasons: ${data.reactivationReasons?.join(', ')}` : undefined,
-        changeCorrectionInfo: data.applicationType === 'changeCorrection' ? `Present: ${data.presentData}, New: ${data.newCorrectedData}` : undefined,
+        // REMOVED: reactivationInfo and changeCorrectionInfo
       };
       
       const classificationResult = await classifyApplicantType(classificationInput);
@@ -264,8 +250,8 @@ export function ApplicationFormFields() {
             </div>
              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField control={form.control} name="zipCode" render={({ field }) => (<FormItem><FormLabel>Zip Code</FormLabel><FormControl><Input placeholder="1218" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField control={form.control} name="yearsOfResidency" render={({ field }) => (<FormItem><FormLabel>Years at Current Address</FormLabel><FormControl><Input type="number" placeholder="5" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField control={form.control} name="monthsOfResidency" render={({ field }) => (<FormItem><FormLabel>Months at Current Address</FormLabel><FormControl><Input type="number" placeholder="3" min="0" max="11" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="yearsOfResidency" render={({ field }) => (<FormItem><FormLabel>Years at Current Address</FormLabel><FormControl><Input type="number" placeholder="5" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseInt(e.target.value,10) || undefined)} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="monthsOfResidency" render={({ field }) => (<FormItem><FormLabel>Months at Current Address</FormLabel><FormControl><Input type="number" placeholder="3" min="0" max="11" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseInt(e.target.value,10) || undefined)} /></FormControl><FormMessage /></FormItem>)} />
             </div>
           </>
         ))}
@@ -274,10 +260,10 @@ export function ApplicationFormFields() {
             <>
                 <Label className="text-sm font-medium">In the City/Municipality</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="residencyYearsCityMun" render={({ field }) => (<FormItem><FormLabel>No. of Years</FormLabel><FormControl><Input type="number" placeholder="10" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="residencyMonthsCityMun" render={({ field }) => (<FormItem><FormLabel>No. of Months</FormLabel><FormControl><Input type="number" placeholder="6" min="0" max="11" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="residencyYearsCityMun" render={({ field }) => (<FormItem><FormLabel>No. of Years</FormLabel><FormControl><Input type="number" placeholder="10" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseInt(e.target.value,10) || undefined)} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField control={form.control} name="residencyMonthsCityMun" render={({ field }) => (<FormItem><FormLabel>No. of Months</FormLabel><FormControl><Input type="number" placeholder="6" min="0" max="11" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseInt(e.target.value,10) || undefined)} /></FormControl><FormMessage /></FormItem>)} />
                 </div>
-                <FormField control={form.control} name="residencyYearsPhilippines" render={({ field }) => (<FormItem><FormLabel>In the Philippines (No. of Years)</FormLabel><FormControl><Input type="number" placeholder="25" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="residencyYearsPhilippines" render={({ field }) => (<FormItem><FormLabel>In the Philippines (No. of Years)</FormLabel><FormControl><Input type="number" placeholder="25" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseInt(e.target.value,10) || undefined)} /></FormControl><FormMessage /></FormItem>)} />
             </>
         ))}
 
@@ -336,9 +322,7 @@ export function ApplicationFormFields() {
                 <FormControl><RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex flex-col space-y-1">
                     <FormItem className="flex items-center space-x-3 space-y-0"><FormControl><RadioGroupItem value="register" /></FormControl><FormLabel className="font-normal">New Registration</FormLabel></FormItem>
                     <FormItem className="flex items-center space-x-3 space-y-0"><FormControl><RadioGroupItem value="transfer" /></FormControl><FormLabel className="font-normal">Transfer of Registration Record</FormLabel></FormItem>
-                    <FormItem className="flex items-center space-x-3 space-y-0"><FormControl><RadioGroupItem value="reactivation" /></FormControl><FormLabel className="font-normal">Reactivation of Registration Record</FormLabel></FormItem>
-                    <FormItem className="flex items-center space-x-3 space-y-0"><FormControl><RadioGroupItem value="changeCorrection" /></FormControl><FormLabel className="font-normal">Change of Name/Correction of Entries</FormLabel></FormItem>
-                    <FormItem className="flex items-center space-x-3 space-y-0"><FormControl><RadioGroupItem value="inclusionReinstatement" /></FormControl><FormLabel className="font-normal">Inclusion of Records/Reinstatement of Name</FormLabel></FormItem>
+                    {/* REMOVED RadioGroupItems for reactivation, changeCorrection, inclusionReinstatement */}
                 </RadioGroup></FormControl><FormMessage />
               </FormItem>)} />
 
@@ -356,65 +340,10 @@ export function ApplicationFormFields() {
               </>
             )}
 
-            {applicationType === 'reactivation' && (
-                <>
-                    <Separator className="my-4" />
-                    <h4 className="text-md font-semibold mb-2">Reactivation Details</h4>
-                    <FormField control={form.control} name="reactivationReasons" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Reason(s) for Deactivation (Select all applicable)</FormLabel>
-                            {REACTIVATION_REASONS.map(reason => (
-                                <FormField
-                                    key={reason.id}
-                                    control={form.control}
-                                    name="reactivationReasons"
-                                    render={({ field: reasonField }) => (
-                                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-2">
-                                            <FormControl>
-                                                <Checkbox
-                                                    checked={reasonField.value?.includes(reason.id)}
-                                                    onCheckedChange={(checked) => {
-                                                        return checked
-                                                            ? reasonField.onChange([...(reasonField.value || []), reason.id])
-                                                            : reasonField.onChange(
-                                                                (reasonField.value || []).filter(
-                                                                    (value) => value !== reason.id
-                                                                )
-                                                              );
-                                                    }}
-                                                />
-                                            </FormControl>
-                                            <FormLabel className="font-normal text-sm">{reason.label}</FormLabel>
-                                        </FormItem>
-                                    )}
-                                />
-                            ))}
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                     <FormField control={form.control} name="reactivationEvidence" render={({ field }) => (<FormItem className="mt-4"><FormLabel>Evidence Ground No Longer Exists (e.g., Certification/Order of the Court)</FormLabel><FormControl><Textarea placeholder="Describe or reference attached documents" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
-                </>
-            )}
-
-            {applicationType === 'changeCorrection' && (
-                 <>
-                    <Separator className="my-4" />
-                    <h4 className="text-md font-semibold mb-2">Change/Correction Details</h4>
-                    <FormField control={form.control} name="presentData" render={({ field }) => (<FormItem><FormLabel>Present Data/Information</FormLabel><FormControl><Textarea placeholder="Current information on record" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="newCorrectedData" render={({ field }) => (<FormItem><FormLabel>New/Corrected Data/Information</FormLabel><FormControl><Textarea placeholder="Updated/Corrected information" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormDescription>Attach required supporting documents such as Certified Copy or Certificate of Court Order or Certificate of Live Birth, and others.</FormDescription>
-                 </>
-            )}
+            {/* REMOVED conditional rendering for reactivationDetails */}
+            {/* REMOVED conditional rendering for changeCorrectionDetails */}
+            {/* REMOVED conditional rendering for inclusionReinstatementDetails */}
             
-            {applicationType === 'inclusionReinstatement' && (
-                 <>
-                    <Separator className="my-4" />
-                    <h4 className="text-md font-semibold mb-2">Inclusion/Reinstatement Details</h4>
-                    <FormDescription>For inclusion of voter registration record or reinstatement of name in the list of voters. Please ensure all personal and address details above are accurate.</FormDescription>
-                 </>
-            )}
-
-
             <Separator className="my-4" />
             <FormField control={form.control} name="biometricsFile" render={({ field }) => (
                 <FormItem><FormLabel>Biometrics Data (Thumbprints/Signatures)</FormLabel>
@@ -440,5 +369,3 @@ export function ApplicationFormFields() {
     </Form>
   );
 }
-
-    

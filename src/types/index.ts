@@ -65,19 +65,17 @@ export interface Application {
   civilDetails: CivilDetails;
   specialNeeds?: SpecialNeeds;
   
-  applicationType: 'register' | 'transfer' | 'reactivation' | 'changeCorrection' | 'inclusionReinstatement' | '';
+  applicationType: 'register' | 'transfer' | ''; // UPDATED
   biometricsFile?: string; // Simulated file name or path or "Captured"
 
   // Conditional based on applicationType
   oldAddressDetails?: AddressDetails; // For transfer applications (previous address)
   
-  reactivationReasons?: string[]; // Array of string keys for reasons
-  reactivationEvidence?: string; // Path to/description of evidence
-
-  presentData?: string; // For change/correction
-  newCorrectedData?: string; // For change/correction
-
-  // Fields for inclusionReinstatement might be minimal or covered by general info
+  // Removed reactivation, change/correction, inclusion fields
+  // reactivationReasons?: string[]; 
+  // reactivationEvidence?: string; 
+  // presentData?: string; 
+  // newCorrectedData?: string; 
 
   status: 'pending' | 'approved' | 'rejected' | 'reviewing';
   submissionDate: string; // ISO string date
@@ -90,7 +88,7 @@ export interface Application {
 
 // Combines all form fields into one type for react-hook-form, matching schema
 export type ApplicationFormData = PersonalInfo & AddressDetails & CivilDetails & SpecialNeeds & {
-  applicationType: 'register' | 'transfer' | 'reactivation' | 'changeCorrection' | 'inclusionReinstatement' | '';
+  applicationType: 'register' | 'transfer' | ''; // UPDATED
   biometricsFile?: string;
 
   // Transfer specific fields (previous address)
@@ -99,13 +97,10 @@ export type ApplicationFormData = PersonalInfo & AddressDetails & CivilDetails &
   transferCityMunicipality?: string;
   transferProvince?: string;
   transferZipCode?: string;
-  // transferYearsOfResidency is not directly on CEF-1 for previous address; details are usually gathered as full previous AddressDetails.
 
-  // Reactivation specific
-  reactivationReasons?: string[];
-  reactivationEvidence?: string;
-
-  // Change/Correction specific
-  presentData?: string;
-  newCorrectedData?: string;
+  // Removed reactivation, change/correction, inclusion fields
+  // reactivationReasons?: string[];
+  // reactivationEvidence?: string;
+  // presentData?: string;
+  // newCorrectedData?: string;
 };

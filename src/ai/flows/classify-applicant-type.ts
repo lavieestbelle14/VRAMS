@@ -14,18 +14,17 @@ import {z} from 'genkit';
 const ClassifyApplicantTypeInputSchema = z.object({
   personalInfo: z.string().describe('Personal information summary of the applicant, including name, DOB, sex, citizenship basis, and profession/occupation.'),
   addressDetails: z.string().describe('Current address details and residency period at current address.'),
-  applicationType: z.string().describe('Type of application (e.g., register, transfer, reactivation, changeCorrection, inclusionReinstatement).'),
+  applicationType: z.string().describe('Type of application (e.g., register, transfer).'), // UPDATED
   biometrics: z.string().describe('Biometric data status of the applicant.'),
   civilDetails: z.string().describe('Civil details of the applicant (e.g., civil status, spouse).'),
   specialSectorNeeds: z.string().optional().describe('Special sector needs of the applicant, if any (e.g. PWD, illiterate, indigenous).'),
   previousAddressInfo: z.string().optional().describe('Information about the previous address, if application type is transfer.'),
-  reactivationInfo: z.string().optional().describe('Information regarding reasons for reactivation, if application type is reactivation.'),
-  changeCorrectionInfo: z.string().optional().describe('Information regarding data to be changed or corrected, if application type is changeCorrection.'),
+  // REMOVED: reactivationInfo, changeCorrectionInfo
 });
 export type ClassifyApplicantTypeInput = z.infer<typeof ClassifyApplicantTypeInputSchema>;
 
 const ClassifyApplicantTypeOutputSchema = z.object({
-  applicantType: z.string().describe('The classified type of the applicant (e.g., new registration, transfer, reactivation, data correction, inclusion/reinstatement).'),
+  applicantType: z.string().describe('The classified type of the applicant (e.g., New Registration, Transfer of Registration).'), // UPDATED
   confidence: z.number().describe('The confidence level of the classification (0-1).'),
   reason: z.string().describe('Reasoning for the classification.'),
 });
@@ -44,12 +43,9 @@ const prompt = ai.definePrompt({
   Based on the following information provided in the application form, classify the applicant type into one of the following categories: 
   - New Registration
   - Transfer of Registration
-  - Reactivation of Registration
-  - Change/Correction of Entries
-  - Inclusion/Reinstatement of Name
 
   Provide a confidence level (0-1) for your classification and a brief reason for your classification.
-  Consider all provided fields to make the most accurate classification. For example, if "previousAddressInfo" is present, it strongly suggests a "Transfer". If "reactivationInfo" is present, it's "Reactivation". If "changeCorrectionInfo" is present, it's "Change/Correction". Otherwise, it's likely "New Registration" or "Inclusion/Reinstatement" based on other cues.
+  Consider all provided fields to make the most accurate classification. If "previousAddressInfo" is present, it strongly suggests a "Transfer". Otherwise, it's likely "New Registration".
 
   Application Type field from form: {{{applicationType}}}
   Personal Information: {{{personalInfo}}}
@@ -58,8 +54,7 @@ const prompt = ai.definePrompt({
   Civil Details: {{{civilDetails}}}
   Special Sector Needs: {{{specialSectorNeeds}}}
   {{#if previousAddressInfo}}Previous Address Info (Transfer): {{{previousAddressInfo}}}{{/if}}
-  {{#if reactivationInfo}}Reactivation Info: {{{reactivationInfo}}}{{/if}}
-  {{#if changeCorrectionInfo}}Change/Correction Info: {{{changeCorrectionInfo}}}{{/if}}
+  {{!-- REMOVED: reactivationInfo and changeCorrectionInfo handlebars --}}
   `,
   config: {
     safetySettings: [

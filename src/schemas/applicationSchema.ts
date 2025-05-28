@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 const nonEmptyString = z.string().min(1, { message: "This field is required" });
 const optionalString = z.string().optional();
-const numericString = z.string().regex(/^\d+$/, "Must be a number").optional();
+// const numericString = z.string().regex(/^\d+$/, "Must be a number").optional(); // Not currently used
 
 export const applicationFormSchema = z.object({
   // Part 1: Personal Information
@@ -40,11 +40,11 @@ export const applicationFormSchema = z.object({
   civilStatus: z.enum(['single', 'married', ''], { errorMap: () => ({ message: "Please select civil status" }) }).refine(val => val !== '', { message: "Please select civil status"}),
   spouseName: optionalString, // Required if civilStatus is 'married'
 
-  // Parent Information (Simplified as per current structure, CEF-1 does not ask for middle names of parents)
+  // Parent Information
   fatherFirstName: nonEmptyString,
   fatherLastName: nonEmptyString,
   motherFirstName: nonEmptyString,
-  motherLastName: nonEmptyString, // Typically maiden name
+  motherLastName: nonEmptyString, 
 
   // Special Needs / Assistance
   isIlliterate: z.boolean().default(false),
@@ -52,14 +52,14 @@ export const applicationFormSchema = z.object({
   isIndigenousPerson: z.boolean().default(false),
   disabilityType: optionalString, // Required if isPwd is true
   assistorName: optionalString,
-  assistorRelationship: optionalString, // New field
+  assistorRelationship: optionalString, 
   assistorAddress: optionalString,
-  prefersGroundFloor: z.boolean().default(false), // Maintained as common accessibility need
-  isSenior: z.boolean().default(false), // Maintained
+  prefersGroundFloor: z.boolean().default(false), 
+  isSenior: z.boolean().default(false), 
 
   // Application Type and Biometrics
-  applicationType: z.enum(['register', 'transfer', 'reactivation', 'changeCorrection', 'inclusionReinstatement', ''], { errorMap: () => ({ message: "Please select an application type" }) }).refine(val => val !== '', { message: "Please select an application type"}),
-  biometricsFile: optionalString, // Simulating file upload/capture status
+  applicationType: z.enum(['register', 'transfer', ''], { errorMap: () => ({ message: "Please select an application type" }) }).refine(val => val !== '', { message: "Please select an application type"}), // UPDATED
+  biometricsFile: optionalString, 
 
   // Conditional Fields for Transfer
   transferHouseNoStreet: optionalString,
@@ -67,19 +67,12 @@ export const applicationFormSchema = z.object({
   transferCityMunicipality: optionalString,
   transferProvince: optionalString,
   transferZipCode: optionalString.refine(val => !val || /^[0-9]{4,5}$/.test(val), { message: "Invalid zip code" }),
-  // years/months at old address not explicitly on CEF-1 for transfer, but often asked. Current schema has transferYearsOfResidency
-  // CEF-1 asks for years/months at *new* residence for transfer, which is covered by AddressDetails.yearsOfResidency/monthsOfResidency
 
-  // Conditional Fields for Reactivation
-  reactivationReasons: z.array(z.string()).optional().default([]), // For multi-select reasons
-  reactivationEvidence: optionalString,
-
-  // Conditional Fields for Change/Correction
-  presentData: optionalString,
-  newCorrectedData: optionalString,
-
-  // Conditional fields for Inclusion/Reinstatement - can be simple for now, or share reasons with reactivation
-  // For now, no specific extra fields for inclusionReinstatement beyond selecting the type.
+  // REMOVED fields for reactivation, changeCorrection
+  // reactivationReasons: z.array(z.string()).optional().default([]),
+  // reactivationEvidence: optionalString,
+  // presentData: optionalString,
+  // newCorrectedData: optionalString,
 
 }).superRefine((data, ctx) => {
   if (data.citizenshipType === 'naturalized' || data.citizenshipType === 'reacquired') {
@@ -97,8 +90,6 @@ export const applicationFormSchema = z.object({
   }
 
   if (data.applicationType === 'transfer') {
-    // CEF-1 implies old address info might be collected elsewhere or as part of "Accomplish Personal Information at the back"
-    // For a digital form, explicit fields are better.
     if (!data.transferHouseNoStreet) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous House No./Street required for transfer", path: ["transferHouseNoStreet"] });
     if (!data.transferBarangay) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous Barangay required for transfer", path: ["transferBarangay"] });
     if (!data.transferCityMunicipality) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous City/Municipality required for transfer", path: ["transferCityMunicipality"] });
@@ -106,17 +97,9 @@ export const applicationFormSchema = z.object({
     if (!data.transferZipCode) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous Zip Code required for transfer", path: ["transferZipCode"] });
   }
 
-  if (data.applicationType === 'reactivation') {
-    if (!data.reactivationReasons || data.reactivationReasons.length === 0) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "At least one reason for deactivation is required", path: ["reactivationReasons"] });
-    }
-    // Evidence might not always be mandatory initially, depends on policy.
-  }
-
-  if (data.applicationType === 'changeCorrection') {
-    if (!data.presentData) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Present data/information is required", path: ["presentData"] });
-    if (!data.newCorrectedData) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "New/Corrected data/information is required", path: ["newCorrectedData"] });
-  }
+  // REMOVED superRefine logic for reactivation and changeCorrection
+  // if (data.applicationType === 'reactivation') { ... }
+  // if (data.applicationType === 'changeCorrection') { ... }
 });
 
 export type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
