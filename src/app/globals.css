@@ -111,34 +111,51 @@ body {
 
 @media print {
   body * {
-    visibility: hidden;
+    visibility: hidden !important; /* Hide everything by default */
   }
-  .print-hide, .print-hide * {
-    display: none !important;
-    visibility: hidden !important;
+
+  #printable-receipt-area,
+  #printable-receipt-area * {
+    visibility: visible !important; /* Make the printable area and its children visible */
   }
-  #printable-receipt-area, #printable-receipt-area * {
-    visibility: visible !important;
-  }
+
   #printable-receipt-area {
-    position: absolute !important;
+    position: absolute !important; /* Position it at the top-left for printing */
     left: 0 !important;
     top: 0 !important;
-    width: 100% !important; /* Ensure it takes full width of the page */
-    margin: 0 !important; /* Reset margins */
-    padding: 10px !important; /* Add some padding for print */
-    border: none !important; /* Remove any borders from the area itself */
+    width: 100% !important; /* Make it take the full page width */
+    height: auto !important;
+    margin: 0 !important;
+    padding: 20px !important; /* Add some padding */
+    border: 1px solid #aaa !important; /* A light border for the receipt */
     box-shadow: none !important;
+    background-color: white !important; /* Ensure white background */
+    font-size: 12pt !important; /* Ensure readable font size */
+    color: black !important; /* Ensure text is black */
   }
-   #printable-receipt-area .border-dashed {
-    border-style: dotted !important; /* Ensure dotted lines print */
+  
+  /* Ensure all text elements within the receipt are black */
+  #printable-receipt-area h1,
+  #printable-receipt-area h2,
+  #printable-receipt-area h3,
+  #printable-receipt-area h4,
+  #printable-receipt-area p,
+  #printable-receipt-area div,
+  #printable-receipt-area span,
+  #printable-receipt-area dt,
+  #printable-receipt-area dd {
+    color: black !important;
+    background-color: transparent !important; /* Remove any themed backgrounds */
   }
-  /* Ensure card within printable area takes full width and has minimal styling */
-   #printable-receipt-area > .shadcn-card { /* Use direct child selector for the Card */
-    border: 1px solid #ccc !important; /* Light border for the receipt itself */
-    box-shadow: none !important;
-    padding: 15px !important;
-    width: 100% !important; /* Make card take full width of its container */
-    margin: 0 auto !important; /* Center it if necessary, but full width is likely better */
+
+  #printable-receipt-area .border-dashed {
+    border-style: dashed !important; /* Ensure dashed borders print as dashed */
+    border-color: #aaa !important;
+  }
+
+  /* Hide elements specifically marked with .print-hide, even if they are inside the printable area */
+  .print-hide, .print-hide * { /* This rule targets any element with print-hide */
+    display: none !important;
+    visibility: hidden !important; /* Redundant but safe */
   }
 }
