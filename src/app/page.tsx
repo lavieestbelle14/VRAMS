@@ -9,11 +9,7 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
 export default function AuthPage() { // Renamed to AuthPage for clarity
-  const [logoSrc, setLogoSrc] = useState('/logo.png');
-
-  useEffect(() => {
-    setLogoSrc(`/logo.png?t=${new Date().getTime()}`);
-  }, []);
+  const logoSrc = "/logo.png"; // Initialize directly
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
@@ -24,7 +20,6 @@ export default function AuthPage() { // Renamed to AuthPage for clarity
               alt="VRAMS official seal"
               width={64}
               height={64}
-              key={logoSrc} // Force re-render if src changes
               data-ai-hint="VRAMS official seal"
             />
         </div>

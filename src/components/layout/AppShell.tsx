@@ -38,29 +38,24 @@ const navItems: NavItem[] = [
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
-  const [logoSrc, setLogoSrc] = useState('');
-  const [avatarKey, setAvatarKey] = useState(Date.now()); 
+  const [avatarKey, setAvatarKey] = useState(Date.now());
+  const logoSrc = "/logo.png"; // Initialize directly
 
   useEffect(() => {
-    setLogoSrc(`/logo.png?t=${new Date().getTime()}`);
-  }, []);
-  
-  useEffect(() => {
     // Force re-render of AvatarImage if the src might be cached by browser aggressively
-    // This is a simple way to try and bust cache for the avatar if it doesn't update
     setAvatarKey(Date.now());
   }, [user]);
 
 
   const getAvatarFallback = () => {
-    if (user?.role === 'officer') return "EO"; 
+    if (user?.role === 'officer') return "EO";
     if (user?.firstName && user?.lastName) {
       return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
     }
     if (user?.firstName) {
       return user.firstName.substring(0, 2).toUpperCase();
     }
-    if (user?.username) { 
+    if (user?.username) {
       return user.username.substring(0, 2).toUpperCase();
     }
     return <UserCircle size={20}/>;
@@ -76,7 +71,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               alt="VRAMS official seal"
               width={32}
               height={32}
-              key={logoSrc} 
               data-ai-hint="VRAMS official seal"
             />
             <span className="text-xl font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">VRAMS</span>
@@ -105,9 +99,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-background px-4 sm:px-6"> {/* z-index was 10, now 30 (same as sidebar for consistency) - sidebar.tsx now has z-30 for its fixed part too */}
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-background px-4 sm:px-6">
           <div className="flex items-center gap-2">
-             <SidebarTrigger /> {/* Removed md:hidden */}
+             <SidebarTrigger />
              <h1 className="text-lg font-semibold hidden sm:block">
               {navItems.find(item => pathname.startsWith(item.href))?.label || 'VRAMS Portal'}
             </h1>
