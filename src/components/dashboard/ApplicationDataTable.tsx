@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button'; // Added buttonVariants here
 import type { Application } from '@/types';
 import { Eye, MoreHorizontal, ArrowUpDown, Trash2, Calendar as CalendarIconLucide } from 'lucide-react';
 import { format, parseISO, isValid, startOfDay, endOfDay } from 'date-fns';
