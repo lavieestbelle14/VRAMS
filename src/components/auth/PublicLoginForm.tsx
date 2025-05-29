@@ -1,5 +1,6 @@
 
 'use client';
+import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -9,7 +10,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useAuth } from '@/contexts/AuthContext';
 import { LogIn } from 'lucide-react';
 
-// Re-using the same schema as LoginForm
 const publicLoginSchema = z.object({
   email: z.string().email({ message: 'Invalid email address' }),
   password: z.string().min(1, { message: 'Password is required' }),
@@ -63,6 +63,11 @@ export function PublicLoginForm() {
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
           <LogIn className="mr-2 h-4 w-4" /> Login as Public User
         </Button>
+        <div className="text-sm text-center">
+          <Link href="/public/forgot-password" legacyBehavior>
+            <a className="font-medium text-primary hover:underline">Forgot Password?</a>
+          </Link>
+        </div>
       </form>
     </Form>
   );

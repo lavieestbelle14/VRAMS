@@ -25,6 +25,9 @@ interface AuthContextType {
   logout: () => void;
   isLoading: boolean;
   user: AuthenticatedUser | null;
+  resetPassword: (email: string, token: string, newPass: string, confirmPass: string) => Promise<boolean>;
+  updateUserProfile: (updates: { firstName?: string; lastName?: string }) => Promise<boolean>;
+  updateUserPassword: (currentPass: string, newPass: string, confirmPass: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -54,11 +57,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const seedInitialUsers = useCallback(() => {
     let users = getMockUsersDB();
     if (!users.some(u => u.username.toLowerCase() === 'officer@comelec.gov.ph')) {
-      users.push({ 
-        username: 'officer@comelec.gov.ph', 
-        passwordHash: 'password123', 
+      users.push({
+        username: 'officer@comelec.gov.ph',
+        passwordHash: 'password123',
         role: 'officer',
-        firstName: 'Election', // Default name for officer
+        firstName: 'Election',
         lastName: 'Officer'
       });
       saveMockUsersDB(users);
@@ -68,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuthStatus = useCallback(() => {
     setIsLoading(true);
-    seedInitialUsers(); 
+    seedInitialUsers();
     const storedUser = localStorage.getItem(CURRENT_USER_KEY);
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser) as AuthenticatedUser;
@@ -89,29 +92,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (isLoading) return;
 
     const isOfficerPath = pathname.startsWith('/dashboard');
-    const isPublicAuthenticatedPath = ['/public/home', '/public/apply', '/public/track-status', '/public/application-submitted'].some(p => pathname.startsWith(p));
+    const isPublicAuthenticatedPath = ['/public/home', '/public/apply', '/public/track-status', '/public/application-submitted', '/public/profile'].some(p => pathname.startsWith(p));
+    const isPublicUnauthenticatedPath = ['/public/forgot-password', '/public/reset-password'].some(p => pathname.startsWith(p));
     const isAuthPage = pathname === '/';
 
+
     if (isAuthenticated && user) {
-      // User is authenticated
       if (user.role === 'officer') {
-        if (!isOfficerPath) {
-            // Officer trying to access public authenticated or auth page, redirect to dashboard
-            if (isPublicAuthenticatedPath || isAuthPage) router.push('/dashboard');
+        if (!isOfficerPath && !isAuthPage) { // Officer not on officer path or main auth page
+             router.push('/dashboard');
+        } else if (isAuthPage && isOfficerPath) { // Officer logged in and on auth page, trying to go to dashboard
+            // this case means they are at / but trying to access dashboard, allow existing officer paths
+        } else if (isAuthPage) { // officer logged in and on auth page, redirect
+            router.push('/dashboard');
         }
+
       } else if (user.role === 'public') {
          if (isOfficerPath) {
-            router.push('/public/home'); // Public user trying to access officer page, redirect to public home
+            router.push('/public/home');
          } else if (isAuthPage) {
-            router.push('/public/home'); // Public user on auth page (e.g. already logged in), redirect to public home
+            router.push('/public/home');
          }
       }
     } else {
       // User is NOT authenticated
-      if (isOfficerPath || isPublicAuthenticatedPath) {
-        router.push('/'); // Trying to access any protected route (officer or public authenticated), redirect to login
+      if ((isOfficerPath || isPublicAuthenticatedPath)) { // Trying to access any protected route
+        router.push('/');
       }
-      // If on isAuthPage or other truly public unauthenticated page, do nothing.
+      // If on isAuthPage, or public unauthenticated paths, do nothing.
     }
   }, [isAuthenticated, isLoading, user, pathname, router]);
 
@@ -120,23 +128,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const users = getMockUsersDB();
     const foundUser = users.find(u => u.username.toLowerCase() === email.toLowerCase());
 
-    if (foundUser && foundUser.passwordHash === passwordAttempt) { 
+    if (foundUser && foundUser.passwordHash === passwordAttempt) {
       if (foundUser.role !== intendedRole) {
         toast({ title: 'Login Failed', description: `Please use the ${intendedRole === 'officer' ? 'Officer' : 'Public User'} login tab.`, variant: 'destructive' });
         return;
       }
-      // Ensure firstName and lastName are part of the authenticatedUser object
-      const authenticatedUser: AuthenticatedUser = { 
-        username: foundUser.username, 
+      const authenticatedUser: AuthenticatedUser = {
+        username: foundUser.username,
         role: foundUser.role,
-        firstName: foundUser.firstName, // Load firstName
-        lastName: foundUser.lastName   // Load lastName
+        firstName: foundUser.firstName,
+        lastName: foundUser.lastName
       };
       setUser(authenticatedUser);
       setIsAuthenticated(true);
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(authenticatedUser));
       toast({ title: 'Login Successful', description: `Welcome, ${authenticatedUser.firstName || authenticatedUser.username}!` });
-      // Redirection is handled by the useEffect above
     } else {
       toast({ title: 'Login Failed', description: 'Invalid email or password.', variant: 'destructive' });
     }
@@ -158,20 +164,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const newUser: StoredUser = { 
-      firstName, 
-      lastName, 
-      username: email, 
-      passwordHash: passwordAttempt, 
-      role: 'public' 
+    const newUser: StoredUser = {
+      firstName,
+      lastName,
+      username: email,
+      passwordHash: passwordAttempt,
+      role: 'public'
     };
     users.push(newUser);
     saveMockUsersDB(users);
-    
+
     toast({ title: 'Sign Up Successful!', description: 'You can now log in.' });
-    // Automatically log in the new user
-    const authenticatedUser: AuthenticatedUser = { 
-      username: newUser.username, 
+    const authenticatedUser: AuthenticatedUser = {
+      username: newUser.username,
       role: newUser.role,
       firstName: newUser.firstName,
       lastName: newUser.lastName
@@ -179,7 +184,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(authenticatedUser);
     setIsAuthenticated(true);
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(authenticatedUser));
-    // Redirection is handled by the useEffect above
   };
 
   const logout = () => {
@@ -188,7 +192,95 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(CURRENT_USER_KEY);
     router.push('/');
   };
-  
+
+  const resetPassword = async (email: string, token: string, newPass: string, confirmPass: string): Promise<boolean> => {
+    if (newPass !== confirmPass) {
+      toast({ title: "Password Reset Failed", description: "New passwords do not match.", variant: "destructive" });
+      return false;
+    }
+    if (newPass.length < 6) {
+      toast({ title: "Password Reset Failed", description: "New password must be at least 6 characters.", variant: "destructive" });
+      return false;
+    }
+    // In a real app, token would be validated. Here, we just check if email exists.
+    // And the token is just a formality for the mock.
+    if (!token.startsWith("RESET-")) {
+        toast({ title: "Password Reset Failed", description: "Invalid reset token format.", variant: "destructive" });
+        return false;
+    }
+
+    let users = getMockUsersDB();
+    const userIndex = users.findIndex(u => u.username.toLowerCase() === email.toLowerCase() && u.role === 'public');
+
+    if (userIndex === -1) {
+      toast({ title: "Password Reset Failed", description: "Public user email not found.", variant: "destructive" });
+      return false;
+    }
+
+    users[userIndex].passwordHash = newPass;
+    saveMockUsersDB(users);
+    toast({ title: "Password Reset Successful", description: "You can now log in with your new password." });
+    return true;
+  };
+
+  const updateUserProfile = async (updates: { firstName?: string; lastName?: string }): Promise<boolean> => {
+    if (!user || !isAuthenticated || user.role !== 'public') {
+      toast({ title: "Update Failed", description: "You must be logged in as a public user.", variant: "destructive" });
+      return false;
+    }
+    let users = getMockUsersDB();
+    const userIndex = users.findIndex(u => u.username.toLowerCase() === user.username.toLowerCase());
+
+    if (userIndex === -1) {
+      toast({ title: "Update Failed", description: "User not found.", variant: "destructive" });
+      return false;
+    }
+
+    const updatedUserDetails = { ...users[userIndex], ...updates };
+    users[userIndex] = updatedUserDetails;
+    saveMockUsersDB(users);
+
+    const updatedAuthUser = { ...user, ...updates };
+    setUser(updatedAuthUser);
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedAuthUser));
+
+    toast({ title: "Profile Updated", description: "Your profile information has been updated." });
+    return true;
+  };
+
+  const updateUserPassword = async (currentPass: string, newPass: string, confirmPass: string): Promise<boolean> => {
+     if (!user || !isAuthenticated || user.role !== 'public') {
+      toast({ title: "Password Change Failed", description: "You must be logged in as a public user.", variant: "destructive" });
+      return false;
+    }
+    if (newPass !== confirmPass) {
+      toast({ title: "Password Change Failed", description: "New passwords do not match.", variant: "destructive" });
+      return false;
+    }
+    if (newPass.length < 6) {
+      toast({ title: "Password Change Failed", description: "New password must be at least 6 characters.", variant: "destructive" });
+      return false;
+    }
+
+    let users = getMockUsersDB();
+    const userIndex = users.findIndex(u => u.username.toLowerCase() === user.username.toLowerCase());
+
+    if (userIndex === -1) {
+      toast({ title: "Password Change Failed", description: "User not found.", variant: "destructive" });
+      return false;
+    }
+    if (users[userIndex].passwordHash !== currentPass) {
+      toast({ title: "Password Change Failed", description: "Incorrect current password.", variant: "destructive" });
+      return false;
+    }
+
+    users[userIndex].passwordHash = newPass;
+    saveMockUsersDB(users);
+    toast({ title: "Password Changed Successfully", description: "Your password has been updated." });
+    return true;
+  };
+
+
   if (isLoading) {
     return <div className="flex h-screen items-center justify-center"><svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -197,7 +289,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, signUp, logout, isLoading }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, signUp, logout, isLoading, resetPassword, updateUserProfile, updateUserPassword }}>
       {children}
     </AuthContext.Provider>
   );
