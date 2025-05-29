@@ -1,128 +1,106 @@
 
 'use client';
 import type { Application } from '@/types';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Printer, Pin } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Printer, Bookmark } from 'lucide-react'; // Added Bookmark
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns'; // Added for displaying submissionDate
+import { useAuth } from '@/contexts/AuthContext'; // Added
 
 interface AcknowledgementReceiptProps {
   application: Application;
-  showPinButton?: boolean;
 }
 
-const PINNED_APPS_STORAGE_KEY_PREFIX = 'vrams_pinned_applications_';
-
-export function AcknowledgementReceipt({ application, showPinButton = true }: AcknowledgementReceiptProps) {
-  const { user } = useAuth();
+export const AcknowledgementReceipt = ({ application }: AcknowledgementReceiptProps) => {
+  const { user } = useAuth(); // Added
   const { toast } = useToast();
 
   const handlePrint = () => {
-    console.log('Print button clicked. Attempting to call window.print().');
+    console.log("Print button clicked. Attempting to call window.print().");
+    alert("About to call window.print(). Click OK to proceed.");
     try {
-      const printableArea = document.getElementById('printable-receipt-area');
-      if (!printableArea) {
-        console.error('Printable area not found!');
-        toast({
-          title: "Print Error",
-          description: "Could not find the receipt content to print.",
-          variant: "destructive",
-        });
-        return;
-      }
-      // You might need more sophisticated print handling if just window.print() is not working
-      // For now, let's stick to the basic and ensure it's called.
       window.print();
+      console.log("window.print() called successfully.");
+      alert("window.print() has been called. Check for print dialog.");
     } catch (error) {
-      console.error('Error calling window.print():', error);
+      console.error("Error calling window.print():", error);
+      alert("An error occurred while trying to print. Check console.");
       toast({
         title: "Print Error",
-        description: "Could not open the print dialog. Please check the browser console for errors.",
+        description: "Could not open print dialog. Please check browser console for errors.",
         variant: "destructive",
       });
     }
   };
 
   const handlePinApplication = () => {
-    if (!user || !application) return;
-    const storageKey = `${PINNED_APPS_STORAGE_KEY_PREFIX}${user.username}`;
-    try {
-      let pinnedApps: string[] = JSON.parse(localStorage.getItem(storageKey) || '[]');
-      if (!pinnedApps.includes(application.id)) {
-        pinnedApps.push(application.id);
-        localStorage.setItem(storageKey, JSON.stringify(pinnedApps));
-        toast({
-          title: 'Application Pinned!',
-          description: `Application ID ${application.id} has been pinned to your dashboard.`,
-        });
-      } else {
-        toast({
-          title: 'Already Pinned',
-          description: `Application ID ${application.id} is already on your dashboard.`,
-          variant: 'default',
-        });
-      }
-    } catch (e) {
-      console.error("Failed to pin application:", e);
-      toast({
-        title: 'Error Pining Application',
-        description: 'Could not pin the application. Please try again.',
-        variant: 'destructive',
-      });
+    if (!application || !user) return;
+    const key = `pinned_applications_${user.username}`;
+    let pinnedApps: string[] = JSON.parse(localStorage.getItem(key) || '[]');
+    if (!pinnedApps.includes(application.id)) {
+      pinnedApps.push(application.id);
+      localStorage.setItem(key, JSON.stringify(pinnedApps));
+      toast({ title: 'Application Pinned', description: `${application.id} has been pinned to your dashboard.` });
+    } else {
+      toast({ title: 'Already Pinned', description: `${application.id} is already pinned.`, variant: 'default' });
     }
   };
 
-  if (!application) return null;
 
-  const applicantName = `${application.personalInfo.lastName}, ${application.personalInfo.firstName} ${application.personalInfo.middleName || ''}`.trim();
+  if (!application) {
+    return <p>Application data not found.</p>;
+  }
 
   return (
-    <Card id="printable-receipt-area" className="mt-6 mb-6 border-2 border-dashed border-muted-foreground bg-card text-card-foreground shadow-lg print:shadow-none print:border-none print:m-0 print:p-0">
-      <CardHeader className="print:p-2">
-        <CardTitle className="text-xl text-center font-serif print:text-lg">ACKNOWLEDGEMENT RECEIPT</CardTitle>
-        <CardDescription className="text-center print:text-xs">
-          This serves as your proof of application submission.
-        </CardDescription>
+    <Card id="printable-receipt-area" className="mt-6 border-dashed border-2 border-muted-foreground p-4">
+      <CardHeader className="text-center">
+        <CardTitle className="text-xl font-semibold">ACKNOWLEDGEMENT RECEIPT</CardTitle>
+        <CardDescription>Republic of the Philippines</CardDescription>
+        <CardDescription>Commission on Elections</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3 print:p-2 print:text-sm">
-        <dl className="space-y-2 font-mono print:font-sans">
-          <div>
-            <dt className="font-semibold text-muted-foreground print:text-black">Application For:</dt>
-            <dd className="ml-4 print:ml-2">{application.applicationType === 'register' ? 'Registration' : 'Transfer of Registration'}</dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-muted-foreground print:text-black">Applicant&apos;s Name:</dt>
-            <dd className="ml-4 print:ml-2">{applicantName.toUpperCase()}</dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-muted-foreground print:text-black">Application No.:</dt>
-            <dd className="ml-4 print:ml-2">{application.id}</dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-muted-foreground print:text-black">Date Submitted:</dt>
-            <dd className="ml-4 print:ml-2">{format(new Date(application.submissionDate), 'MMMM dd, yyyy hh:mm a')}</dd>
-          </div>
-        </dl>
-        <Separator className="my-4 print:hidden" />
-        <p className="text-xs text-muted-foreground italic print:text-xs print:text-black">
+      <CardContent className="space-y-3 text-sm">
+        <div className="text-center mb-4">
+          <p className="font-semibold">APPLICATION FOR REGISTRATION</p>
+        </div>
+        <div className="grid grid-cols-3 gap-x-2 items-baseline">
+          <p className="text-muted-foreground col-span-1">Last Name:</p>
+          <p className="font-medium border-b border-foreground text-center col-span-2">{application.personalInfo.lastName}</p>
+        </div>
+        <div className="grid grid-cols-3 gap-x-2 items-baseline">
+          <p className="text-muted-foreground col-span-1">First Name:</p>
+          <p className="font-medium border-b border-foreground text-center col-span-2">{application.personalInfo.firstName}</p>
+        </div>
+        <div className="grid grid-cols-3 gap-x-2 items-baseline">
+          <p className="text-muted-foreground col-span-1">Middle Name:</p>
+          <p className="font-medium border-b border-foreground text-center col-span-2">{application.personalInfo.middleName || ''}</p>
+        </div>
+         <div className="grid grid-cols-3 gap-x-2 items-baseline mt-2">
+          <p className="text-muted-foreground col-span-1">Application No.:</p>
+          <p className="font-medium col-span-2">{application.id}</p>
+        </div>
+
+        <p className="text-xs italic mt-4 text-center">
           This is to acknowledge receipt of your Application for registration.
           You are not yet registered unless approved by the Election Registration Board (ERB).
           You need not appear in the ERB hearing unless required through a written notice.
         </p>
-        <div className="text-center mt-6 print-hide">
-          <Button onClick={handlePrint} variant="outline" className="mr-2">
-            <Printer className="mr-2 h-4 w-4" /> Download/Print Receipt
-          </Button>
-          {showPinButton && user && (
-            <Button onClick={handlePinApplication}>
-              <Pin className="mr-2 h-4 w-4" /> Pin Application to Dashboard
-            </Button>
-          )}
-        </div>
       </CardContent>
+      <div className="mt-6 pt-6 border-t print-hide flex justify-center gap-2">
+        <Button
+          variant="outline"
+          onClick={handlePrint}
+          className="mt-4" 
+        >
+          <Printer className="mr-2 h-4 w-4" /> Download/Print Receipt
+        </Button>
+        <Button
+            variant="outline"
+            onClick={handlePinApplication}
+            className="mt-4"
+        >
+            <Bookmark className="mr-2 h-4 w-4" /> Pin Application to Dashboard
+        </Button>
+      </div>
     </Card>
   );
-}
+};

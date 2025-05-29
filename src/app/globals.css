@@ -50,9 +50,8 @@ body {
     --sidebar-background: 208 100% 30%; /* COMELEC Blue */
     --sidebar-foreground: 0 0% 100%;  /* White Text */
     
-    /* Active item uses sidebar-accent now for consistency with hover */
-    --sidebar-primary: var(--sidebar-accent-foreground); /* Text color for active item (dark blue on yellow) */
-    --sidebar-primary-foreground: var(--sidebar-accent); /* Background for active item (Yellow/Gold) */
+    --sidebar-primary: var(--sidebar-accent-foreground); 
+    --sidebar-primary-foreground: var(--sidebar-accent);
 
     --sidebar-accent: 47 98% 54%; /* Background for hovered/active item (COMELEC Yellow/Gold) */
     --sidebar-accent-foreground: 208 100% 10%; /* Text color for hovered/active item (Very dark blue) */
@@ -110,79 +109,45 @@ body {
 }
 
 @media print {
-  html, body {
-    background-color: white !important;
-    height: auto !important;
-    overflow: visible !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  /* Hide everything by default */
   body * {
     visibility: hidden !important;
-    -webkit-print-color-adjust: exact !important; /* Attempt to force color printing */
-    print-color-adjust: exact !important;
-    box-shadow: none !important; /* Remove shadows from everything */
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
   }
 
-  /* Make the specific printable area and its children visible */
   #printable-receipt-area,
   #printable-receipt-area * {
     visibility: visible !important;
+    color: black !important; /* Ensure text is black for printing */
+    background-color: white !important; /* Ensure background is white */
+    font-family: 'Times New Roman', Times, serif !important; /* Standard print font */
+    box-shadow: none !important; /* Remove shadows from receipt content */
+    -webkit-print-color-adjust: exact !important; /* Try to force color printing if any */
+    print-color-adjust: exact !important;
   }
 
   #printable-receipt-area {
-    position: fixed !important; /* Take over the entire viewport for printing */
+    position: absolute !important; /* Use absolute for natural flow */
     left: 0 !important;
     top: 0 !important;
-    width: 100vw !important;
-    height: auto !important; /* Allow height to adjust to content */
-    min-height: 100vh !important; /* Ensure it can fill a page if needed */
-    margin: 0 !important;
-    padding: 20px !important; /* Adjust padding as needed */
-    background-color: white !important;
-    color: black !important;
-    border: 1px solid #ccc !important; /* Optional border for the receipt itself */
-    box-shadow: none !important;
+    width: 100% !important; /* Use 100% for natural width, not viewport width */
+    border: 1px solid #ccc !important; /* Optional border for the receipt */
+    padding: 20px !important; /* Or your desired padding */
     font-size: 12pt !important;
     line-height: 1.4 !important;
-    overflow: visible !important; /* Ensure all content is visible if it overflows */
-  }
-
-  /* Specific styling for elements within the printable receipt */
-  #printable-receipt-area h1, 
-  #printable-receipt-area h2, 
-  #printable-receipt-area h3, 
-  #printable-receipt-area p, 
-  #printable-receipt-area div, 
-  #printable-receipt-area span, 
-  #printable-receipt-area dt, 
-  #printable-receipt-area dd {
-    color: black !important;
-    background-color: white !important; /* Ensure no themed backgrounds leak in */
-    font-family: 'Times New Roman', Times, serif !important; /* Standard print font */
-    box-shadow: none !important;
-  }
-
-  #printable-receipt-area h2 { /* Example for a title within the receipt */
-    font-size: 16pt !important;
-    font-weight: bold !important;
-    text-align: center !important;
-    margin-bottom: 1em !important;
+    page-break-inside: avoid !important; /* Try to keep receipt on one page */
   }
   
-  #printable-receipt-area dt {
-    font-weight: bold !important;
-  }
-  #printable-receipt-area dd {
-    margin-left: 0 !important; /* Reset browser default for dd */
-    margin-bottom: 0.5em !important;
+  #printable-receipt-area .print-hide, 
+  #printable-receipt-area .print-hide * { /* Ensure buttons inside receipt are also hidden */
+    display: none !important;
+    visibility: hidden !important;
   }
 
-  /* Hide elements specifically marked with .print-hide */
-  .print-hide, .print-hide * { /* Ensure all children of print-hide are also hidden */
+  /* Hide elements outside the printable area that might have .print-hide */
+  .print-hide {
     display: none !important;
-    visibility: hidden !important; /* Double ensure */
+    visibility: hidden !important;
   }
 }
