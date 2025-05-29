@@ -61,8 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         username: 'officer@comelec.gov.ph',
         passwordHash: 'password123',
         role: 'officer',
-        firstName: 'Election',
-        lastName: 'Officer'
+        firstName: 'Officer', // UPDATED from 'Election'
+        lastName: 'User' // Changed "Officer" to "User" for lastName to avoid "Officer Officer"
       });
       saveMockUsersDB(users);
     }
@@ -99,11 +99,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (isAuthenticated && user) {
       if (user.role === 'officer') {
-        if (!isOfficerPath && !isAuthPage) { // Officer not on officer path or main auth page
+        if (!isOfficerPath && !isAuthPage) { 
              router.push('/dashboard');
-        } else if (isAuthPage && isOfficerPath) { // Officer logged in and on auth page, trying to go to dashboard
+        } else if (isAuthPage && isOfficerPath) { 
             // this case means they are at / but trying to access dashboard, allow existing officer paths
-        } else if (isAuthPage) { // officer logged in and on auth page, redirect
+        } else if (isAuthPage) { 
             router.push('/dashboard');
         }
 
@@ -116,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } else {
       // User is NOT authenticated
-      if ((isOfficerPath || isPublicAuthenticatedPath)) { // Trying to access any protected route
+      if ((isOfficerPath || isPublicAuthenticatedPath)) { 
         router.push('/');
       }
       // If on isAuthPage, or public unauthenticated paths, do nothing.
