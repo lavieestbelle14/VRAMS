@@ -3,15 +3,25 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import type { Application } from '@/types';
-import { getApplicationById, updateApplicationStatus } from '@/lib/applicationStore';
+import { getApplicationById, updateApplicationStatus, deleteApplicationById } from '@/lib/applicationStore';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, CheckCircle, Edit, FileText, User, MapPin, CalendarDays, Briefcase, Accessibility, Save, XCircle, MessageSquare, Building, Users, ShieldCheck } from 'lucide-react'; // Removed ListChecks, Edit3, RefreshCcw
+import { ArrowLeft, CheckCircle, Edit, FileText, User, MapPin, CalendarDays, Briefcase, Accessibility, Save, XCircle, MessageSquare, Building, Users, ShieldCheck, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function ApplicationDetailsPage() {
   const params = useParams();
@@ -20,6 +30,7 @@ export default function ApplicationDetailsPage() {
   const [application, setApplication] = useState<Application | null>(null);
   const [remarks, setRemarks] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const id = typeof params.id === 'string' ? params.id : '';
 
@@ -46,6 +57,18 @@ export default function ApplicationDetailsPage() {
     } else {
        toast({ title: 'Error', description: 'Failed to update status.', variant: 'destructive' });
     }
+  };
+
+  const handleDeleteApplication = () => {
+    if (!application) return;
+    const success = deleteApplicationById(application.id);
+    if (success) {
+      toast({ title: "Application Deleted", description: `Application ID ${application.id} has been deleted.` });
+      router.push('/dashboard/applications');
+    } else {
+      toast({ title: "Error", description: "Failed to delete application.", variant: "destructive" });
+    }
+    setShowDeleteDialog(false);
   };
   
   const DetailItem = ({ label, value, icon, isBoolean = false }: { label: string; value?: string | number | null | boolean | string[]; icon?: React.ElementType; isBoolean?: boolean }) => {
@@ -91,10 +114,8 @@ export default function ApplicationDetailsPage() {
   const applicationTypeLabels: Record<Application['applicationType'] | '', string> = {
       'register': 'New Registration',
       'transfer': 'Transfer of Registration',
-      // REMOVED: reactivation, changeCorrection, inclusionReinstatement
       '': 'Unknown Type'
   };
-  // REMOVED: const reactivationReasonLabels = { ... };
 
   const getStatusBadgeVariant = (status: Application['status']) => {
     switch (status) {
@@ -108,9 +129,15 @@ export default function ApplicationDetailsPage() {
 
   return (
     <div className="space-y-6">
-      <Button variant="outline" onClick={() => router.back()} className="mb-4">
-        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Applications
-      </Button>
+      <div className="flex justify-between items-center mb-4">
+        <Button variant="outline" onClick={() => router.back()}>
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Applications
+        </Button>
+        <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
+          <Trash2 className="mr-2 h-4 w-4" /> Delete Application
+        </Button>
+      </div>
+
 
       <Card>
         <CardHeader className="flex flex-row justify-between items-start">
@@ -198,10 +225,6 @@ export default function ApplicationDetailsPage() {
             </Card>
           )}
 
-          {/* REMOVED Conditional display for Reactivation Details */}
-          {/* REMOVED Conditional display for Change/Correction Details */}
-          {/* REMOVED Conditional display for Inclusion/Reinstatement Details */}
-
           {sn && (Object.values(sn).some(v => v) || sn.assistorName) && (
              <Card className="lg:col-span-1">
                 <CardHeader><CardTitle className="flex items-center"><Accessibility className="mr-2"/>Special Needs & Assistance</CardTitle></CardHeader>
@@ -264,6 +287,24 @@ export default function ApplicationDetailsPage() {
           </CardFooter>
         ) : null}
       </Card>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete application ID {application?.id}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteApplication} className={buttonVariants({ variant: "destructive" })}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 }

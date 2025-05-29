@@ -61,6 +61,20 @@ export function updateApplicationStatus(id: string, status: Application['status'
   return undefined;
 }
 
+export function deleteApplicationById(id: string): boolean {
+  if (typeof window === 'undefined') return false;
+  let applications = initializeStore();
+  const initialLength = applications.length;
+  applications = applications.filter(app => app.id !== id);
+  if (applications.length < initialLength) {
+    localStorage.setItem(APPLICATIONS_KEY, JSON.stringify(applications));
+    memoryStore = [...applications];
+    return true;
+  }
+  return false;
+}
+
+
 export function seedInitialData() {
   if (typeof window === 'undefined') return;
   const apps = getApplications();
@@ -95,7 +109,7 @@ export function seedInitialData() {
         biometricsFile: "Captured on-site",
         status: 'pending',
         submissionDate: new Date(Date.now() - 86400000 * 5).toISOString(), 
-        classification: { applicantType: 'new registration', confidence: 0.95, reason: 'All fields indicate a new applicant.'},
+        classification: { applicantType: 'New Registration', confidence: 0.95, reason: 'All fields indicate a new applicant.'},
         remarks: 'Awaiting initial review.'
       },
       {
@@ -130,11 +144,11 @@ export function seedInitialData() {
         approvalDate: new Date(Date.now() - 86400000 * 2).toISOString(),
         voterId: 'VID-APP002-54321',
         precinct: 'Precinct 007B',
-        classification: { applicantType: 'transfer', confidence: 0.98, reason: 'Application type is transfer and old address provided.'},
+        classification: { applicantType: 'Transfer of Registration', confidence: 0.98, reason: 'Application type is transfer and old address provided.'},
         remarks: 'All documents verified. Approved for transfer.'
       },
       {
-        id: 'APP-004', // Renamed from APP-003 as it was a Reactivation example
+        id: 'APP-004', 
         personalInfo: { 
           firstName: 'Gabriela', lastName: 'Silang', middleName: 'Cariño',
           sex: 'female', dob: '1988-03-19', 
@@ -160,7 +174,7 @@ export function seedInitialData() {
         biometricsFile: "Pending capture",
         status: 'reviewing', 
         submissionDate: new Date(Date.now() - 86400000 * 1).toISOString(), 
-        classification: { applicantType: 'new registration', confidence: 0.92, reason: 'Standard new registration criteria met.'},
+        classification: { applicantType: 'New Registration', confidence: 0.92, reason: 'Standard new registration criteria met.'},
         remarks: 'Initial check done. Pending biometrics capture verification.'
       }
     ];

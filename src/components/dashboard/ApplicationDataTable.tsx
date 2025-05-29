@@ -5,15 +5,27 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Application } from '@/types';
-import { Eye, MoreHorizontal, ArrowUpDown, ListFilter, Calendar as CalendarIconLucide } from 'lucide-react';
-import { format, parseISO, isValid, subDays, startOfDay, endOfDay } from 'date-fns';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Eye, MoreHorizontal, ArrowUpDown, Trash2, Calendar as CalendarIconLucide } from 'lucide-react';
+import { format, parseISO, isValid, startOfDay, endOfDay } from 'date-fns';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import React, { useState, useMemo } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { Input } from '@/components/ui/input'; // For potential search later
+import { Input } from '@/components/ui/input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { deleteApplicationById, getApplications } from '@/lib/applicationStore';
+import { useToast } from '@/hooks/use-toast';
 
 interface ApplicationDataTableProps {
   applications: Application[];
@@ -30,6 +42,14 @@ export function ApplicationDataTable({ applications: initialApplications }: Appl
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({ from: undefined, to: undefined });
+
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [applicationToDeleteId, setApplicationToDeleteId] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  React.useEffect(() => {
+    setApplications(initialApplications);
+  }, [initialApplications]);
 
   const getStatusVariant = (status: Application['status']) => {
     switch (status) {
@@ -50,8 +70,27 @@ export function ApplicationDataTable({ applications: initialApplications }: Appl
     }
   };
 
+  const handleDeleteApplication = (id: string) => {
+    setApplicationToDeleteId(id);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    if (applicationToDeleteId) {
+      const success = deleteApplicationById(applicationToDeleteId);
+      if (success) {
+        setApplications(prev => prev.filter(app => app.id !== applicationToDeleteId));
+        toast({ title: "Application Deleted", description: `Application ID ${applicationToDeleteId} has been deleted.` });
+      } else {
+        toast({ title: "Error", description: "Failed to delete application.", variant: "destructive" });
+      }
+      setApplicationToDeleteId(null);
+      setShowDeleteDialog(false);
+    }
+  };
+
   const filteredAndSortedApplications = useMemo(() => {
-    let filtered = [...initialApplications];
+    let filtered = [...applications]; // Use the local state 'applications'
 
     if (statusFilter !== 'all') {
       filtered = filtered.filter(app => app.status === statusFilter);
@@ -93,7 +132,7 @@ export function ApplicationDataTable({ applications: initialApplications }: Appl
       if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [initialApplications, statusFilter, typeFilter, dateRange, sortKey, sortDirection]);
+  }, [applications, statusFilter, typeFilter, dateRange, sortKey, sortDirection]);
 
   const SortableHeader = ({ children, sortFieldKey }: { children: React.ReactNode; sortFieldKey: SortKey }) => (
     <TableHead onClick={() => handleSort(sortFieldKey)} className="cursor-pointer hover:bg-muted/50">
@@ -217,6 +256,10 @@ export function ApplicationDataTable({ applications: initialApplications }: Appl
                             <Eye className="mr-2 h-4 w-4" /> View Details
                           </Link>
                         </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleDeleteApplication(app.id)} className="text-destructive hover:!bg-destructive/10 focus:!bg-destructive/10">
+                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -226,7 +269,25 @@ export function ApplicationDataTable({ applications: initialApplications }: Appl
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the application
+              (ID: {applicationToDeleteId}) from the system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setApplicationToDeleteId(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className={buttonVariants({ variant: "destructive" })}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 }
-
