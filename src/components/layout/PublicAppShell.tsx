@@ -73,7 +73,7 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
           <SidebarMenu>
             {navItems.map((item) => (
               <SidebarMenuItem key={item.href}>
-                <Link href={item.href} legacyBehavior passHref>
+                <Link href={item.href}>
                   <SidebarMenuButton
                     isActive={pathname === item.href || (item.href !== '/public/home' && pathname.startsWith(item.href))}
                     tooltip={item.tooltip}
