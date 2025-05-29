@@ -206,7 +206,7 @@ export function ApplicationDataTable({ applications: initialApplications }: Appl
             className="pl-8 w-full"
           />
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
+        <div className="flex flex-col sm:flex-row gap-2 flex-wrap sm:items-center">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Filter by Status" />
