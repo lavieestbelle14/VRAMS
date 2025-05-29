@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
-import { Home, FileSearch, LogOut, UserCircle, FilePlus2, Settings } from 'lucide-react'; // Added Settings for Profile
+import { Home, FileSearch, LogOut, UserCircle, FilePlus2, Settings, HelpCircle } from 'lucide-react';
 import Image from 'next/image';
 
 interface NavItem {
@@ -33,12 +33,13 @@ const navItems: NavItem[] = [
   { href: '/public/home', label: 'Home', icon: Home, tooltip: 'Home' },
   { href: '/public/apply', label: 'New Application', icon: FilePlus2, tooltip: 'Submit New Application' },
   { href: '/public/track-status', label: 'Track Application Status', icon: FileSearch, tooltip: 'Track Application Status' },
+  { href: '/public/faq', label: 'FAQ / Help', icon: HelpCircle, tooltip: 'Frequently Asked Questions' },
 ];
 
 export function PublicAppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
-  const logoSrc = "/vrams_logo.png";
+  const logoSrc = "/vrams_logo.png"; 
 
   const getAvatarFallback = () => {
     if (user?.firstName && user?.lastName) {
@@ -55,7 +56,7 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
 
   return (
     <SidebarProvider defaultOpen>
-      <Sidebar side="left" variant="sidebar" collapsible="icon">
+      <Sidebar side="left" variant="sidebar" collapsible="icon" className="z-40"> {/* Ensure sidebar is on top */}
         <SidebarHeader className="p-4">
           <Link href="/public/home" className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
             <Image
