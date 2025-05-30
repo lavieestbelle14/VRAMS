@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, CheckCircle, Edit, FileText, User, MapPin, CalendarDays, Briefcase, Accessibility, Save, XCircle, MessageSquare, Building, Users, ShieldCheck, Trash2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Edit, FileText, User, MapPin, CalendarDays, Briefcase, Accessibility, Save, XCircle, MessageSquare, Building, Users, ShieldCheck, Trash2, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   AlertDialog,
@@ -51,8 +51,8 @@ export default function ApplicationDetailsPage() {
     if (updatedApp) {
       setApplication(updatedApp); 
       toast({
-        title: `Application ${newStatus}`,
-        description: `Application ID ${updatedApp.id} has been ${newStatus}.`,
+        title: `Application ${newStatus.replace(/([A-Z])/g, ' $1').trim()}`,
+        description: `Application ID ${updatedApp.id} has been updated.`,
       });
     } else {
        toast({ title: 'Error', description: 'Failed to update status.', variant: 'destructive' });
@@ -109,7 +109,7 @@ export default function ApplicationDetailsPage() {
     );
   }
   
-  const { personalInfo: pi, addressDetails: ad, civilDetails: cd, specialNeeds: sn, oldAddressDetails: oad } = application;
+  const { personalInfo: pi, addressDetails: ad, civilDetails: cd, specialNeeds: sn, oldAddressDetails: oad, biometricsSchedule } = application;
 
   const applicationTypeLabels: Record<Application['applicationType'] | '', string> = {
       'register': 'New Registration',
@@ -120,12 +120,18 @@ export default function ApplicationDetailsPage() {
   const getStatusBadgeVariant = (status: Application['status']) => {
     switch (status) {
       case 'approved': return 'default'; 
+      case 'approvedAwaitingBiometrics': return 'default';
+      case 'approvedBiometricsScheduled': return 'default';
       case 'rejected': return 'destructive'; 
       case 'pending': return 'secondary'; 
       case 'reviewing': return 'outline'; 
       default: return 'secondary';
     }
   }
+
+  const isActionable = ['pending', 'reviewing', 'approvedAwaitingBiometrics', 'approvedBiometricsScheduled'].includes(application.status);
+  const showApprovalOutcome = ['approved', 'approvedAwaitingBiometrics', 'approvedBiometricsScheduled', 'rejected'].includes(application.status) || application.remarks;
+
 
   return (
     <div className="space-y-6">
@@ -148,7 +154,7 @@ export default function ApplicationDetailsPage() {
             </CardDescription>
           </div>
           <Badge variant={getStatusBadgeVariant(application.status)} className="text-lg capitalize">
-            {application.status}
+            {application.status.replace(/([A-Z])/g, ' $1').trim()}
           </Badge>
         </CardHeader>
         <CardContent className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -209,7 +215,7 @@ export default function ApplicationDetailsPage() {
           </Card>
 
           <Card className="lg:col-span-1">
-            <CardHeader><CardTitle className="flex items-center"><FileText className="mr-2"/>Application Type & Biometrics</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="flex items-center"><FileText className="mr-2"/>Application Type & Biometrics Status</CardTitle></CardHeader>
             <CardContent>
               <DetailItem label="Application Type" value={applicationTypeLabels[application.applicationType || '']} />
               <DetailItem label="Biometrics Data Status" value={application.biometricsFile || 'N/A'} />
@@ -242,24 +248,35 @@ export default function ApplicationDetailsPage() {
             </Card>
           )}
           
-          {(application.status === 'approved' || application.status === 'rejected' || application.remarks) && (
+          {biometricsSchedule && (application.status === 'approvedBiometricsScheduled' || application.status === 'approved') && (
+             <Card className="lg:col-span-2">
+                <CardHeader><CardTitle className="flex items-center"><Clock className="mr-2 text-blue-500"/>Biometrics Schedule</CardTitle></CardHeader>
+                <CardContent>
+                    <DetailItem label="Scheduled Date" value={format(new Date(biometricsSchedule.date), 'PPP')} icon={CalendarDays}/>
+                    <DetailItem label="Scheduled Time" value={biometricsSchedule.time} icon={Clock}/>
+                    <DetailItem label="Location" value={biometricsSchedule.location || 'Main COMELEC Office'} icon={MapPin}/>
+                </CardContent>
+            </Card>
+          )}
+
+          {showApprovalOutcome && (
             <Card className="lg:col-span-3">
               <CardHeader><CardTitle className="flex items-center"><MessageSquare className="mr-2"/>Officer Remarks & Outcome</CardTitle></CardHeader>
               <CardContent>
-                {application.status === 'approved' && (
+                {(application.status === 'approved' || application.status === 'approvedAwaitingBiometrics' || application.status === 'approvedBiometricsScheduled') && (
                   <>
                     <DetailItem label="Voter ID" value={application.voterId} icon={CheckCircle} />
                     <DetailItem label="Precinct No." value={application.precinct} icon={MapPin} />
                     <DetailItem label="Approval Date" value={application.approvalDate ? format(new Date(application.approvalDate), 'PPP p') : 'N/A'} icon={CalendarDays} />
                   </>
                 )}
-                <DetailItem label="Officer Remarks" value={application.remarks || (application.status === 'approved' ? 'Application Approved.' : 'No remarks provided.')} />
+                <DetailItem label="Officer Remarks" value={application.remarks || (application.status.startsWith('approved') ? 'Application Approved.' : 'No remarks provided.')} />
               </CardContent>
             </Card>
           )}
         </CardContent>
 
-        {(application.status === 'pending' || application.status === 'reviewing') ? (
+        {isActionable ? (
           <CardFooter className="flex-col items-start space-y-4 pt-6 border-t">
              <div>
                 <Label htmlFor="remarks" className="text-lg font-semibold">Add/Update Remarks</Label>
@@ -267,20 +284,29 @@ export default function ApplicationDetailsPage() {
                     id="remarks"
                     value={remarks}
                     onChange={(e) => setRemarks(e.target.value)}
-                    placeholder="Enter remarks for approval or rejection..."
+                    placeholder="Enter remarks for approval, rejection, or status update..."
                     className="mt-2 min-h-[100px]"
                 />
             </div>
-            <div className="flex space-x-2">
-              <Button onClick={() => handleStatusUpdate('approved')} className="bg-green-600 hover:bg-green-700">
-                <CheckCircle className="mr-2 h-4 w-4" /> Approve
-              </Button>
-              <Button onClick={() => handleStatusUpdate('rejected')} variant="destructive">
-                <XCircle className="mr-2 h-4 w-4" /> Reject
-              </Button>
+            <div className="flex flex-wrap gap-2">
               {application.status === 'pending' && (
-                 <Button onClick={() => handleStatusUpdate('reviewing')} variant="outline">
+                <Button onClick={() => handleStatusUpdate('reviewing')} variant="outline">
                     <Edit className="mr-2 h-4 w-4" /> Mark as Reviewing
+                </Button>
+              )}
+              {(application.status === 'pending' || application.status === 'reviewing') && (
+                <>
+                <Button onClick={() => handleStatusUpdate('approvedAwaitingBiometrics')} className="bg-green-600 hover:bg-green-700">
+                  <CheckCircle className="mr-2 h-4 w-4" /> Approve (Await Biometrics)
+                </Button>
+                <Button onClick={() => handleStatusUpdate('rejected')} variant="destructive">
+                  <XCircle className="mr-2 h-4 w-4" /> Reject
+                </Button>
+                </>
+              )}
+              {application.status === 'approvedBiometricsScheduled' && (
+                <Button onClick={() => handleStatusUpdate('approved')} className="bg-blue-600 hover:bg-blue-700">
+                    <CheckCircle className="mr-2 h-4 w-4" /> Mark Biometrics Complete & Final Approve
                 </Button>
               )}
             </div>
