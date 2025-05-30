@@ -40,7 +40,7 @@ With a user-friendly interface and status tracking features, VRAMS aims to minim
 
 ---
 
-## The Team Behind VRAMS
+## Project Developers
 
 **Group 5 – BSCS 2-5**
 
@@ -52,7 +52,7 @@ With a user-friendly interface and status tracking features, VRAMS aims to minim
 
 ---
 
-## Special Thanks
+## Course Information
 **A Database Project for COMP 010 - Information Management**  
 - Polytechnic University of the Philippines
 - PUP College of Computer and Information Sciences
