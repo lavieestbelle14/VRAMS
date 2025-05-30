@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
-import { LayoutDashboard, Files, LogOut, Settings, UserCircle } from 'lucide-react';
+import { LayoutDashboard, Files, LogOut, UserCircle } from 'lucide-react'; // Removed Settings
 import Image from 'next/image';
 
 interface NavItem {
@@ -36,7 +36,7 @@ const navItems: NavItem[] = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
-  const pathname = usePathname();
+  const pathname = usePathname(); // Ensure pathname is defined
   const logoSrc = "/vrams_logo.png"; 
 
   const getAvatarFallback = () => {
@@ -55,7 +55,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <SidebarProvider defaultOpen>
-      <Sidebar side="left" variant="sidebar" collapsible="icon">
+      <Sidebar side="left" variant="sidebar" collapsible="icon" className="z-40"> {/* Ensure sidebar is on top */}
         <SidebarHeader className="p-4">
           <Link href="/dashboard" className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
             <Image
@@ -72,7 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <SidebarMenu>
             {navItems.map((item) => (
               <SidebarMenuItem key={item.href}>
-                <Link href={item.href} legacyBehavior passHref>
+                <Link href={item.href}>
                   <SidebarMenuButton
                     isActive={pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))}
                     tooltip={item.tooltip}
@@ -112,11 +112,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Welcome, Officer!</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
+              {/* Settings item removed */}
               <DropdownMenuItem onClick={logout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Logout</span>
