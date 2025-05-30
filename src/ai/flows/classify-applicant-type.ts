@@ -14,17 +14,16 @@ import {z} from 'genkit';
 const ClassifyApplicantTypeInputSchema = z.object({
   personalInfo: z.string().describe('Personal information summary of the applicant, including name, DOB, sex, citizenship basis, and profession/occupation.'),
   addressDetails: z.string().describe('Current address details and residency period at current address.'),
-  applicationType: z.string().describe('Type of application (e.g., register, transfer).'), // UPDATED
+  applicationType: z.string().describe('Type of application (e.g., register, transfer).'),
   biometrics: z.string().describe('Biometric data status of the applicant.'),
   civilDetails: z.string().describe('Civil details of the applicant (e.g., civil status, spouse).'),
   specialSectorNeeds: z.string().optional().describe('Special sector needs of the applicant, if any (e.g. PWD, illiterate, indigenous).'),
   previousAddressInfo: z.string().optional().describe('Information about the previous address, if application type is transfer.'),
-  // REMOVED: reactivationInfo, changeCorrectionInfo
 });
 export type ClassifyApplicantTypeInput = z.infer<typeof ClassifyApplicantTypeInputSchema>;
 
 const ClassifyApplicantTypeOutputSchema = z.object({
-  applicantType: z.string().describe('The classified type of the applicant (e.g., New Registration, Transfer of Registration).'), // UPDATED
+  applicantType: z.string().describe('The classified type of the applicant (e.g., New Registration, Transfer of Registration).'),
   confidence: z.number().describe('The confidence level of the classification (0-1).'),
   reason: z.string().describe('Reasoning for the classification.'),
 });
@@ -54,7 +53,6 @@ const prompt = ai.definePrompt({
   Civil Details: {{{civilDetails}}}
   Special Sector Needs: {{{specialSectorNeeds}}}
   {{#if previousAddressInfo}}Previous Address Info (Transfer): {{{previousAddressInfo}}}{{/if}}
-  {{!-- REMOVED: reactivationInfo and changeCorrectionInfo handlebars --}}
   `,
   config: {
     safetySettings: [
@@ -73,7 +71,13 @@ const classifyApplicantTypeFlow = ai.defineFlow(
     outputSchema: ClassifyApplicantTypeOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    const result = await prompt(input);
+    if (!result.output) {
+      // Log the full result for debugging in case the output structure is unexpected
+      console.error("Genkit prompt for classifyApplicantType did not return an output object. Full result:", JSON.stringify(result, null, 2));
+      throw new Error("AI classification failed: No output from model. Please check console for details.");
+    }
+    return result.output;
   }
 );
+
