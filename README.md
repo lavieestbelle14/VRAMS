@@ -12,17 +12,21 @@
 
 </div>
 
+---
+
 ## Our Logo
 
 The VRAMS logo is more than just a seal — it’s a symbol of civic duty, empowerment, and digital innovation in public service.
 
-The Ballot Box with the Check Mark — At the heart of the logo is a stylized ballot box marked with a golden check. It represents every vote cast — a voice heard, a choice made. It’s the centerpiece of democracy, where every tick matters.
+**The Ballot Box with the Check Mark** — At the heart of the logo is a stylized ballot box marked with a golden check. It represents every vote cast — a voice heard, a choice made. It’s the centerpiece of democracy, where every tick matters.
 
-The Radiating Lines — These golden rays behind the ballot box symbolize enlightenment and hope — that with every new voter registration, we bring light to the nation’s future. It’s a reminder that progress begins with participation.
+**The Radiating Lines** — These golden rays behind the ballot box symbolize enlightenment and hope — that with every new voter registration, we bring light to the nation’s future. It’s a reminder that progress begins with participation.
 
-The Bold Blue and Gold Colors — Blue stands for integrity, trust, and the backbone of the system — the people. Gold reflects the value of your right to vote, something to be guarded, respected, and exercised with pride.
+**The Bold Blue and Gold Colors** — Blue stands for integrity, trust, and the backbone of the system — the people. Gold reflects the value of your right to vote, something to be guarded, respected, and exercised with pride.
 
-The Circular Text — Surrounding the image, the name "Voter Registration and Application Management System (VRAMS)" wraps around like a shield — signifying security, accessibility, and streamlined service for every eligible Filipino.
+**The Circular Text** — Surrounding the image, the name "Voter Registration and Application Management System (VRAMS)" wraps around like a shield — signifying security, accessibility, and streamlined service for every eligible Filipino.
+
+---
 
 ## About VRAMS
 
@@ -34,6 +38,8 @@ With a user-friendly interface and status tracking features, VRAMS aims to minim
 
 **Because in a democracy, every vote counts — and every voter matters.**
 
+---
+
 ## The Team Behind VRAMS
 
 **Group 5 – BSCS 2-5**
@@ -43,6 +49,8 @@ With a user-friendly interface and status tracking features, VRAMS aims to minim
 - LAMBOHON, Ashley H.
 - OJA, Ma. Izabelle L.
 - SARDENIA, Reymel O.
+
+---
 
 ## Special Thanks
 **A Database Project for COMP 010 - Information Management**  
