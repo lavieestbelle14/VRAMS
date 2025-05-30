@@ -8,7 +8,7 @@
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
   [![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.x-38BDF8.svg?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 
-  *"Register smart. Apply easy. Vote ready — with VRAMS."*
+  *Register smart. Apply easy. Vote ready — with VRAMS.*
 
 </div>
 
@@ -32,9 +32,11 @@ Designed to make the voter registration process faster, more accessible, and mor
 
 With a user-friendly interface and status tracking features, VRAMS aims to minimize long queues and paperwork, help citizens avoid missed deadlines, and ensure fair, inclusive participation in elections.
 
-*"Because in a democracy, every vote counts — and every voter matters."*
+**Because in a democracy, every vote counts — and every voter matters.**
 
 ## The Team Behind VRAMS
+
+**Group 5 – BSCS 2-5**
 
 - BOMBOLA, Yvan Raphael C.
 - DELGADO, Hannahlette T.
@@ -42,10 +44,14 @@ With a user-friendly interface and status tracking features, VRAMS aims to minim
 - OJA, Ma. Izabelle L.
 - SARDENIA, Reymel O.
 
-  Group 5 – BSCS 2-5
-
 ## Special Thanks
 **A Database Project for COMP 010 - Information Management**  
 - Polytechnic University of the Philippines
 - PUP College of Computer and Information Sciences
 - Instructor: Mrs. Lydinar D. Dastas
+
+---
+
+<div align="center">
+  Mula sa'yo, para sa bayan
+</div>
