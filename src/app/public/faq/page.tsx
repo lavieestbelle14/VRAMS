@@ -1,100 +1,146 @@
 
 'use client';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Search, HelpCircle, UserCheck, Clock, ListChecks, ShieldCheck, FileText } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { ArrowLeft, HelpCircle } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Input } from '@/components/ui/input';
 
-const faqItems = [
+const allFaqItems = [
   {
-    value: "item-1",
-    question: "What is VRAMS?",
-    answer: "VRAMS stands for Voter Registration and Application Management System. It's a platform designed to streamline the voter registration process, making it more accessible and efficient for Filipino citizens."
+    id: 'item-1',
+    question: 'What is VRAMS?',
+    icon: HelpCircle,
+    answer: 'VRAMS stands for Voter Registration and Application Management System. It is a secure, web-based platform designed to modernize the Philippine voter registration process, making it faster, more accessible, and transparent for all Filipino citizens.',
   },
   {
-    value: "item-2",
-    question: "Who can use VRAMS?",
-    answer: "All eligible Filipino citizens who wish to register as a voter, transfer their registration, or update their voter information can use VRAMS."
+    id: 'item-2',
+    question: 'Who can use VRAMS?',
+    icon: UserCheck,
+    answer: 'Any Filipino citizen eligible to vote can use VRAMS to register for the first time, transfer their registration, update their records, or check their application status.',
   },
   {
-    value: "item-3",
-    question: "What types of applications can I submit through VRAMS?",
-    answer: "Currently, VRAMS supports new voter registrations and transfers of registration records. Other application types may be added in the future."
+    id: 'item-3',
+    question: 'How do I register as a new voter using VRAMS?',
+    icon: FileText,
+    answer: 'Navigate to the "New Application" page from the public portal. Fill out the required personal information, address details, and other necessary fields. Once submitted, your application will be reviewed by an election officer. You will then need to schedule and complete an onsite biometrics capture.',
   },
   {
-    value: "item-4",
-    question: "Is my data secure with VRAMS?",
-    answer: "Yes, VRAMS is designed with security in mind. We employ measures to protect your personal information. However, always ensure you are on the official VRAMS portal and practice good online safety habits."
+    id: 'item-4',
+    question: 'How can I track the status of my application?',
+    icon: ListChecks,
+    answer: 'You can track your application status by going to the "Track Application Status" page and entering your unique Application ID, which you receive after submitting your application.',
   },
   {
-    value: "item-5",
-    question: "How do I track my application status?",
-    answer: "You can use the 'Track Application Status' feature on the portal. You will need your Application ID, which is provided to you after successfully submitting your application."
+    id: 'item-5',
+    question: 'What happens after my application is approved?',
+    icon: Clock,
+    answer: 'If your application is initially approved, its status will change to "Approved - Awaiting Biometrics." You will then need to schedule an appointment for onsite biometrics capture (photo, fingerprints, signature) through the "Track Application Status" page. Once biometrics are completed and verified, your status will be fully "Approved."',
   },
   {
-    value: "item-6",
-    question: "What happens after I submit my application online?",
-    answer: "After online submission, your application will be reviewed by an Election Officer. If initially approved, you will be required to schedule an appointment for biometrics capture (photo, fingerprints, signature) at a COMELEC office. Your registration is only complete after successful biometrics capture and final approval."
+    id: 'item-6',
+    question: 'Is my data secure with VRAMS?',
+    icon: ShieldCheck,
+    answer: 'Yes, VRAMS is designed with security in mind to protect your personal information. We employ measures to ensure data integrity and confidentiality throughout the registration process.',
   },
   {
-    value: "item-7",
-    question: "What if I encounter technical issues?",
-    answer: "If you experience technical difficulties, please try clearing your browser's cache and cookies, or try using a different browser. If the issue persists, please note down any error messages and contact the VRAMS support (details usually found on the official COMELEC website)."
+    id: 'item-7',
+    question: 'What if I need assistance or have special needs?',
+    icon: HelpCircle,
+    answer: 'The application form includes a section for special needs, such as assistance for PWDs, illiterate individuals, or senior citizens. You can specify your needs, and if you require an assistor, you can provide their details. COMELEC aims to make the process inclusive and accessible.',
   },
   {
-    value: "item-8",
-    question: "Where can I find my Voter ID after approval?",
-    answer: "Once your application is fully approved (including biometrics), your Voter ID number and Precinct details will be visible when you track your application status. The system will also generate a visual representation of your Voter ID."
+    id: 'item-8',
+    question: 'Can I update my existing voter registration details?',
+    icon: FileText,
+    answer: 'Currently, VRAMS primarily focuses on new registrations and transfers. For corrections or updates to existing records not covered by a transfer, please check the main COMELEC website for guidance or visit your local COMELEC office. Future VRAMS updates may expand these features.',
   },
   {
-    value: "item-9",
-    question: "Can I use VRAMS to vote online?",
-    answer: "No, VRAMS is for voter registration and application management. It does not facilitate online voting. Voting procedures are still conducted as per COMELEC guidelines."
+    id: 'item-9',
+    question: 'What should I do if I forget my password?',
+    icon: HelpCircle,
+    answer: 'If you forget your password for the public portal, you can use the "Forgot Password?" link on the login page. You will be guided through a process to reset your password, typically via email.',
+  },
+  {
+    id: 'item-10',
+    question: 'Where do I go for my biometrics capture?',
+    icon: Clock,
+    answer: 'When you schedule your biometrics appointment through VRAMS, the location for the biometrics capture (e.g., "Main COMELEC Office" or a specific local office) will be provided along with your scheduled date and time.',
   }
 ];
 
-export default function FAQPage() {
+
+export default function FaqPage() {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredFaqs = useMemo(() => {
+    if (!searchTerm) {
+      return allFaqItems;
+    }
+    return allFaqItems.filter(faq =>
+      faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      faq.answer.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [searchTerm]);
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <HelpCircle className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold tracking-tight">Frequently Asked Questions (FAQ)</h1>
-        </div>
-        <Button variant="outline" asChild>
-          <Link href="/public/home">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Home
-          </Link>
-        </Button>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">FAQ / Help Center</h1>
+        <Link href="/public/home" passHref>
+          <Button variant="outline">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Home
+          </Button>
+        </Link>
       </div>
-      <Card className="shadow-lg">
+
+      <Card>
         <CardHeader>
-          <CardTitle>Need Help?</CardTitle>
+          <CardTitle>Frequently Asked Questions</CardTitle>
           <CardDescription>Find answers to common questions about VRAMS and the voter registration process.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Accordion type="single" collapsible className="w-full">
-            {faqItems.map((item) => (
-              <AccordionItem value={item.value} key={item.value}>
-                <AccordionTrigger className="text-lg hover:no-underline text-left">{item.question}</AccordionTrigger>
-                <AccordionContent className="text-base text-muted-foreground leading-relaxed">
-                  {item.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </CardContent>
-      </Card>
-      <Card className="mt-8">
-        <CardHeader>
-            <CardTitle>Still Have Questions?</CardTitle>
-        </CardHeader>
-        <CardContent>
-            <p className="text-muted-foreground">
-                If you can&apos;t find an answer to your question here, please contact your local COMELEC office or visit the official COMELEC website for more information and support channels.
-            </p>
+          <div className="relative mb-6">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search FAQs..."
+              className="w-full pl-10 pr-4 py-2 rounded-md border"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          {filteredFaqs.length > 0 ? (
+            <Accordion type="single" collapsible className="w-full">
+              {filteredFaqs.map((faq) => {
+                const IconComponent = faq.icon || HelpCircle;
+                return (
+                  <AccordionItem value={faq.id} key={faq.id}>
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="flex items-center text-left">
+                        <IconComponent className="mr-3 h-5 w-5 text-primary shrink-0" />
+                        {faq.question}
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                );
+              })}
+            </Accordion>
+          ) : (
+            <div className="text-center py-10">
+              <Search className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-xl font-semibold">No FAQs Found</p>
+              <p className="text-muted-foreground">
+                No questions match your search term "{searchTerm}". Try using different keywords or browse all questions.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
