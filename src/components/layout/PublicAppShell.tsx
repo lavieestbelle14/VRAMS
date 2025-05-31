@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
-import { Home, FileSearch, LogOut, UserCircle, FilePlus2, Settings, HelpCircle } from 'lucide-react';
+import { Home, FileSearch, LogOut, UserCircle, FilePlus2, Settings, HelpCircle, Search as SearchIcon } from 'lucide-react';
 import Image from 'next/image';
 
 interface NavItem {
@@ -35,6 +35,16 @@ const navItems: NavItem[] = [
   { href: '/public/track-status', label: 'Track Application Status', icon: FileSearch, tooltip: 'Track Application Status' },
   { href: '/public/faq', label: 'FAQ / Help', icon: HelpCircle, tooltip: 'Frequently Asked Questions' },
 ];
+
+const pageTitleIcons: Record<string, React.ElementType> = {
+  '/public/apply': FilePlus2,
+  '/public/track-status': SearchIcon, // Magnifying glass
+  '/public/faq': HelpCircle,
+  '/public/home': Home,
+  '/public/profile': Settings,
+  '/public/application-submitted': FilePlus2, // Same as apply, shows receipt
+  '/public/schedule-biometrics': FilePlus2, // Related to application process
+};
 
 export function PublicAppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
@@ -53,6 +63,33 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
     }
     return <UserCircle size={20}/>;
   };
+
+  const getCurrentPageDetails = () => {
+    // First, try direct match or startsWith for navItems
+    let currentNavItem = navItems.find(item => pathname === item.href || (item.href !== '/public/home' && pathname.startsWith(item.href)));
+    
+    let title = currentNavItem?.label || 'VRAMS Public Portal';
+    // Default to Home icon if no specific match, or use mapped icon
+    let IconComponent = pageTitleIcons[pathname] || pageTitleIcons[currentNavItem?.href || ''] || Home;
+
+    // Handle specific cases for titles not directly in navItems but need icons
+    if (pathname.startsWith('/public/application-submitted')) {
+        title = 'Application Submitted';
+        IconComponent = FilePlus2;
+    } else if (pathname.startsWith('/public/schedule-biometrics')) {
+        title = 'Schedule Biometrics';
+        IconComponent = FilePlus2;
+    } else if (pathname === '/public/profile') {
+        title = 'My Profile';
+        IconComponent = Settings;
+    }
+
+
+    return { title, IconComponent };
+  };
+
+  const { title: pageTitle, IconComponent: PageIcon } = getCurrentPageDetails();
+
 
   return (
     <SidebarProvider defaultOpen>
@@ -95,8 +132,9 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-background px-4 sm:px-6">
           <div className="flex items-center gap-2">
              <SidebarTrigger />
-             <h1 className="text-lg font-semibold hidden sm:block">
-              {navItems.find(item => pathname.startsWith(item.href))?.label || 'VRAMS Public Portal'}
+             <h1 className="text-lg font-semibold hidden sm:block flex items-center">
+              {PageIcon && <PageIcon className="mr-2 h-5 w-5" />}
+              {pageTitle}
             </h1>
           </div>
           <DropdownMenu>

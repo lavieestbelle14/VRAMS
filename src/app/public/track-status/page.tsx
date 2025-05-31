@@ -1,37 +1,37 @@
 
 'use client';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import type { Application } from '@/types';
-import { getApplicationById } from '@/lib/applicationStore';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { useState, useEffect, FormEvent } from 'react';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { format, parseISO } from 'date-fns';
+import type { Application } from '@/types';
+import { getApplicationById, updateApplicationStatus } from '@/lib/applicationStore'; // Removed saveApplication as it's not used here directly for status tracking
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ArrowLeft, CalendarCheck, CalendarPlus, CheckCircle, FileText, HelpCircle, Info, Loader2, MapPin, User, Search as SearchIcon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Search, CalendarDays, CheckCircle, AlertTriangle, Info, FileText, Clock, CalendarPlus, CalendarCheck, Printer, Eye } from 'lucide-react';
+import { format } from 'date-fns';
 import { VoterIdDisplay } from '@/components/public/VoterIdDisplay';
-import { AcknowledgementReceipt } from '@/components/public/AcknowledgementReceipt'; // Added for printing receipt
 
 export default function TrackStatusPage() {
   const [applicationId, setApplicationId] = useState('');
   const [application, setApplication] = useState<Application | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [notFound, setNotFound] = useState(false);
-  const { toast } = useToast();
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleSearch = () => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (!applicationId.trim()) {
-      toast({ title: 'Error', description: 'Please enter an Application ID.', variant: 'destructive' });
+      setError('Please enter an Application ID.');
+      setApplication(null);
       return;
     }
     setIsLoading(true);
-    setNotFound(false);
-    setApplication(null); // Reset previous search result
+    setError(null);
+    setApplication(null); 
     
     // Simulate API call
     setTimeout(() => {
@@ -39,140 +39,135 @@ export default function TrackStatusPage() {
       if (appData) {
         setApplication(appData);
       } else {
-        setNotFound(true);
+        setError(`Application ID "${applicationId.trim()}" not found.`);
       }
       setIsLoading(false);
     }, 700);
   };
 
-  const getStatusBadgeVariant = (status: Application['status']) => {
+  const getStatusVariant = (status: Application['status']) => {
     switch (status) {
       case 'approved': return 'default';
       case 'approvedAwaitingBiometrics': return 'default';
       case 'approvedBiometricsScheduled': return 'default';
-      case 'rejected': return 'destructive';
       case 'pending': return 'secondary';
+      case 'rejected': return 'destructive';
       case 'reviewing': return 'outline';
       default: return 'secondary';
     }
   };
 
-  const getStatusMessage = (app: Application) => {
-    switch (app.status) {
-      case 'pending': return { title: 'Pending Review', description: 'Your application is awaiting review by an election officer.', icon: Clock, color: 'text-yellow-600' };
-      case 'reviewing': return { title: 'Under Review', description: 'An election officer is currently reviewing your application.', icon: FileText, color: 'text-blue-600' };
-      case 'approvedAwaitingBiometrics': return { title: 'Approved - Awaiting Biometrics', description: 'Congratulations! Your application has been initially approved. Please schedule your biometrics capture.', icon: CheckCircle, color: 'text-green-600' };
-      case 'approvedBiometricsScheduled': return { title: 'Biometrics Scheduled', description: `Your biometrics appointment is scheduled for ${app.biometricsSchedule ? format(parseISO(app.biometricsSchedule.date), 'PPP') + ' at ' + app.biometricsSchedule.time : 'N/A'}. Location: ${app.biometricsSchedule?.location || 'Main COMELEC Office'}`, icon: CalendarCheck, color: 'text-green-700' };
-      case 'approved': return { title: 'Application Approved & Complete', description: 'Your voter registration is complete! Your Voter ID is now available.', icon: CheckCircle, color: 'text-green-600' };
-      case 'rejected': return { title: 'Application Rejected', description: `Reason: ${app.remarks || 'Please contact COMELEC for details.'}`, icon: AlertTriangle, color: 'text-destructive' };
-      default: return { title: 'Unknown Status', description: 'Please contact COMELEC for more information.', icon: Info, color: 'text-muted-foreground' };
-    }
-  };
-
-  const handlePrintReceipt = () => {
-    if (!application) return;
-    const printableArea = document.getElementById('printable-receipt-area');
-    if (printableArea) {
-      window.print();
-    } else {
-      toast({ title: 'Error', description: 'Could not find printable receipt content.', variant: 'destructive' });
+  const getStatusDescription = (status: Application['status']): string => {
+    switch (status) {
+        case 'pending': return 'Your application has been submitted and is awaiting initial review by an election officer.';
+        case 'reviewing': return 'Your application is currently being reviewed by an election officer. Please check back later for updates.';
+        case 'approvedAwaitingBiometrics': return 'Congratulations! Your initial application has been approved. The next step is to schedule your biometrics (photo, fingerprints, signature) capture.';
+        case 'approvedBiometricsScheduled': return 'Your biometrics appointment has been successfully scheduled. Please ensure you attend on the specified date and time.';
+        case 'approved': return 'Your application is fully approved, and biometrics capture is complete! You are now a registered voter.';
+        case 'rejected': return 'We regret to inform you that your application has been rejected. Please see remarks for details.';
+        default: return 'The status of your application is unclear. Please contact support.';
     }
   };
 
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Track Application Status</h1>
-        <Button variant="outline" asChild>
-          <Link href="/public/home">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Home
-          </Link>
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold tracking-tight flex items-center">
+          <SearchIcon className="mr-3 h-8 w-8 text-primary" />
+          Track Your Application
+        </h2>
+        <Button variant="outline" onClick={() => router.push('/public/home')}>
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Home
         </Button>
       </div>
+      <p className="text-muted-foreground">
+        Enter your Application ID to check the current status of your voter registration application.
+      </p>
 
       <Card>
         <CardHeader>
-          <CardTitle>Check Your Application</CardTitle>
-          <CardDescription>Enter your Application ID to see the current status of your voter registration application.</CardDescription>
+          <CardTitle>Check Application Status</CardTitle>
+          <CardDescription>
+            Your Application ID was provided to you upon submission of your form.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Input
-              type="text"
-              placeholder="Enter Application ID (e.g., APP-XXXXXX)"
-              value={applicationId}
-              onChange={(e) => setApplicationId(e.target.value.toUpperCase())}
-              className="flex-grow"
-              aria-label="Application ID"
-            />
-            <Button onClick={handleSearch} disabled={isLoading} className="w-full sm:w-auto">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="applicationId">Application ID</Label>
+              <Input
+                id="applicationId"
+                value={applicationId}
+                onChange={(e) => setApplicationId(e.target.value.toUpperCase())}
+                placeholder="e.g., APP-123456"
+                className="uppercase"
+              />
+            </div>
+            <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
               {isLoading ? (
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                <Search className="mr-2 h-4 w-4" />
+                <SearchIcon className="mr-2 h-4 w-4" />
               )}
-              Search
+              Track Status
             </Button>
-          </div>
+          </form>
         </CardContent>
       </Card>
 
+      {error && (
+        <Alert variant="destructive">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
       {application && (
-        <Card className="mt-6 shadow-lg">
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                <div>
-                    <CardTitle className="text-2xl">Application Status: {application.id}</CardTitle>
-                    <CardDescription>Submitted on: {format(parseISO(application.submissionDate), 'PPP p')}</CardDescription>
-                </div>
-                <Badge variant={getStatusBadgeVariant(application.status)} className="text-base mt-2 sm:mt-0 capitalize">
-                    {application.status.replace(/([A-Z])/g, ' $1').trim()}
-                </Badge>
+        <Card>
+          <CardHeader className="flex flex-row justify-between items-start">
+            <div>
+                <CardTitle>Application Found: {application.id}</CardTitle>
+                <CardDescription>Submitted on: {format(new Date(application.submissionDate), 'PPP p')}</CardDescription>
             </div>
+            <Badge variant={getStatusVariant(application.status)} className="text-lg capitalize">
+                {application.status.replace(/([A-Z])/g, ' $1').trim()}
+            </Badge>
           </CardHeader>
           <CardContent className="space-y-4">
-            {(() => {
-                const statusInfo = getStatusMessage(application);
-                const IconComponent = statusInfo.icon;
-                return (
-                  <div className={`flex items-start p-4 rounded-md border ${statusInfo.color.includes('destructive') ? 'border-destructive bg-destructive/10' : statusInfo.color.includes('green') ? 'border-green-500 bg-green-50/50' : 'border-blue-500 bg-blue-50/50'}`}>
-                    <IconComponent className={`mr-3 h-6 w-6 ${statusInfo.color}`} />
-                    <div>
-                      <p className={`font-semibold text-lg ${statusInfo.color}`}>{statusInfo.title}</p>
-                      <p className="text-sm text-muted-foreground">{statusInfo.description}</p>
-                    </div>
-                  </div>
-                );
-            })()}
+            <Alert variant={getStatusVariant(application.status) === "destructive" ? "destructive" : "default"}>
+              <Info className="h-4 w-4" />
+              <AlertTitle className="font-semibold capitalize">{application.status.replace(/([A-Z])/g, ' $1').trim()}</AlertTitle>
+              <AlertDescription>{getStatusDescription(application.status)}</AlertDescription>
+            </Alert>
+            
+            {application.remarks && (
+              <div className="p-3 border rounded-md bg-muted/50">
+                <p className="text-sm font-semibold">Officer Remarks:</p>
+                <p className="text-sm text-muted-foreground">{application.remarks}</p>
+              </div>
+            )}
 
-            {application.classification && (
-              <Card className="bg-muted/30">
-                <CardHeader><CardTitle className="text-base">AI Classification Details</CardTitle></CardHeader>
-                <CardContent className="text-sm space-y-1">
-                  <p><strong>Classified Type:</strong> {application.classification.applicantType}</p>
-                  <p><strong>Confidence:</strong> {(application.classification.confidence * 100).toFixed(0)}%</p>
-                  <p><strong>Reason:</strong> {application.classification.reason}</p>
-                </CardContent>
-              </Card>
+            {(application.status === 'approved' || application.status === 'approvedAwaitingBiometrics' || application.status === 'approvedBiometricsScheduled') && application.voterId && (
+              <VoterIdDisplay application={application} />
             )}
 
             {application.status === 'approvedAwaitingBiometrics' && (
-                <Card className="border-green-500 bg-green-50 dark:bg-green-900/30 shadow-md hover:shadow-lg transition-shadow">
+                <Card className="bg-green-50 border-green-200 dark:bg-green-900/30 dark:border-green-700">
                     <CardHeader>
-                        <CardTitle className="flex items-center text-green-700 dark:text-green-400"><CalendarCheck className="mr-2"/> Schedule Your Biometrics</CardTitle>
-                        <CardDescription className="text-green-600 dark:text-green-500">Your application is approved! The next step is to schedule your biometrics (photo, fingerprints, signature) capture at a COMELEC office.</CardDescription>
+                        <CardTitle className="text-green-700 dark:text-green-400 flex items-center">
+                            <CalendarCheck className="mr-2 h-6 w-6"/>Action Required: Schedule Biometrics
+                        </CardTitle>
+                        <CardDescription className="text-green-600 dark:text-green-500">
+                            Your application has been approved! Please schedule your biometrics capture.
+                        </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <p className="mb-4 text-sm">Please choose a convenient date and time for your appointment. This is a mandatory step to complete your voter registration.</p>
                         <Button 
-                            size="lg" 
-                            className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white"
-                            onClick={() => router.push(`/public/schedule-biometrics/${application.id}`)}
+                            onClick={() => router.push(`/public/schedule-biometrics/${application.id}`)} 
+                            className="w-full bg-green-600 hover:bg-green-700 text-white dark:bg-green-500 dark:hover:bg-green-600"
+                            size="lg"
                         >
                            <CalendarPlus className="mr-2 h-5 w-5"/> Schedule Biometrics Appointment
                         </Button>
@@ -180,39 +175,47 @@ export default function TrackStatusPage() {
                 </Card>
             )}
 
-            {(application.status === 'approved' || application.status === 'approvedAwaitingBiometrics' || application.status === 'approvedBiometricsScheduled') && application.voterId && (
-              <div className="my-6">
-                <h3 className="text-xl font-semibold mb-3 text-center">Your Voter Information</h3>
-                <VoterIdDisplay application={application} />
-              </div>
+            {application.status === 'approvedBiometricsScheduled' && application.biometricsSchedule && (
+                <Card className="bg-blue-50 border-blue-200 dark:bg-blue-900/30 dark:border-blue-700">
+                    <CardHeader>
+                        <CardTitle className="text-blue-700 dark:text-blue-400 flex items-center"><CalendarCheck className="mr-2 h-6 w-6"/>Biometrics Scheduled!</CardTitle>
+                         <CardDescription className="text-blue-600 dark:text-blue-500">
+                            Your appointment is confirmed.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                        <p className="text-sm"><strong>Date:</strong> {format(new Date(application.biometricsSchedule.date), 'PPP')}</p>
+                        <p className="text-sm"><strong>Time:</strong> {application.biometricsSchedule.time}</p>
+                        <p className="text-sm"><strong>Location:</strong> {application.biometricsSchedule.location || 'Main COMELEC Office'}</p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                            Please bring a valid ID. If you need to reschedule, please contact your local COMELEC office.
+                        </p>
+                    </CardContent>
+                </Card>
             )}
-             {/* Printable Acknowledgement Receipt Section */}
-             <div className="mt-6 flex justify-center">
-                <Button variant="outline" onClick={handlePrintReceipt}>
-                  <Printer className="mr-2 h-4 w-4" /> Print Acknowledgement Receipt
-                </Button>
-              </div>
-              <div id="printable-receipt-area" className="print-only-area hidden">
-                <AcknowledgementReceipt application={application} />
-              </div>
-          </CardContent>
-           <CardFooter className="text-xs text-muted-foreground">
-            If you have any questions or concerns about your application status, please contact your local COMELEC office.
-          </CardFooter>
-        </Card>
-      )}
 
-      {notFound && (
-        <Card className="mt-6 border-destructive">
-          <CardHeader>
-            <CardTitle className="text-destructive flex items-center"><AlertTriangle className="mr-2"/>Application Not Found</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>No application found with ID: <strong>{applicationId}</strong>. Please check the ID and try again. Application IDs are case-sensitive.</p>
+            {application.classification && (
+                <Card className="mt-4">
+                    <CardHeader>
+                        <CardTitle className="text-base flex items-center"><FileText className="mr-2 h-5 w-5 text-muted-foreground" />AI Classification Summary</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-sm space-y-1">
+                        <p><strong>Classified Type:</strong> {application.classification.applicantType}</p>
+                        <p><strong>Confidence:</strong> {(application.classification.confidence * 100).toFixed(0)}%</p>
+                        <p><strong>Reason:</strong> {application.classification.reason}</p>
+                    </CardContent>
+                </Card>
+            )}
+
+            <div className="mt-6 text-center">
+              <p className="text-xs text-muted-foreground">
+                Need help or have questions about your application?
+                Visit our <Link href="/public/faq" className="underline hover:text-primary">FAQ page</Link> or contact COMELEC.
+              </p>
+            </div>
           </CardContent>
         </Card>
       )}
     </div>
   );
 }
-
