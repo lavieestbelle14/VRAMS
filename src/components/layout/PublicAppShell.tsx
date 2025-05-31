@@ -36,15 +36,18 @@ const navItems: NavItem[] = [
   { href: '/public/faq', label: 'FAQ / Help', icon: HelpCircle, tooltip: 'Frequently Asked Questions' },
 ];
 
-const pageTitleIcons: Record<string, React.ElementType> = {
-  '/public/apply': FilePlus2,
-  '/public/track-status': SearchIcon, // Magnifying glass
-  '/public/faq': HelpCircle,
-  '/public/home': Home,
-  '/public/profile': Settings,
-  '/public/application-submitted': FilePlus2, // Same as apply, shows receipt
-  '/public/schedule-biometrics': FilePlus2, // Related to application process
+// This mapping is still useful for page-specific titles if needed elsewhere,
+// but the icon won't be shown in the header bar.
+const pageTitleDetails: Record<string, { title: string; icon?: React.ElementType }> = {
+  '/public/home': { title: 'Home', icon: Home },
+  '/public/apply': { title: 'New Voter Application', icon: FilePlus2 },
+  '/public/track-status': { title: 'Track Application Status', icon: SearchIcon },
+  '/public/faq': { title: 'FAQ / Help Center', icon: HelpCircle },
+  '/public/profile': { title: 'My Profile', icon: Settings },
+  '/public/application-submitted': { title: 'Application Submitted', icon: FilePlus2 },
+  '/public/schedule-biometrics': { title: 'Schedule Biometrics', icon: FilePlus2 },
 };
+
 
 export function PublicAppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
@@ -64,32 +67,22 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
     return <UserCircle size={20}/>;
   };
 
-  const getCurrentPageDetails = () => {
-    // First, try direct match or startsWith for navItems
-    let currentNavItem = navItems.find(item => pathname === item.href || (item.href !== '/public/home' && pathname.startsWith(item.href)));
-    
-    let title = currentNavItem?.label || 'VRAMS Public Portal';
-    // Default to Home icon if no specific match, or use mapped icon
-    let IconComponent = pageTitleIcons[pathname] || pageTitleIcons[currentNavItem?.href || ''] || Home;
+  const getCurrentPageTitle = () => {
+    // Find a direct match or a startsWith match for dynamic routes like /application-submitted/[id]
+    const matchedPath = Object.keys(pageTitleDetails).find(
+      key => pathname === key || (key.includes('[') && pathname.startsWith(key.split('[')[0]))
+    );
 
-    // Handle specific cases for titles not directly in navItems but need icons
-    if (pathname.startsWith('/public/application-submitted')) {
-        title = 'Application Submitted';
-        IconComponent = FilePlus2;
-    } else if (pathname.startsWith('/public/schedule-biometrics')) {
-        title = 'Schedule Biometrics';
-        IconComponent = FilePlus2;
-    } else if (pathname === '/public/profile') {
-        title = 'My Profile';
-        IconComponent = Settings;
+    if (matchedPath && pageTitleDetails[matchedPath]) {
+      return pageTitleDetails[matchedPath].title;
     }
-
-
-    return { title, IconComponent };
+    
+    // Fallback for nav items if no specific title detail found
+    const currentNavItem = navItems.find(item => pathname === item.href || (item.href !== '/public/home' && pathname.startsWith(item.href)));
+    return currentNavItem?.label || 'VRAMS Public Portal';
   };
 
-  const { title: pageTitle, IconComponent: PageIcon } = getCurrentPageDetails();
-
+  const pageTitle = getCurrentPageTitle();
 
   return (
     <SidebarProvider defaultOpen>
@@ -132,8 +125,8 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-background px-4 sm:px-6">
           <div className="flex items-center gap-2">
              <SidebarTrigger />
-             <h1 className="text-lg font-semibold hidden sm:block flex items-center">
-              {PageIcon && <PageIcon className="mr-2 h-5 w-5" />}
+             <h1 className="text-lg font-semibold hidden sm:block">
+              {/* Icon removed from here */}
               {pageTitle}
             </h1>
           </div>
