@@ -1,141 +1,100 @@
 
 'use client';
-
-import { useState, useMemo } from 'react';
-import { Input } from '@/components/ui/input';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, HelpCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { ArrowLeft, HelpCircle } from 'lucide-react';
 
-interface FAQItem {
-  id: string;
-  question: string;
-  answer: string;
-  keywords?: string[];
-}
-
-const faqs: FAQItem[] = [
+const faqItems = [
   {
-    id: 'q1',
-    question: 'How do I register to vote?',
-    answer:
-      'To register to vote, you need to fill out the online application form available in the "New Application" section of this portal. Ensure all required information is provided accurately. After submission, your application will be reviewed.',
-    keywords: ['register', 'application', 'how to', 'form'],
+    value: "item-1",
+    question: "What is VRAMS?",
+    answer: "VRAMS stands for Voter Registration and Application Management System. It's a platform designed to streamline the voter registration process, making it more accessible and efficient for Filipino citizens."
   },
   {
-    id: 'q2',
-    question: 'What are the requirements for voter registration?',
-    answer:
-      'You must be a Filipino citizen, at least 18 years of age on or before election day, a resident of the Philippines for at least one year, and a resident in the place where you intend to vote for at least six months immediately preceding the election. Specific documents may be required for certain application types.',
-    keywords: ['requirements', 'eligibility', 'age', 'residency', 'citizen'],
+    value: "item-2",
+    question: "Who can use VRAMS?",
+    answer: "All eligible Filipino citizens who wish to register as a voter, transfer their registration, or update their voter information can use VRAMS."
   },
   {
-    id: 'q3',
-    question: 'How can I track the status of my application?',
-    answer:
-      'You can track your application status by navigating to the "Track Application Status" page and entering your Application ID, which you received after submitting your form.',
-    keywords: ['track', 'status', 'application id', 'progress'],
+    value: "item-3",
+    question: "What types of applications can I submit through VRAMS?",
+    answer: "Currently, VRAMS supports new voter registrations and transfers of registration records. Other application types may be added in the future."
   },
   {
-    id: 'q4',
-    question: 'What should I do if I made a mistake in my application?',
-    answer:
-      'If your application has not yet been approved, you may need to contact your local election office for guidance on how to correct errors. If it involves a change of name or correction of entries, this typically requires a specific application process.',
-    keywords: ['mistake', 'error', 'correction', 'change'],
+    value: "item-4",
+    question: "Is my data secure with VRAMS?",
+    answer: "Yes, VRAMS is designed with security in mind. We employ measures to protect your personal information. However, always ensure you are on the official VRAMS portal and practice good online safety habits."
   },
   {
-    id: 'q5',
-    question: 'How long does the application review process take?',
-    answer:
-      'The review process duration can vary. You can monitor the status of your application through the "Track Application Status" page. You will be notified once a decision has been made or if further action is required from your end.',
-    keywords: ['review time', 'duration', 'processing', 'how long'],
+    value: "item-5",
+    question: "How do I track my application status?",
+    answer: "You can use the 'Track Application Status' feature on the portal. You will need your Application ID, which is provided to you after successfully submitting your application."
   },
   {
-    id: 'q6',
-    question: 'What is an Application ID?',
-    answer:
-      'The Application ID is a unique reference number assigned to your application upon submission. It is essential for tracking the status of your application. Please keep it safe.',
-    keywords: ['application id', 'reference number'],
+    value: "item-6",
+    question: "What happens after I submit my application online?",
+    answer: "After online submission, your application will be reviewed by an Election Officer. If initially approved, you will be required to schedule an appointment for biometrics capture (photo, fingerprints, signature) at a COMELEC office. Your registration is only complete after successful biometrics capture and final approval."
   },
   {
-    id: 'q7',
-    question: 'Can I submit an application for someone else?',
-    answer:
-      'Generally, voter registration is a personal application. However, assistance can be provided to individuals who are illiterate or persons with disabilities (PWDs), by an assistor of their choice. Details of the assistor must be provided in the form.',
-    keywords: ['assistance', 'someone else', 'pwd', 'illiterate'],
+    value: "item-7",
+    question: "What if I encounter technical issues?",
+    answer: "If you experience technical difficulties, please try clearing your browser's cache and cookies, or try using a different browser. If the issue persists, please note down any error messages and contact the VRAMS support (details usually found on the official COMELEC website)."
   },
   {
-    id: 'q8',
-    question: 'What happens after my application is approved?',
-    answer:
-      'Once your application is approved, you will be officially registered as a voter. You will receive a Voter ID number and precinct details. You can check these details on the "Track Application Status" page.',
-    keywords: ['approved', 'voter id', 'precinct', 'next steps'],
+    value: "item-8",
+    question: "Where can I find my Voter ID after approval?",
+    answer: "Once your application is fully approved (including biometrics), your Voter ID number and Precinct details will be visible when you track your application status. The system will also generate a visual representation of your Voter ID."
   },
+  {
+    value: "item-9",
+    question: "Can I use VRAMS to vote online?",
+    answer: "No, VRAMS is for voter registration and application management. It does not facilitate online voting. Voting procedures are still conducted as per COMELEC guidelines."
+  }
 ];
 
 export default function FAQPage() {
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const filteredFaqs = useMemo(() => {
-    if (!searchTerm.trim()) {
-      return faqs;
-    }
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    return faqs.filter(
-      (faq) =>
-        faq.question.toLowerCase().includes(lowerSearchTerm) ||
-        faq.answer.toLowerCase().includes(lowerSearchTerm) ||
-        (faq.keywords && faq.keywords.some(keyword => keyword.toLowerCase().includes(lowerSearchTerm)))
-    );
-  }, [searchTerm]);
-
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-3">
+          <HelpCircle className="h-8 w-8 text-primary" />
+          <h1 className="text-3xl font-bold tracking-tight">Frequently Asked Questions (FAQ)</h1>
+        </div>
+        <Button variant="outline" asChild>
+          <Link href="/public/home">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Link>
+        </Button>
+      </div>
       <Card className="shadow-lg">
         <CardHeader>
-          <div className="flex items-center space-x-2 text-primary">
-            <HelpCircle className="h-8 w-8" />
-            <CardTitle className="text-3xl font-bold">Frequently Asked Questions (FAQ)</CardTitle>
-          </div>
-          <CardDescription className="text-lg">
-            Find answers to common questions about the voter registration process and using this portal.
-          </CardDescription>
+          <CardTitle>Need Help?</CardTitle>
+          <CardDescription>Find answers to common questions about VRAMS and the voter registration process.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-6 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search FAQs..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-base border-2 border-border focus:border-primary transition-colors duration-200 rounded-lg shadow-sm"
-            />
-          </div>
-
-          {filteredFaqs.length > 0 ? (
-            <Accordion type="single" collapsible className="w-full space-y-2">
-              {filteredFaqs.map((faq) => (
-                <AccordionItem value={faq.id} key={faq.id} className="border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 bg-card">
-                  <AccordionTrigger className="p-4 text-left font-semibold text-lg hover:bg-muted/50 rounded-t-lg transition-colors duration-150">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="p-4 pt-0 text-base text-muted-foreground">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          ) : (
-            <p className="text-center text-muted-foreground text-lg py-8">
-              No FAQs found matching your search term.
+          <Accordion type="single" collapsible className="w-full">
+            {faqItems.map((item) => (
+              <AccordionItem value={item.value} key={item.value}>
+                <AccordionTrigger className="text-lg hover:no-underline text-left">{item.question}</AccordionTrigger>
+                <AccordionContent className="text-base text-muted-foreground leading-relaxed">
+                  {item.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </CardContent>
+      </Card>
+      <Card className="mt-8">
+        <CardHeader>
+            <CardTitle>Still Have Questions?</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <p className="text-muted-foreground">
+                If you can&apos;t find an answer to your question here, please contact your local COMELEC office or visit the official COMELEC website for more information and support channels.
             </p>
-          )}
         </CardContent>
       </Card>
     </div>
