@@ -1,18 +1,14 @@
 
 'use client';
-import React, { useState, useEffect, useMemo } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import type { Application } from '@/types';
-import { getApplicationById } from '@/lib/applicationStore';
-import { Badge } from '@/components/ui/badge';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { ArrowLeft, Search, User, FileText, CalendarDays, Clock, XCircle, CheckCircle, Hourglass, ShieldAlert, ShieldCheck, Users, Cake, Building, MapPin } from 'lucide-react';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { getApplicationById } from '@/lib/applicationStore';
+import type { Application } from '@/types';
+import { Search, ArrowLeft, User, CalendarDays, FileText, Clock, CheckCircle2, XCircle, Hourglass, ShieldCheck, Info, Users as UsersIcon } from 'lucide-react';
 import Link from 'next/link';
 import { AcknowledgementReceipt } from '@/components/public/AcknowledgementReceipt';
 import { Label } from '@/components/ui/label';
@@ -20,120 +16,147 @@ import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 
-const searchSchema = z.object({
-  applicationId: z.string().min(1, { message: 'Application ID is required' }),
-});
-type SearchFormValues = z.infer<typeof searchSchema>;
 
 interface StatusDisplayInfo {
   icon: React.ElementType;
   title: string;
   message: string;
-  variant: 'default' | 'secondary' | 'destructive' | 'outline';
+  badgeVariant: 'default' | 'destructive' | 'secondary' | 'outline' | 'success';
   cardBgClass: string;
   cardBorderClass: string;
+  iconColorClass: string;
 }
 
-export default function TrackStatusPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [searchedApplication, setSearchedApplication] = useState<Application | null>(null);
-  const [searchError, setSearchError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+const getStatusDisplayInfo = (status: Application['status']): StatusDisplayInfo => {
+  switch (status) {
+    case 'pending':
+      return {
+        icon: Hourglass,
+        title: "Application Pending",
+        message: "Your application has been submitted and is awaiting initial review by an election officer.",
+        badgeVariant: 'secondary',
+        cardBgClass: 'bg-blue-50 dark:bg-blue-900/30',
+        cardBorderClass: 'border-blue-400 dark:border-blue-600',
+        iconColorClass: 'text-blue-600',
+      };
+    case 'reviewing':
+      return {
+        icon: Info,
+        title: "Application Under Review",
+        message: "An election officer is currently reviewing your application details and documents.",
+        badgeVariant: 'outline',
+        cardBgClass: 'bg-yellow-50 dark:bg-yellow-900/30',
+        cardBorderClass: 'border-yellow-400 dark:border-yellow-600',
+        iconColorClass: 'text-yellow-600',
+      };
+    case 'approvedAwaitingBiometrics':
+        return {
+            icon: CheckCircle2,
+            title: "Approved - Awaiting Biometrics",
+            message: "Your application has been initially approved! Please proceed to schedule your biometrics capture.",
+            badgeVariant: 'default', // Visually similar to success
+            cardBgClass: 'bg-green-50 dark:bg-green-900/30',
+            cardBorderClass: 'border-green-400 dark:border-green-600',
+            iconColorClass: 'text-green-600',
+        };
+    case 'approvedBiometricsScheduled':
+        return {
+            icon: CheckCircle2,
+            title: "Approved - Biometrics Scheduled",
+            message: "Your biometrics appointment is scheduled. Please check the details below.",
+            badgeVariant: 'default',
+            cardBgClass: 'bg-green-50 dark:bg-green-900/30',
+            cardBorderClass: 'border-green-400 dark:border-green-600',
+            iconColorClass: 'text-green-600',
+        };
+    case 'approved':
+      return {
+        icon: CheckCircle2,
+        title: "Application Approved",
+        message: "Congratulations! Your voter registration application has been approved.",
+        badgeVariant: 'default',
+        cardBgClass: 'bg-green-50 dark:bg-green-900/30',
+        cardBorderClass: 'border-green-400 dark:border-green-600',
+        iconColorClass: 'text-green-600',
+      };
+    case 'rejected':
+      return {
+        icon: XCircle,
+        title: "Application Rejected",
+        message: "Unfortunately, your application could not be approved at this time. Please see remarks for details.",
+        badgeVariant: 'destructive',
+        cardBgClass: 'bg-red-50 dark:bg-red-900/30',
+        cardBorderClass: 'border-red-400 dark:border-red-600',
+        iconColorClass: 'text-red-600',
+      };
+    default:
+      return { // Should not happen
+        icon: ShieldCheck,
+        title: "Status Unknown",
+        message: "The status of your application is currently unknown. Please contact support.",
+        badgeVariant: 'secondary',
+        cardBgClass: 'bg-gray-50 dark:bg-gray-900/30',
+        cardBorderClass: 'border-gray-400 dark:border-gray-600',
+        iconColorClass: 'text-gray-600',
+      };
+  }
+};
 
-  const form = useForm<SearchFormValues>({
-    resolver: zodResolver(searchSchema),
-    defaultValues: {
-      applicationId: '',
-    },
-  });
 
-  const fetchApplication = (id: string) => {
-    if (!id) return;
-    setIsLoading(true);
-    setSearchError(null);
-    setSearchedApplication(null); // Clear previous result
-
-    // Simulate API delay
-    setTimeout(() => {
-      const app = getApplicationById(id);
-      if (app) {
-        setSearchedApplication(app);
-      } else {
-        setSearchError('Application ID not found. Please check the ID and try again.');
-      }
-      setIsLoading(false);
-    }, 700);
+const DetailItem = ({ label, value, icon, className, valueClassName }: { label: string; value?: string | number | null; icon?: React.ElementType; className?: string; valueClassName?: string }) => {
+    const IconComponent = icon;
+    if (value === null || typeof value === 'undefined' || (typeof value === 'string' && value.trim() === '')) return null;
+  
+    return (
+      <div className={cn("mb-1 flex flex-col", className)}>
+        <div className="flex items-center text-sm font-semibold text-foreground">
+          {IconComponent && <IconComponent className="mr-2 h-4 w-4 flex-shrink-0 text-muted-foreground" />} {label}
+        </div>
+        <p className={cn("text-sm text-foreground ml-6", valueClassName)}>{String(value)}</p> {}
+      </div>
+    );
   };
 
-  useEffect(() => {
-    const appIdFromQuery = searchParams.get('applicationId');
-    if (appIdFromQuery) {
-      form.setValue('applicationId', appIdFromQuery);
-      fetchApplication(appIdFromQuery);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, form.setValue]);
 
-  function onSubmit(data: SearchFormValues) {
-    router.push(`/public/track-status?applicationId=${data.applicationId}`);
-    // fetchApplication is called by useEffect when searchParams change
-  }
+export default function TrackStatusPage() {
+  const [applicationId, setApplicationId] = useState('');
+  const [searchedApplication, setSearchedApplication] = useState<Application | null | undefined>(undefined); // undefined for initial, null for not found
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSearch = useCallback(() => {
+    if (!applicationId.trim()) {
+      setSearchedApplication(undefined); // Reset if search is cleared
+      return;
+    }
+    setIsLoading(true);
+    // Simulate API call
+    setTimeout(() => {
+      const app = getApplicationById(applicationId.trim());
+      setSearchedApplication(app);
+      setIsLoading(false);
+    }, 500);
+  }, [applicationId]);
+
+  // Effect to auto-search if ID changes (e.g. pasted)
+  useEffect(() => {
+    if (applicationId.trim()) {
+      handleSearch();
+    } else {
+      setSearchedApplication(undefined); // Clear results if input is empty
+    }
+  }, [applicationId, handleSearch]);
 
   const applicationTypeLabels: Record<Application['applicationType'] | '', string> = {
     'register': 'New Registration',
     'transfer': 'Transfer of Registration',
     '': 'Unknown Type'
   };
-
-  const getStatusDisplayInfo = (status: Application['status']): StatusDisplayInfo => {
-    switch (status) {
-      case 'pending':
-        return { icon: Hourglass, title: "Application Pending", message: "Your application has been submitted and is currently awaiting review by an election officer. You will be notified of any updates.", variant: 'secondary', cardBgClass: 'bg-blue-50 dark:bg-blue-900/30', cardBorderClass: 'border-blue-400 dark:border-blue-700'};
-      case 'reviewing':
-        return { icon: FileText, title: "Application Under Review", message: "An election officer is currently reviewing your application details and documents. This step may take a few days.", variant: 'outline', cardBgClass: 'bg-yellow-50 dark:bg-yellow-900/30', cardBorderClass: 'border-yellow-400 dark:border-yellow-700' };
-      case 'approvedAwaitingBiometrics':
-        return { icon: ShieldAlert, title: "Approved - Awaiting Biometrics", message: "Your application has been preliminarily approved! Please proceed to schedule your biometrics capture. Further instructions will be provided.", variant: 'default', cardBgClass: 'bg-green-50 dark:bg-green-900/30', cardBorderClass: 'border-green-400 dark:border-green-700' };
-      case 'approvedBiometricsScheduled':
-        return { icon: CalendarDays, title: "Approved - Biometrics Scheduled", message: "Your biometrics capture has been scheduled. Please check the details below and ensure you attend your appointment.", variant: 'default', cardBgClass: 'bg-green-50 dark:bg-green-900/30', cardBorderClass: 'border-green-400 dark:border-green-700' };
-      case 'approved':
-        return { icon: ShieldCheck, title: "Application Approved", message: "Congratulations! Your voter registration application has been fully approved. Your Voter ID and Precinct details are now available.", variant: 'default', cardBgClass: 'bg-green-50 dark:bg-green-900/30', cardBorderClass: 'border-green-400 dark:border-green-700' };
-      case 'rejected':
-        return { icon: XCircle, title: "Application Rejected", message: "Unfortunately, your application could not be approved at this time. Please see the officer remarks for details on the reason for rejection.", variant: 'destructive', cardBgClass: 'bg-red-50 dark:bg-red-900/30', cardBorderClass: 'border-red-400 dark:border-red-700' };
-      default:
-        return { icon: Clock, title: "Status Unknown", message: "The status of your application is currently unknown. Please try again later or contact support.", variant: 'secondary', cardBgClass: 'bg-gray-50 dark:bg-gray-900/30', cardBorderClass: 'border-gray-400 dark:border-gray-700' };
-    }
-  };
-
-  const DetailItem = ({ label, value, icon, className, valueClassName }: { label: string; value?: string | number | null; icon?: React.ElementType; className?: string, valueClassName?: string }) => {
-    const IconComponent = icon;
-    if (value === null || typeof value === 'undefined' || (typeof value === 'string' && value.trim() === '')) return null;
-
-    return (
-      <div className={cn("mb-1", className)}>
-        <div className="flex items-center text-sm font-semibold text-foreground">
-          {IconComponent && <IconComponent className="mr-2 h-4 w-4 flex-shrink-0" />} {label}
-        </div>
-        <p className={cn("text-sm text-foreground pt-0.5 pl-6", valueClassName)}>{String(value)}</p> {/* pl-6 to align value under label text */}
-      </div>
-    );
-  };
-
-  const renderBiometricsSchedule = (schedule: Application['biometricsSchedule']) => {
-    if (!schedule) return null;
-    return (
-      <div className="mt-3 p-3 border border-dashed border-primary/50 rounded-md bg-primary/5">
-        <h4 className="font-semibold text-md mb-1 text-primary flex items-center"><CalendarDays className="mr-2 h-5 w-5"/>Biometrics Schedule:</h4>
-        <DetailItem label="Date" value={format(parseISO(schedule.date), 'MMMM do, yyyy')} />
-        <DetailItem label="Time" value={schedule.time} />
-        <DetailItem label="Location" value={schedule.location || 'Main COMELEC Office'} />
-      </div>
-    );
-  };
+  
+  const statusInfo = searchedApplication ? getStatusDisplayInfo(searchedApplication.status) : null;
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h2 className="text-3xl font-bold tracking-tight flex items-center">
           <Search className="mr-3 h-7 w-7" /> Track Your Application
         </h2>
@@ -142,113 +165,107 @@ export default function TrackStatusPage() {
         </Link>
       </div>
 
-      <Card className="w-full">
+      <Card>
         <CardHeader>
           <CardTitle>Check Application Status</CardTitle>
-          <CardDescription>Enter your Application ID to view its current status and details.</CardDescription>
+          <CardDescription>Enter your Application ID to check the current status of your submission.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col sm:flex-row gap-4 items-start">
-              <FormField
-                control={form.control}
-                name="applicationId"
-                render={({ field }) => (
-                  <FormItem className="flex-grow w-full sm:w-auto">
-                    <Label htmlFor="applicationId" className="sr-only">Application ID</Label>
-                    <FormControl>
-                      <Input id="applicationId" placeholder="e.g., APP-123456" {...field} className="text-base"/>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
-                {isLoading ? (
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                ) : (
-                  <Search className="mr-2 h-4 w-4" />
-                )}
-                Track Status
-              </Button>
-            </form>
-          </Form>
+          <div className="flex gap-2">
+            <Input
+              type="text"
+              placeholder="Enter Application ID (e.g., APP-XXXXXX)"
+              value={applicationId}
+              onChange={(e) => setApplicationId(e.target.value)}
+              className="flex-grow"
+            />
+            <Button onClick={handleSearch} disabled={isLoading || !applicationId.trim()}>
+              {isLoading ? (
+                <svg className="animate-spin mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : <Search className="mr-2 h-4 w-4" />}
+              Search
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
-      {isLoading && <div className="text-center py-6"><svg className="animate-spin h-8 w-8 text-primary mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <p className="mt-2 text-muted-foreground">Searching for application...</p>
-        </div>}
-      {searchError && !isLoading && <p className="text-red-600 text-center py-6">{searchError}</p>}
+      {isLoading && <div className="text-center py-4">Loading status...</div>}
 
-      {searchedApplication && !isLoading && (
-        <>
-          <Card className="w-full shadow-lg">
+      {!isLoading && searchedApplication === null && (
+        <Alert variant="destructive" className="mt-6">
+          <XCircle className="h-4 w-4" />
+          <AlertTitle>Application Not Found</AlertTitle>
+          <AlertDescription>
+            No application found with ID: {applicationId}. Please check the ID and try again.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!isLoading && searchedApplication && statusInfo && (
+        <Card className="mt-6 shadow-lg">
             <CardHeader className="flex flex-row justify-between items-start pb-3">
-              <div>
-                <CardTitle className="text-2xl">Application Found</CardTitle>
-                <CardDescription>ID: {searchedApplication.id}</CardDescription>
-              </div>
-              <Badge variant={getStatusDisplayInfo(searchedApplication.status).variant} className="capitalize text-sm">
-                 {React.createElement(getStatusDisplayInfo(searchedApplication.status).icon, { className: "mr-1.5 h-4 w-4" })}
+                <div>
+                    <CardTitle className="text-xl font-semibold">Application Found</CardTitle>
+                    <CardDescription className="text-sm text-muted-foreground">ID: {searchedApplication.id}</CardDescription>
+                </div>
+              <Badge variant={statusInfo.badgeVariant} className={cn("capitalize text-sm", statusInfo.iconColorClass === 'text-primary-foreground' ? 'text-primary-foreground' : '')}>
+                 {React.createElement(statusInfo.icon, { className: cn("mr-1.5 h-4 w-4", statusInfo.iconColorClass) })}
                 {searchedApplication.status.replace(/([A-Z])/g, ' $1').trim()}
               </Badge>
             </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 gap-x-6 gap-y-4 pt-2 pb-3">
-                <DetailItem icon={User} label="Applicant Name" value={`${searchedApplication.personalInfo.firstName} ${searchedApplication.personalInfo.middleName || ''} ${searchedApplication.personalInfo.lastName}`} />
-                <DetailItem icon={CalendarDays} label="Submission Date" value={format(new Date(searchedApplication.submissionDate), 'MMMM do, yyyy p')} />
-                <DetailItem icon={FileText} label="Application Type" value={applicationTypeLabels[searchedApplication.applicationType || '']} />
-                <DetailItem icon={Cake} label="Date of Birth" value={searchedApplication.personalInfo.dob ? format(parseISO(searchedApplication.personalInfo.dob), 'MMMM do, yyyy') : 'N/A'} />
-                <DetailItem icon={Users} label="Sex" value={searchedApplication.personalInfo.sex ? searchedApplication.personalInfo.sex.charAt(0).toUpperCase() + searchedApplication.personalInfo.sex.slice(1) : 'N/A'} />
-              </div>
+          <CardContent className="space-y-4 pt-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 pt-3">
+                <DetailItem label="Applicant Name" value={`${searchedApplication.personalInfo.firstName} ${searchedApplication.personalInfo.lastName}`} icon={User} />
+                <DetailItem label="Submission Date" value={format(parseISO(searchedApplication.submissionDate), 'PPp')} icon={CalendarDays} />
+                <DetailItem label="Application Type" value={applicationTypeLabels[searchedApplication.applicationType || '']} icon={FileText} />
+                <DetailItem label="Date of Birth" value={format(parseISO(searchedApplication.personalInfo.dob), 'PPP')} icon={CalendarDays} />
+                <DetailItem label="Sex" value={searchedApplication.personalInfo.sex} icon={UsersIcon} />
+            </div>
+            
+            <Separator className="my-4" />
 
-              <Separator className="my-4" />
-              
-              <div className={cn(
-                "p-4 rounded-md border",
-                getStatusDisplayInfo(searchedApplication.status).cardBgClass,
-                getStatusDisplayInfo(searchedApplication.status).cardBorderClass
-              )}>
-                  <h3 className="text-lg font-semibold flex items-center mb-2 text-foreground">
-                    {React.createElement(getStatusDisplayInfo(searchedApplication.status).icon, { className: "mr-2 h-5 w-5" })}
-                    {getStatusDisplayInfo(searchedApplication.status).title}
-                  </h3>
-                  <p className="text-sm text-foreground/90">
-                    {getStatusDisplayInfo(searchedApplication.status).message}
-                  </p>
+            <div className={cn("p-4 rounded-md border", statusInfo.cardBgClass, statusInfo.cardBorderClass)}>
+                <h3 className={cn("text-lg font-semibold flex items-center mb-2", statusInfo.iconColorClass)}>
+                    {React.createElement(statusInfo.icon, { className: cn("mr-2 h-5 w-5", statusInfo.iconColorClass) })}
+                    {statusInfo.title}
+                </h3>
+                <p className="text-sm text-foreground/90">{statusInfo.message}</p>
 
-                  {(searchedApplication.status === 'approved' || searchedApplication.status === 'approvedBiometricsScheduled') && searchedApplication.voterId && (
-                    <div className="mt-3 space-y-1">
-                      <DetailItem icon={ShieldCheck} label="Voter ID" value={searchedApplication.voterId} valueClassName="font-mono"/>
-                      {searchedApplication.precinct && <DetailItem icon={MapPin} label="Precinct No." value={searchedApplication.precinct} />}
-                      {searchedApplication.approvalDate && <DetailItem icon={CalendarDays} label="Approval Date" value={format(parseISO(searchedApplication.approvalDate), 'MMMM do, yyyy p')} />}
+                {(searchedApplication.status === 'approved' || searchedApplication.status === 'approvedBiometricsScheduled') && searchedApplication.voterId && (
+                    <DetailItem label="Voter ID" value={searchedApplication.voterId} className="mt-3" valueClassName="font-mono"/>
+                )}
+                {(searchedApplication.status === 'approved' || searchedApplication.status === 'approvedBiometricsScheduled') && searchedApplication.precinct && (
+                    <DetailItem label="Precinct No." value={searchedApplication.precinct} className="mt-1" />
+                )}
+                 {(searchedApplication.status === 'approved' || searchedApplication.status === 'approvedBiometricsScheduled') && searchedApplication.approvalDate && (
+                    <DetailItem label="Approval Date" value={format(parseISO(searchedApplication.approvalDate), 'PPp')} className="mt-1" />
+                )}
+
+                {searchedApplication.status === 'approvedBiometricsScheduled' && searchedApplication.biometricsSchedule && (
+                    <div className="mt-3 space-y-1 pl-1">
+                        <p className="text-sm font-medium text-foreground">Biometrics Schedule:</p>
+                        <DetailItem label="Date" value={format(parseISO(searchedApplication.biometricsSchedule.date), 'PPP')} icon={CalendarDays} />
+                        <DetailItem label="Time" value={searchedApplication.biometricsSchedule.time} icon={Clock} />
+                        <DetailItem label="Location" value={searchedApplication.biometricsSchedule.location} icon={MapPin} />
                     </div>
-                  )}
-                  
-                  {(searchedApplication.status === 'approvedBiometricsScheduled' || (searchedApplication.status === 'approved' && searchedApplication.biometricsSchedule) ) && searchedApplication.biometricsSchedule && renderBiometricsSchedule(searchedApplication.biometricsSchedule)}
+                )}
+            </div>
+
+            {searchedApplication.remarks && (
+              <div className="mt-4 pt-4 border-t">
+                <Label className="text-md font-semibold text-muted-foreground flex items-center"><MessageSquare className="mr-2 h-4 w-4"/>Officer Remarks</Label>
+                <p className="text-sm text-foreground/90 whitespace-pre-wrap p-2 bg-muted/50 rounded-md mt-1">{searchedApplication.remarks}</p>
               </div>
+            )}
 
-              {searchedApplication.remarks && (
-                <div className="mt-4">
-                  <h4 className="text-md font-semibold text-foreground mb-1">Officer Remarks:</h4>
-                  <p className="text-sm text-foreground/90 p-3 bg-muted rounded-md border border-muted-foreground/20">{searchedApplication.remarks}</p>
-                </div>
-              )}
-
-            </CardContent>
-          </Card>
-
-          {searchedApplication.status === 'approved' && (
+          </CardContent>
+          {(searchedApplication.status === 'approved' || searchedApplication.status === 'approvedBiometricsScheduled') && (
             <AcknowledgementReceipt application={searchedApplication} />
           )}
-        </>
+        </Card>
       )}
     </div>
   );
