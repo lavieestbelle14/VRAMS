@@ -3,78 +3,75 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 export default function TermsOfServicePage() {
-  const router = useRouter();
-  const logoSrc = "/vrams_logo.png"; // Ensure this path is correct
+  const logoSrc = "/vrams_logo.png";
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-background p-4 pt-12">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="mb-8 text-center">
-        <Link href="/">
+        <div className="flex items-center justify-center mb-4">
           <Image
             src={logoSrc}
             alt="VRAMS official seal"
             width={64}
             height={64}
             data-ai-hint="VRAMS official seal"
-            className="mx-auto cursor-pointer"
           />
-        </Link>
-        <h1 className="text-4xl font-bold text-primary mt-4">VRAMS Portal</h1>
+        </div>
+        <h1 className="text-4xl font-bold text-primary">Terms of Service</h1>
+        <p className="text-muted-foreground mt-2">Voter Registration and Application Management System</p>
       </div>
       <Card className="w-full max-w-3xl shadow-xl">
         <CardHeader>
-          <CardTitle className="text-3xl">Terms of Service</CardTitle>
-          <CardDescription>Last updated: {new Date().toLocaleDateString()}</CardDescription>
+          <CardTitle className="text-2xl text-center">Our Terms of Service</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6 text-foreground/90">
-          <div>
-            <h2 className="font-semibold text-xl mb-2">1. Introduction</h2>
-            <p>Welcome to the Voter Registration and Application Management System (VRAMS). These Terms of Service ("Terms") govern your access to and use of the VRAMS platform and its related services (collectively, the "Service"). By accessing or using the Service, you agree to be bound by these Terms.</p>
-          </div>
-          <div>
-            <h2 className="font-semibold text-xl mb-2">2. Use of the Service</h2>
-            <p>You agree to use the Service only for lawful purposes and in accordance with these Terms. You are responsible for ensuring that all information you provide to the Service is accurate, current, and complete. You agree not to use the Service:</p>
-            <ul className="list-disc list-inside ml-4 mt-2 space-y-1">
-              <li>In any way that violates any applicable national or local law or regulation.</li>
-              <li>To impersonate or attempt to impersonate VRAMS, a VRAMS employee, another user, or any other person or entity.</li>
-              <li>To engage in any other conduct that restricts or inhibits anyone's use or enjoyment of the Service, or which, as determined by us, may harm VRAMS or users of the Service or expose them to liability.</li>
-            </ul>
-          </div>
-          <div>
-            <h2 className="font-semibold text-xl mb-2">3. Account Registration and Security</h2>
-            <p>To access certain features of the Service, you may be required to create an account. You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You agree to notify VRAMS immediately of any unauthorized use of your account or any other breach of security.</p>
-          </div>
-          <div>
-            <h2 className="font-semibold text-xl mb-2">4. Intellectual Property</h2>
-            <p>The Service and its original content (excluding content provided by users), features, and functionality are and will remain the exclusive property of the administering body of VRAMS and its licensors. The Service is protected by copyright, trademark, and other laws of the Philippines.</p>
-          </div>
-          <div>
-            <h2 className="font-semibold text-xl mb-2">5. Disclaimer of Warranties</h2>
-            <p>The Service is provided on an "AS IS" and "AS AVAILABLE" basis. VRAMS makes no representations or warranties of any kind, express or implied, as to the operation of their services, or the information, content, or materials included therein. You expressly agree that your use of these services, their content, and any services or items obtained from us is at your sole risk.</p>
-          </div>
-           <div>
-            <h2 className="font-semibold text-xl mb-2">6. Limitation of Liability</h2>
-            <p>In no event will VRAMS, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the Service.</p>
-          </div>
-          <div>
-            <h2 className="font-semibold text-xl mb-2">7. Changes to Terms</h2>
-            <p>We reserve the right, at our sole discretion, to modify or replace these Terms at any time. If a revision is material we will provide at least 30 days' notice prior to any new terms taking effect. What constitutes a material change will be determined at our sole discretion.</p>
-          </div>
-          <div>
-            <h2 className="font-semibold text-xl mb-2">8. Contact Us</h2>
-            <p>If you have any questions about these Terms, please contact us through the appropriate government channels for VRAMS support.</p>
-            <p className="mt-4 text-sm text-muted-foreground"><em>This is placeholder content. In a real application, this page would contain the official Terms of Service for the VRAMS platform.</em></p>
-          </div>
-          <div className="mt-8 flex justify-end">
-            <Button onClick={() => router.back()}>
-              <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
-            </Button>
+        <CardContent className="space-y-4">
+          <p className="text-muted-foreground">
+            Please read these terms of service carefully before using Our Service.
+          </p>
+          <h2 className="text-xl font-semibold">1. Introduction</h2>
+          <p>
+            Welcome to VRAMS (Voter Registration and Application Management System). By accessing or using our service, you agree to be bound by these Terms. If you disagree with any part of the terms, then you may not access the service.
+          </p>
+          <h2 className="text-xl font-semibold">2. Use License</h2>
+          <p>
+            Permission is granted to temporarily download one copy of the materials (information or software) on VRAMS's website for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:
+          </p>
+          <ul className="list-disc list-inside ml-4 space-y-1">
+            <li>modify or copy the materials;</li>
+            <li>use the materials for any commercial purpose, or for any public display (commercial or non-commercial);</li>
+            <li>attempt to decompile or reverse engineer any software contained on VRAMS's website;</li>
+            <li>remove any copyright or other proprietary notations from the materials; or</li>
+            <li>transfer the materials to another person or "mirror" the materials on any other server.</li>
+          </ul>
+          <p>
+            This license shall automatically terminate if you violate any of these restrictions and may be terminated by VRAMS at any time.
+          </p>
+          <h2 className="text-xl font-semibold">3. Disclaimer</h2>
+          <p>
+            The materials on VRAMS's website are provided on an 'as is' basis. VRAMS makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
+          </p>
+          <h2 className="text-xl font-semibold">4. Limitations</h2>
+          <p>
+            In no event shall VRAMS or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on VRAMS's website, even if VRAMS or a VRAMS authorized representative has been notified orally or in writing of the possibility of such damage.
+          </p>
+          <h2 className="text-xl font-semibold">5. Modifications</h2>
+          <p>
+            VRAMS may revise these terms of service for its website at any time without notice. By using this website you are agreeing to be bound by the then current version of these terms of service.
+          </p>
+          <h2 className="text-xl font-semibold">6. Governing Law</h2>
+          <p>
+            These terms and conditions are governed by and construed in accordance with the laws of the Philippines and you irrevocably submit to the exclusive jurisdiction of the courts in that State or location.
+          </p>
+          <div className="pt-6 text-center">
+            <Link href="/" className={cn(buttonVariants({ variant: "outline" }))}>
+              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Home
+            </Link>
           </div>
         </CardContent>
       </Card>
