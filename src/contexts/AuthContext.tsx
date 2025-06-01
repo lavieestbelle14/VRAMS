@@ -91,38 +91,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
  useEffect(() => {
     if (isLoading) return;
 
+    // Define path categories
     const isOfficerPath = pathname.startsWith('/dashboard');
-    const isPublicAuthenticatedPath = ['/public/home', '/public/apply', '/public/track-status', '/public/application-submitted', '/public/profile'].some(p => pathname.startsWith(p));
-    // const isPublicUnauthenticatedPath = ['/public/forgot-password', '/public/reset-password'].some(p => pathname.startsWith(p)); // This line is not strictly needed for the redirect logic below.
-    const isAuthPage = pathname === '/';
+
+    const publicUserAuthenticatedPaths = [
+      '/public/home',
+      '/public/apply',
+      '/public/track-status',
+      '/public/application-submitted',
+      '/public/profile',
+      '/public/faq',
+      '/public/schedule-biometrics'
+    ];
+    const isPathRequiringPublicUserAuth = publicUserAuthenticatedPaths.some(p => pathname.startsWith(p));
+
+    const isAuthPage = pathname === '/'; // The login/signup page
     const isTermsOrPrivacyPage = pathname.startsWith('/public/terms-of-service') || pathname.startsWith('/public/privacy-policy');
+    const isPasswordResetPage = pathname.startsWith('/public/forgot-password') || pathname.startsWith('/public/reset-password');
+    
+    const isExplicitlyPublicUnauthenticatedPath = isAuthPage || isTermsOrPrivacyPage || isPasswordResetPage;
 
-
-    if (isAuthenticated && user) {
+    if (isAuthenticated && user) { // User IS authenticated
       if (user.role === 'officer') {
-        if (!isOfficerPath && !isAuthPage) {
-             router.push('/dashboard');
-        } else if (isAuthPage && isOfficerPath) {
-            // this case means they are at / but trying to access dashboard, allow existing officer paths
-        } else if (isAuthPage) {
-            router.push('/dashboard');
+        if (!isOfficerPath) { // If officer is authenticated but not on a dashboard page
+          router.push('/dashboard'); // Redirect to dashboard
         }
-
       } else if (user.role === 'public') {
-         if (isOfficerPath) {
-            router.push('/public/home');
-         } else if (isAuthPage) {
-            router.push('/public/home');
-         }
+        if (isOfficerPath) { // If public user tries to access officer dashboard
+          router.push('/public/home'); // Redirect to public home
+        } else if (isAuthPage) { // If public user is on login page
+          router.push('/public/home'); // Redirect to public home
+        }
+        // If authenticated public user is on a public page (e.g. /public/home, /public/apply, /public/terms-of-service), no redirect needed.
       }
-    } else {
-      // User is NOT authenticated
-      // If the path requires authentication (officer or designated public authenticated path)
-      // AND it's NOT one of the explicitly public informational pages (terms, privacy), then redirect to login.
-      if ((isOfficerPath || isPublicAuthenticatedPath) && !isTermsOrPrivacyPage) {
+    } else { // User is NOT authenticated
+      if (isExplicitlyPublicUnauthenticatedPath) {
+        // Allow access. These pages are fine for unauthenticated users.
+      } else if (isOfficerPath || isPathRequiringPublicUserAuth) {
+        // If not an explicitly public unauthenticated page, AND it's a path requiring auth, redirect to login.
         router.push('/');
       }
-      // Otherwise, access is allowed (covers login page, terms, privacy, forgot-password, reset-password etc.)
+      // Other paths not covered (e.g., a truly public page not needing auth and not in isExplicitlyPublicUnauthenticatedPath) are allowed by not redirecting.
     }
   }, [isAuthenticated, isLoading, user, pathname, router]);
 
