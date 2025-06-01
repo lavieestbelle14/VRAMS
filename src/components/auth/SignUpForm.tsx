@@ -172,17 +172,15 @@ export function SignUpForm() {
         <p className="px-2 text-center text-xs text-muted-foreground sm:px-8">
           By signing up, you agree to our{' '}
           <Link
-            href="#"
+            href="/public/terms-of-service"
             className="underline underline-offset-4 hover:text-primary"
-            onClick={(e) => { e.preventDefault(); alert('This is a mock Terms of Service page. In a real app, this would link to a dedicated page.'); }}
           >
             Terms of Service
           </Link>{' '}
           and{' '}
           <Link
-            href="#"
+            href="/public/privacy-policy"
             className="underline underline-offset-4 hover:text-primary"
-            onClick={(e) => { e.preventDefault(); alert('This is a mock Privacy Policy page. In a real app, this would link to a dedicated page.'); }}
           >
             Privacy Policy
           </Link>
