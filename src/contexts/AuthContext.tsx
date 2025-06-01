@@ -35,6 +35,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const USERS_DB_KEY = 'vrams_users_db';
 const CURRENT_USER_KEY = 'vrams_current_user';
 
+// Define these paths once, outside the effect, if they don't change
+const publicUserAuthenticatedPaths = [
+  '/public/home',
+  '/public/apply',
+  '/public/track-status',
+  '/public/application-submitted', // Note: often includes [id]
+  '/public/profile',
+  '/public/faq',
+  '/public/schedule-biometrics' // Note: often includes [id]
+];
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
@@ -89,39 +100,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [checkAuthStatus]);
 
  useEffect(() => {
-    const currentPath = pathname; // Capture pathname for consistent use within this effect run
+    // If still loading auth state, wait before making redirection decisions.
+    if (isLoading) {
+      return;
+    }
+
+    const currentPath = pathname;
 
     const isTermsPage = currentPath.startsWith('/public/terms-of-service');
     const isPrivacyPage = currentPath.startsWith('/public/privacy-policy');
 
+    // If it's a public informational page that should always be accessible, do nothing further here.
     if (isTermsPage || isPrivacyPage) {
-      // These pages are always accessible. Skip all other auth checks and redirection logic from this effect.
       return;
     }
 
-    // For all other pages, proceed with auth checks:
-    if (isLoading) return; // Wait for auth status to be clear.
-
-
-    // Define path categories using currentPath
+    // Define path categories
     const isOfficerPath = currentPath.startsWith('/dashboard');
-    const publicUserAuthenticatedPaths = [
-      '/public/home',
-      '/public/apply',
-      '/public/track-status',
-      '/public/application-submitted',
-      '/public/profile',
-      '/public/faq',
-      '/public/schedule-biometrics'
-    ];
     const isPathRequiringPublicUserAuth = publicUserAuthenticatedPaths.some(p => currentPath.startsWith(p));
-    const isAuthPage = currentPath === '/'; // The login/signup page
+    const isAuthPage = currentPath === '/';
     const isPasswordResetPage = currentPath.startsWith('/public/forgot-password') || currentPath.startsWith('/public/reset-password');
 
 
     if (isAuthenticated && user) { // User IS authenticated
       if (user.role === 'officer') {
-        // If officer is authenticated but not on a dashboard page (and not terms/privacy due to early return)
+        // If officer is authenticated but not on a dashboard page (and not terms/privacy)
         if (!isOfficerPath) {
           router.push('/dashboard');
         }
@@ -133,14 +136,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           router.push('/public/home');
         }
       }
-    } else { // User is NOT authenticated
-      // We know it's not terms/privacy due to the early return.
-      // If it's an officer path or a path requiring public user auth, redirect to login.
-      // Also ensure not to redirect if it's the password reset page.
-      if ((isOfficerPath || isPathRequiringPublicUserAuth) && !isPasswordResetPage && !isAuthPage) {
+    } else { // User is NOT authenticated (and not isLoading, and not on terms/privacy)
+      // Redirect to login IF:
+      // 1. It's an officer path OR
+      // 2. It's a path requiring public user auth
+      // AND it's NOT the auth page itself AND it's NOT a password reset page.
+      // (Terms and Privacy pages are already excluded by the early return)
+      if (!isAuthPage && !isPasswordResetPage && (isOfficerPath || isPathRequiringPublicUserAuth)) {
         router.push('/');
       }
-      // If it's the auth page ('/') or password reset itself, no redirect (unauthenticated user on these pages is fine).
     }
   }, [isAuthenticated, isLoading, user, pathname, router]);
 
@@ -164,6 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsAuthenticated(true);
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(authenticatedUser));
       toast({ title: 'Login Successful', description: `Welcome, ${authenticatedUser.firstName || authenticatedUser.username}!` });
+      // Redirection is handled by the useEffect hook
     } else {
       toast({ title: 'Login Failed', description: 'Invalid email or password.', variant: 'destructive' });
     }
@@ -174,10 +179,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast({ title: 'Sign Up Failed', description: 'Passwords do not match.', variant: 'destructive' });
       return;
     }
-    if (passwordAttempt.length < 6) {
-       toast({ title: 'Sign Up Failed', description: 'Password must be at least 6 characters.', variant: 'destructive' });
-       return;
-    }
+    // Password strength check is now in the form schema itself
+    // if (passwordAttempt.length < 6) { // Basic length check, schema is more comprehensive
+    //    toast({ title: 'Sign Up Failed', description: 'Password must be at least 6 characters.', variant: 'destructive' });
+    //    return;
+    // }
 
     const users = getMockUsersDB();
     if (users.some(u => u.username.toLowerCase() === email.toLowerCase())) {
@@ -189,13 +195,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       firstName,
       lastName,
       username: email,
-      passwordHash: passwordAttempt,
+      passwordHash: passwordAttempt, // In a real app, hash this password
       role: 'public'
     };
     users.push(newUser);
     saveMockUsersDB(users);
 
-    toast({ title: 'Sign Up Successful!', description: 'You can now log in.' });
     const authenticatedUser: AuthenticatedUser = {
       username: newUser.username,
       role: newUser.role,
@@ -205,6 +210,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(authenticatedUser);
     setIsAuthenticated(true);
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(authenticatedUser));
+    toast({ title: 'Sign Up Successful!', description: 'You can now log in or proceed.' });
+    // Redirect to /public/home is handled by the useEffect
   };
 
   const logout = () => {
@@ -219,11 +226,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast({ title: "Password Reset Failed", description: "New passwords do not match.", variant: "destructive" });
       return false;
     }
-    if (newPass.length < 6) {
-      toast({ title: "Password Reset Failed", description: "New password must be at least 6 characters.", variant: "destructive" });
+    // Password strength check should ideally use a schema or regex here too
+    if (newPass.length < 8) { // Align with sign-up strength if possible
+      toast({ title: "Password Reset Failed", description: "New password must be at least 8 characters.", variant: "destructive" });
       return false;
     }
-    if (!token.startsWith("RESET-")) {
+    if (!token.startsWith("RESET-")) { // Simple token validation
         toast({ title: "Password Reset Failed", description: "Invalid reset token format.", variant: "destructive" });
         return false;
     }
@@ -236,7 +244,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
-    users[userIndex].passwordHash = newPass;
+    users[userIndex].passwordHash = newPass; // In a real app, hash this
     saveMockUsersDB(users);
     toast({ title: "Password Reset Successful", description: "You can now log in with your new password." });
     return true;
@@ -276,8 +284,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast({ title: "Password Change Failed", description: "New passwords do not match.", variant: "destructive" });
       return false;
     }
-    if (newPass.length < 6) {
-      toast({ title: "Password Change Failed", description: "New password must be at least 6 characters.", variant: "destructive" });
+    if (newPass.length < 8) { // Align with sign-up strength
+      toast({ title: "Password Change Failed", description: "New password must be at least 8 characters.", variant: "destructive" });
       return false;
     }
 
@@ -293,15 +301,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
-    users[userIndex].passwordHash = newPass;
+    users[userIndex].passwordHash = newPass; // Hash in real app
     saveMockUsersDB(users);
     toast({ title: "Password Changed Successfully", description: "Your password has been updated." });
     return true;
   };
 
 
+  // This logic ensures that the loading spinner is only shown when necessary,
+  // and not for the always-accessible public informational pages.
   if (isLoading && !pathname.startsWith('/public/terms-of-service') && !pathname.startsWith('/public/privacy-policy')) {
-    // Show loading indicator for all pages except terms and privacy during initial auth check
     return <div className="flex h-screen items-center justify-center"><svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
