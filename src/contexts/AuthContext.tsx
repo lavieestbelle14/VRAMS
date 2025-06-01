@@ -89,11 +89,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [checkAuthStatus]);
 
  useEffect(() => {
-    if (isLoading) return;
+    const currentPath = pathname; // Capture pathname for consistent use within this effect run
 
-    // Define path categories
-    const isOfficerPath = pathname.startsWith('/dashboard');
+    const isTermsPage = currentPath.startsWith('/public/terms-of-service');
+    const isPrivacyPage = currentPath.startsWith('/public/privacy-policy');
 
+    if (isTermsPage || isPrivacyPage) {
+      // These pages are always accessible. Skip all other auth checks and redirection logic from this effect.
+      return;
+    }
+
+    // For all other pages, proceed with auth checks:
+    if (isLoading) return; // Wait for auth status to be clear.
+
+
+    // Define path categories using currentPath
+    const isOfficerPath = currentPath.startsWith('/dashboard');
     const publicUserAuthenticatedPaths = [
       '/public/home',
       '/public/apply',
@@ -103,35 +114,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       '/public/faq',
       '/public/schedule-biometrics'
     ];
-    const isPathRequiringPublicUserAuth = publicUserAuthenticatedPaths.some(p => pathname.startsWith(p));
+    const isPathRequiringPublicUserAuth = publicUserAuthenticatedPaths.some(p => currentPath.startsWith(p));
+    const isAuthPage = currentPath === '/'; // The login/signup page
+    const isPasswordResetPage = currentPath.startsWith('/public/forgot-password') || currentPath.startsWith('/public/reset-password');
 
-    const isAuthPage = pathname === '/'; // The login/signup page
-    const isTermsOrPrivacyPage = pathname.startsWith('/public/terms-of-service') || pathname.startsWith('/public/privacy-policy');
-    const isPasswordResetPage = pathname.startsWith('/public/forgot-password') || pathname.startsWith('/public/reset-password');
-    
-    const isExplicitlyPublicUnauthenticatedPath = isAuthPage || isTermsOrPrivacyPage || isPasswordResetPage;
 
     if (isAuthenticated && user) { // User IS authenticated
       if (user.role === 'officer') {
-        if (!isOfficerPath) { // If officer is authenticated but not on a dashboard page
-          router.push('/dashboard'); // Redirect to dashboard
+        // If officer is authenticated but not on a dashboard page (and not terms/privacy due to early return)
+        if (!isOfficerPath) {
+          router.push('/dashboard');
         }
       } else if (user.role === 'public') {
-        if (isOfficerPath) { // If public user tries to access officer dashboard
-          router.push('/public/home'); // Redirect to public home
-        } else if (isAuthPage) { // If public user is on login page
-          router.push('/public/home'); // Redirect to public home
+        // If public user tries to access officer dashboard (and not terms/privacy)
+        if (isOfficerPath) {
+          router.push('/public/home');
+        } else if (isAuthPage) { // Authenticated public user on login page (and not terms/privacy)
+          router.push('/public/home');
         }
-        // If authenticated public user is on a public page (e.g. /public/home, /public/apply, /public/terms-of-service), no redirect needed.
       }
     } else { // User is NOT authenticated
-      if (isExplicitlyPublicUnauthenticatedPath) {
-        // Allow access. These pages are fine for unauthenticated users.
-      } else if (isOfficerPath || isPathRequiringPublicUserAuth) {
-        // If not an explicitly public unauthenticated page, AND it's a path requiring auth, redirect to login.
+      // We know it's not terms/privacy due to the early return.
+      // If it's an officer path or a path requiring public user auth, redirect to login.
+      // Also ensure not to redirect if it's the password reset page.
+      if ((isOfficerPath || isPathRequiringPublicUserAuth) && !isPasswordResetPage && !isAuthPage) {
         router.push('/');
       }
-      // Other paths not covered (e.g., a truly public page not needing auth and not in isExplicitlyPublicUnauthenticatedPath) are allowed by not redirecting.
+      // If it's the auth page ('/') or password reset itself, no redirect (unauthenticated user on these pages is fine).
     }
   }, [isAuthenticated, isLoading, user, pathname, router]);
 
@@ -291,7 +300,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
 
-  if (isLoading) {
+  if (isLoading && !pathname.startsWith('/public/terms-of-service') && !pathname.startsWith('/public/privacy-policy')) {
+    // Show loading indicator for all pages except terms and privacy during initial auth check
     return <div className="flex h-screen items-center justify-center"><svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -312,4 +322,3 @@ export function useAuth() {
   }
   return context;
 }
-
