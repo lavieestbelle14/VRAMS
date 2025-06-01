@@ -61,8 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         username: 'officer@comelec.gov.ph',
         passwordHash: 'password123',
         role: 'officer',
-        firstName: 'Officer', // UPDATED from 'Election'
-        lastName: 'User' // Changed "Officer" to "User" for lastName to avoid "Officer Officer"
+        firstName: 'Officer',
+        lastName: 'User'
       });
       saveMockUsersDB(users);
     }
@@ -93,17 +93,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const isOfficerPath = pathname.startsWith('/dashboard');
     const isPublicAuthenticatedPath = ['/public/home', '/public/apply', '/public/track-status', '/public/application-submitted', '/public/profile'].some(p => pathname.startsWith(p));
-    const isPublicUnauthenticatedPath = ['/public/forgot-password', '/public/reset-password'].some(p => pathname.startsWith(p));
+    // const isPublicUnauthenticatedPath = ['/public/forgot-password', '/public/reset-password'].some(p => pathname.startsWith(p)); // This line is not strictly needed for the redirect logic below.
     const isAuthPage = pathname === '/';
+    const isTermsOrPrivacyPage = pathname.startsWith('/public/terms-of-service') || pathname.startsWith('/public/privacy-policy');
 
 
     if (isAuthenticated && user) {
       if (user.role === 'officer') {
-        if (!isOfficerPath && !isAuthPage) { 
+        if (!isOfficerPath && !isAuthPage) {
              router.push('/dashboard');
-        } else if (isAuthPage && isOfficerPath) { 
+        } else if (isAuthPage && isOfficerPath) {
             // this case means they are at / but trying to access dashboard, allow existing officer paths
-        } else if (isAuthPage) { 
+        } else if (isAuthPage) {
             router.push('/dashboard');
         }
 
@@ -116,10 +117,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } else {
       // User is NOT authenticated
-      if ((isOfficerPath || isPublicAuthenticatedPath)) { 
+      // If the path requires authentication (officer or designated public authenticated path)
+      // AND it's NOT one of the explicitly public informational pages (terms, privacy), then redirect to login.
+      if ((isOfficerPath || isPublicAuthenticatedPath) && !isTermsOrPrivacyPage) {
         router.push('/');
       }
-      // If on isAuthPage, or public unauthenticated paths, do nothing.
+      // Otherwise, access is allowed (covers login page, terms, privacy, forgot-password, reset-password etc.)
     }
   }, [isAuthenticated, isLoading, user, pathname, router]);
 
@@ -202,8 +205,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast({ title: "Password Reset Failed", description: "New password must be at least 6 characters.", variant: "destructive" });
       return false;
     }
-    // In a real app, token would be validated. Here, we just check if email exists.
-    // And the token is just a formality for the mock.
     if (!token.startsWith("RESET-")) {
         toast({ title: "Password Reset Failed", description: "Invalid reset token format.", variant: "destructive" });
         return false;
@@ -302,3 +303,4 @@ export function useAuth() {
   }
   return context;
 }
+
