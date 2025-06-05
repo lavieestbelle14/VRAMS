@@ -100,52 +100,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [checkAuthStatus]);
 
  useEffect(() => {
-    // If still loading auth state, wait before making redirection decisions.
     if (isLoading) {
       return;
     }
 
     const currentPath = pathname;
 
+    // If it's the landing page, do nothing further and allow it to render.
+    if (currentPath === '/') {
+      return;
+    }
+
     const isTermsPage = currentPath.startsWith('/public/terms-of-service');
     const isPrivacyPage = currentPath.startsWith('/public/privacy-policy');
 
-    // If it's a public informational page that should always be accessible, do nothing further here.
     if (isTermsPage || isPrivacyPage) {
       return;
     }
 
-    // Define path categories
     const isOfficerPath = currentPath.startsWith('/dashboard');
     const isPathRequiringPublicUserAuth = publicUserAuthenticatedPaths.some(p => currentPath.startsWith(p));
-    const isAuthPage = currentPath === '/auth'; // CHANGED: Auth page is now /auth
-    const isLandingPage = currentPath === '/'; // New landing page
+    const isAuthPage = currentPath === '/auth';
+    // isLandingPage is effectively handled by the early return now for currentPath === '/'
     const isPasswordResetPage = currentPath.startsWith('/public/forgot-password') || currentPath.startsWith('/public/reset-password');
 
 
-    if (isAuthenticated && user) { // User IS authenticated
+    if (isAuthenticated && user) { 
       if (user.role === 'officer') {
-        // If officer is authenticated but not on a dashboard page (and not terms/privacy/landing)
-        if (!isOfficerPath && !isLandingPage) {
+        if (!isOfficerPath) { // Officer is authenticated but not on a dashboard page
           router.push('/dashboard');
         }
       } else if (user.role === 'public') {
-        // If public user tries to access officer dashboard (and not terms/privacy)
-        if (isOfficerPath) {
+        if (isOfficerPath) { // Public user tries to access officer dashboard
           router.push('/public/home');
-        } else if (isAuthPage) { // Authenticated public user on login page (and not terms/privacy)
+        } else if (isAuthPage) { // Authenticated public user on login page
           router.push('/public/home');
         }
-        // Allow authenticated public user to be on the landing page
       }
-    } else { // User is NOT authenticated (and not isLoading, and not on terms/privacy)
+    } else { // User is NOT authenticated
       // Redirect to login IF:
       // 1. It's an officer path OR
       // 2. It's a path requiring public user auth
-      // AND it's NOT the auth page itself AND it's NOT a password reset page AND it's NOT the landing page.
-      // (Terms and Privacy pages are already excluded by the early return)
-      if (!isLandingPage && !isAuthPage && !isPasswordResetPage && (isOfficerPath || isPathRequiringPublicUserAuth)) {
-        router.push('/auth'); // CHANGED: Redirect to /auth
+      // AND it's NOT the auth page itself AND it's NOT a password reset page.
+      if (!isAuthPage && !isPasswordResetPage && (isOfficerPath || isPathRequiringPublicUserAuth)) {
+        router.push('/auth');
       }
     }
   }, [isAuthenticated, isLoading, user, pathname, router]);
@@ -215,7 +213,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem(CURRENT_USER_KEY);
-    router.push('/'); // Redirect to the new landing page
+    router.push('/'); 
   };
 
   const resetPassword = async (email: string, token: string, newPass: string, confirmPass: string): Promise<boolean> => {
