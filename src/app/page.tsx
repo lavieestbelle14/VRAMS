@@ -47,10 +47,10 @@ export default function LandingPage() {
             <span className="font-bold text-primary">VRAMS</span>
           </Link>
           <nav className="flex items-center gap-4 text-sm lg:gap-6 ml-auto">
-            <Link href="/auth" passHref>
+            <Link href="/auth?tab=public-login" passHref>
               <Button variant="outline">Login</Button>
             </Link>
-            <Link href="/auth" passHref>
+            <Link href="/auth?tab=sign-up" passHref>
                <Button>Register</Button>
             </Link>
           </nav>
@@ -71,12 +71,12 @@ export default function LandingPage() {
                   Secure, accessible, and transparent. Register smart, apply easy, vote ready — with VRAMS.
                 </p>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row animate-in fade-in slide-in-from-top-12 duration-700 ease-out delay-300">
-                  <Link href="/auth" passHref>
+                  <Link href="/auth?tab=sign-up" passHref>
                     <Button size="lg" className="w-full min-[400px]:w-auto">
                       Register Now <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </Link>
-                  <Link href="/auth" passHref>
+                  <Link href="/auth?tab=public-login" passHref>
                     <Button variant="outline" size="lg" className="w-full min-[400px]:w-auto">
                       Access Portal
                     </Button>
