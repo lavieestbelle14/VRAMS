@@ -64,13 +64,13 @@ export default function LandingPage() {
           <div className="container px-4 md:px-6">
             <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 xl:gap-16 items-center">
               <div className="space-y-4">
-                <h1 className="text-3xl font-bold tracking-tighter text-primary sm:text-4xl md:text-5xl lg:text-6xl/none">
+                <h1 className="text-3xl font-bold tracking-tighter text-primary sm:text-4xl md:text-5xl lg:text-6xl/none animate-in fade-in slide-in-from-top-8 duration-700 ease-out">
                   VRAMS: Modernizing Voter Registration in the Philippines
                 </h1>
-                <p className="max-w-[600px] text-muted-foreground md:text-xl">
+                <p className="max-w-[600px] text-muted-foreground md:text-xl animate-in fade-in slide-in-from-top-10 duration-700 ease-out delay-200">
                   Secure, accessible, and transparent. Register smart, apply easy, vote ready — with VRAMS.
                 </p>
-                <div className="flex flex-col gap-2 min-[400px]:flex-row">
+                <div className="flex flex-col gap-2 min-[400px]:flex-row animate-in fade-in slide-in-from-top-12 duration-700 ease-out delay-300">
                   <Link href="/auth" passHref>
                     <Button size="lg" className="w-full min-[400px]:w-auto">
                       Register Now <ArrowRight className="ml-2 h-5 w-5" />
@@ -88,7 +88,7 @@ export default function LandingPage() {
                 alt="Hero VRAMS"
                 width={1200}
                 height={675}
-                className="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full"
+                className="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full animate-in fade-in zoom-in-95 duration-700 ease-out delay-500"
                 data-ai-hint="election registration process"
               />
             </div>
@@ -99,17 +99,21 @@ export default function LandingPage() {
         <section id="features" className="w-full py-12 md:py-24 lg:py-32">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
-              <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">Key Features</div>
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
+              <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm animate-in fade-in duration-500">Key Features</div>
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl animate-in fade-in slide-in-from-top-8 duration-700 ease-out delay-100">
                 Everything You Need for a Smooth Process
               </h2>
-              <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+              <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed animate-in fade-in slide-in-from-top-10 duration-700 ease-out delay-200">
                 VRAMS simplifies voter registration and management with a user-friendly and secure platform.
               </p>
             </div>
             <div className="mx-auto grid items-start gap-8 sm:max-w-4xl sm:grid-cols-2 md:gap-12 lg:max-w-5xl lg:grid-cols-2">
               {features.map((feature, index) => (
-                <Card key={index} className="hover:shadow-lg transition-shadow">
+                <Card 
+                  key={index} 
+                  className={`hover:shadow-lg transition-shadow animate-in fade-in slide-in-from-bottom-8 duration-500 ease-out`}
+                  style={{ animationDelay: `${100 + index * 100}ms` }}
+                >
                   <CardHeader className="pb-4">
                     <div className="flex items-center gap-3">
                       <feature.icon className="h-8 w-8 text-primary" />
@@ -129,11 +133,11 @@ export default function LandingPage() {
         <section id="about" className="w-full py-12 md:py-24 lg:py-32 bg-muted/40">
           <div className="container grid items-center justify-center gap-4 px-4 text-center md:px-6">
             <div className="space-y-3">
-               <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm border">About Us</div>
-              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
+               <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm border animate-in fade-in duration-500">About Us</div>
+              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight animate-in fade-in slide-in-from-top-8 duration-700 ease-out delay-100">
                 The Future of Voter Registration
               </h2>
-              <div className="flex justify-center py-4">
+              <div className="flex justify-center py-4 animate-in fade-in zoom-in-95 duration-700 ease-out delay-200">
                  <Image
                     src={logoSrc}
                     alt="VRAMS official seal"
@@ -142,13 +146,13 @@ export default function LandingPage() {
                     data-ai-hint="VRAMS official seal"
                   />
               </div>
-              <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+              <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out delay-300">
                 The Voter Registration and Application Management System (VRAMS) is a secure, web-based platform
                 designed to modernize the Philippine voter registration process. This project aims to address the
                 inefficiencies of the traditional system and support COMELEC's goal of inclusive, fast, and
                 accessible electoral participation.
               </p>
-              <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+              <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out delay-400">
                 Because in a democracy, every vote counts — and every voter matters.
               </p>
             </div>
