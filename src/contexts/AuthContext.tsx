@@ -118,14 +118,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Define path categories
     const isOfficerPath = currentPath.startsWith('/dashboard');
     const isPathRequiringPublicUserAuth = publicUserAuthenticatedPaths.some(p => currentPath.startsWith(p));
-    const isAuthPage = currentPath === '/';
+    const isAuthPage = currentPath === '/auth'; // CHANGED: Auth page is now /auth
+    const isLandingPage = currentPath === '/'; // New landing page
     const isPasswordResetPage = currentPath.startsWith('/public/forgot-password') || currentPath.startsWith('/public/reset-password');
 
 
     if (isAuthenticated && user) { // User IS authenticated
       if (user.role === 'officer') {
-        // If officer is authenticated but not on a dashboard page (and not terms/privacy)
-        if (!isOfficerPath) {
+        // If officer is authenticated but not on a dashboard page (and not terms/privacy/landing)
+        if (!isOfficerPath && !isLandingPage) {
           router.push('/dashboard');
         }
       } else if (user.role === 'public') {
@@ -135,15 +136,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else if (isAuthPage) { // Authenticated public user on login page (and not terms/privacy)
           router.push('/public/home');
         }
+        // Allow authenticated public user to be on the landing page
       }
     } else { // User is NOT authenticated (and not isLoading, and not on terms/privacy)
       // Redirect to login IF:
       // 1. It's an officer path OR
       // 2. It's a path requiring public user auth
-      // AND it's NOT the auth page itself AND it's NOT a password reset page.
+      // AND it's NOT the auth page itself AND it's NOT a password reset page AND it's NOT the landing page.
       // (Terms and Privacy pages are already excluded by the early return)
-      if (!isAuthPage && !isPasswordResetPage && (isOfficerPath || isPathRequiringPublicUserAuth)) {
-        router.push('/');
+      if (!isLandingPage && !isAuthPage && !isPasswordResetPage && (isOfficerPath || isPathRequiringPublicUserAuth)) {
+        router.push('/auth'); // CHANGED: Redirect to /auth
       }
     }
   }, [isAuthenticated, isLoading, user, pathname, router]);
@@ -179,11 +181,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast({ title: 'Sign Up Failed', description: 'Passwords do not match.', variant: 'destructive' });
       return;
     }
-    // Password strength check is now in the form schema itself
-    // if (passwordAttempt.length < 6) { // Basic length check, schema is more comprehensive
-    //    toast({ title: 'Sign Up Failed', description: 'Password must be at least 6 characters.', variant: 'destructive' });
-    //    return;
-    // }
 
     const users = getMockUsersDB();
     if (users.some(u => u.username.toLowerCase() === email.toLowerCase())) {
@@ -218,7 +215,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem(CURRENT_USER_KEY);
-    router.push('/');
+    router.push('/'); // Redirect to the new landing page
   };
 
   const resetPassword = async (email: string, token: string, newPass: string, confirmPass: string): Promise<boolean> => {
@@ -226,12 +223,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast({ title: "Password Reset Failed", description: "New passwords do not match.", variant: "destructive" });
       return false;
     }
-    // Password strength check should ideally use a schema or regex here too
-    if (newPass.length < 8) { // Align with sign-up strength if possible
+    if (newPass.length < 8) { 
       toast({ title: "Password Reset Failed", description: "New password must be at least 8 characters.", variant: "destructive" });
       return false;
     }
-    if (!token.startsWith("RESET-")) { // Simple token validation
+    if (!token.startsWith("RESET-")) { 
         toast({ title: "Password Reset Failed", description: "Invalid reset token format.", variant: "destructive" });
         return false;
     }
@@ -244,7 +240,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
-    users[userIndex].passwordHash = newPass; // In a real app, hash this
+    users[userIndex].passwordHash = newPass; 
     saveMockUsersDB(users);
     toast({ title: "Password Reset Successful", description: "You can now log in with your new password." });
     return true;
@@ -284,7 +280,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast({ title: "Password Change Failed", description: "New passwords do not match.", variant: "destructive" });
       return false;
     }
-    if (newPass.length < 8) { // Align with sign-up strength
+    if (newPass.length < 8) { 
       toast({ title: "Password Change Failed", description: "New password must be at least 8 characters.", variant: "destructive" });
       return false;
     }
@@ -301,16 +297,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
-    users[userIndex].passwordHash = newPass; // Hash in real app
+    users[userIndex].passwordHash = newPass; 
     saveMockUsersDB(users);
     toast({ title: "Password Changed Successfully", description: "Your password has been updated." });
     return true;
   };
 
 
-  // This logic ensures that the loading spinner is only shown when necessary,
-  // and not for the always-accessible public informational pages.
-  if (isLoading && !pathname.startsWith('/public/terms-of-service') && !pathname.startsWith('/public/privacy-policy')) {
+  if (isLoading && !pathname.startsWith('/public/terms-of-service') && !pathname.startsWith('/public/privacy-policy') && pathname !== '/') {
     return <div className="flex h-screen items-center justify-center"><svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
