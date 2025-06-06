@@ -107,7 +107,7 @@ export default function LandingPage() {
                 width={1200}
                 height={675}
                 className="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full animate-in fade-in zoom-in-95 duration-700 ease-out delay-500"
-                data-ai-hint="filipino voters diverse group interacting with modern technology election process"
+                data-ai-hint="diverse filipino voters election technology"
               />
             </div>
           </div>
