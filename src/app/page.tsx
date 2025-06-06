@@ -107,7 +107,7 @@ export default function LandingPage() {
                 width={1200}
                 height={675}
                 className="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full animate-in fade-in zoom-in-95 duration-700 ease-out delay-500"
-                data-ai-hint="filipino voters digital registration"
+                data-ai-hint="filipino voters diverse group interacting with modern technology election process"
               />
             </div>
           </div>
@@ -118,7 +118,7 @@ export default function LandingPage() {
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
               <div className="inline-block rounded-lg bg-primary/10 px-3 py-1 text-sm font-medium text-primary border border-primary/30 animate-in fade-in duration-500">Key Features</div>
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl animate-in fade-in slide-in-from-top-8 duration-700 ease-out delay-100">
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-foreground animate-in fade-in slide-in-from-top-8 duration-700 ease-out delay-100">
                 Everything You Need for a Smooth Process
               </h2>
               <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed animate-in fade-in slide-in-from-top-10 duration-700 ease-out delay-200">
@@ -135,7 +135,7 @@ export default function LandingPage() {
                   <CardHeader className="pb-4">
                     <div className="flex items-center gap-3">
                       <feature.icon className="h-8 w-8 text-primary" />
-                      <CardTitle className="text-xl">{feature.title}</CardTitle>
+                      <CardTitle className="text-xl text-foreground">{feature.title}</CardTitle>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -152,7 +152,7 @@ export default function LandingPage() {
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
               <div className="inline-block rounded-lg bg-primary/10 px-3 py-1 text-sm font-medium text-primary border border-primary/30 animate-in fade-in duration-500">Get Started</div>
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl animate-in fade-in slide-in-from-top-8 duration-700 ease-out delay-100">
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-foreground animate-in fade-in slide-in-from-top-8 duration-700 ease-out delay-100">
                 Simple Steps to Register
               </h2>
               <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed animate-in fade-in slide-in-from-top-10 duration-700 ease-out delay-200">
@@ -169,7 +169,7 @@ export default function LandingPage() {
                   <div className="mb-4 rounded-full bg-primary/20 p-4 text-primary">
                     <step.icon className="h-10 w-10" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
+                  <h3 className="text-xl font-semibold mb-2 text-foreground">{step.title}</h3>
                   <p className="text-muted-foreground">{step.description}</p>
                 </div>
               ))}
@@ -182,7 +182,7 @@ export default function LandingPage() {
           <div className="container grid items-center justify-center gap-4 px-4 text-center md:px-6">
             <div className="space-y-3">
                <div className="inline-block rounded-lg bg-primary/10 px-3 py-1 text-sm font-medium text-primary border border-primary/30 animate-in fade-in duration-500">About Us</div>
-              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight animate-in fade-in slide-in-from-top-8 duration-700 ease-out delay-100">
+              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight text-foreground animate-in fade-in slide-in-from-top-8 duration-700 ease-out delay-100">
                 The Future of Voter Registration
               </h2>
               <div className="flex justify-center py-4 animate-in fade-in zoom-in-95 duration-700 ease-out delay-200">
