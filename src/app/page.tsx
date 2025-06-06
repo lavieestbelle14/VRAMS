@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FilePlus2, ShieldCheck, FileSearch, Accessibility, ArrowRight } from 'lucide-react';
+import { FilePlus2, ShieldCheck, FileSearch, Accessibility, ArrowRight, UserCheck, FileSignature, Activity } from 'lucide-react';
 
 export default function LandingPage() {
   const logoSrc = "/vrams_logo.png";
@@ -28,6 +28,24 @@ export default function LandingPage() {
       icon: Accessibility,
       title: 'Accessible to All',
       description: 'Designed for inclusivity, ensuring everyone can participate.',
+    },
+  ];
+
+  const howItWorksSteps = [
+    {
+      icon: UserCheck,
+      title: '1. Create Your Account',
+      description: 'Sign up quickly with your basic details to get started with VRAMS.',
+    },
+    {
+      icon: FileSignature,
+      title: '2. Submit Your Application',
+      description: 'Fill out the comprehensive online form for new registration or transfer.',
+    },
+    {
+      icon: Activity,
+      title: '3. Track Your Progress',
+      description: 'Monitor your application status in real-time through your personal dashboard.',
     },
   ];
 
@@ -99,7 +117,7 @@ export default function LandingPage() {
         <section id="features" className="w-full py-12 md:py-24 lg:py-32">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
-              <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm animate-in fade-in duration-500">Key Features</div>
+              <div className="inline-block rounded-lg bg-primary/10 px-3 py-1 text-sm font-medium text-primary border border-primary/30 animate-in fade-in duration-500">Key Features</div>
               <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl animate-in fade-in slide-in-from-top-8 duration-700 ease-out delay-100">
                 Everything You Need for a Smooth Process
               </h2>
@@ -111,7 +129,7 @@ export default function LandingPage() {
               {features.map((feature, index) => (
                 <Card 
                   key={index} 
-                  className={`hover:shadow-lg transition-shadow animate-in fade-in slide-in-from-bottom-8 duration-500 ease-out`}
+                  className="hover:shadow-xl hover:scale-[1.02] transition-all duration-300 ease-out animate-in fade-in slide-in-from-bottom-8 duration-500"
                   style={{ animationDelay: `${100 + index * 100}ms` }}
                 >
                   <CardHeader className="pb-4">
@@ -129,11 +147,41 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* How It Works Section */}
+        <section id="how-it-works" className="w-full py-12 md:py-24 lg:py-32 bg-muted/40">
+          <div className="container px-4 md:px-6">
+            <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
+              <div className="inline-block rounded-lg bg-primary/10 px-3 py-1 text-sm font-medium text-primary border border-primary/30 animate-in fade-in duration-500">Get Started</div>
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl animate-in fade-in slide-in-from-top-8 duration-700 ease-out delay-100">
+                Simple Steps to Register
+              </h2>
+              <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed animate-in fade-in slide-in-from-top-10 duration-700 ease-out delay-200">
+                Follow these easy steps to complete your voter registration or manage your application.
+              </p>
+            </div>
+            <div className="mx-auto grid items-start gap-8 sm:max-w-4xl md:grid-cols-3 md:gap-12 lg:max-w-5xl">
+              {howItWorksSteps.map((step, index) => (
+                <div 
+                  key={index} 
+                  className="flex flex-col items-center text-center p-4 animate-in fade-in slide-in-from-bottom-8 duration-500"
+                  style={{ animationDelay: `${150 + index * 150}ms` }}
+                >
+                  <div className="mb-4 rounded-full bg-primary/20 p-4 text-primary">
+                    <step.icon className="h-10 w-10" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
+                  <p className="text-muted-foreground">{step.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* About VRAMS Section */}
-        <section id="about" className="w-full py-12 md:py-24 lg:py-32 bg-muted/40">
+        <section id="about" className="w-full py-12 md:py-24 lg:py-32">
           <div className="container grid items-center justify-center gap-4 px-4 text-center md:px-6">
             <div className="space-y-3">
-               <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm border animate-in fade-in duration-500">About Us</div>
+               <div className="inline-block rounded-lg bg-primary/10 px-3 py-1 text-sm font-medium text-primary border border-primary/30 animate-in fade-in duration-500">About Us</div>
               <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight animate-in fade-in slide-in-from-top-8 duration-700 ease-out delay-100">
                 The Future of Voter Registration
               </h2>
