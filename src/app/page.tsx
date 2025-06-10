@@ -273,7 +273,7 @@ export default function LandingPage() {
                 <div className="flex flex-col gap-4 min-[400px]:flex-row animate-in fade-in slide-in-from-top-12 duration-700 ease-out delay-300">
                   <a href="/auth?tab=sign-up">
                     <Button size="lg" className="w-full min-[400px]:w-auto bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 shadow-lg hover:shadow-xl transition-all duration-200 text-lg px-8 py-6">
-                      Get Started Free <ArrowRight className="ml-2 h-5 w-5" />
+                      Register Now <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </a>
                   <a href="/auth?tab=public-login">

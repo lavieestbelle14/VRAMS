@@ -1,44 +1,124 @@
-
 import { z } from 'zod';
 
 const nonEmptyString = z.string().min(1, { message: "This field is required" });
 const optionalString = z.string().optional();
-// const numericString = z.string().regex(/^\d+$/, "Must be a number").optional(); // Not currently used
+
+export interface Address {
+  houseNoStreet: string;
+  barangay: string;
+  cityMunicipality: string;
+  province: string;
+  zipCode: string;
+}
+
+export interface TransferAddress {
+  transferHouseNoStreet?: string;
+  transferBarangay?: string;
+  transferCityMunicipality?: string;
+  transferProvince?: string;
+  transferZipCode?: string;
+}
+
+export interface ParentInformation {
+  fatherFirstName: string;
+  fatherLastName: string;
+  motherFirstName: string;
+  motherLastName: string;
+}
+
+export interface SpecialNeeds {
+  isIlliterate: boolean;
+  isPwd: boolean;
+  isIndigenousPerson: boolean;
+  disabilityType?: string;
+  assistorName?: string;
+  assistorRelationship?: string;
+  assistorAddress?: string;
+  prefersGroundFloor: boolean;
+  isSenior: boolean;
+}
+
+export interface ApplicationTypeAndBiometrics {
+  applicationType: 'register' | 'transfer' | '';
+  biometricsFile?: string;
+}
+
+export interface Oath {
+  oathAccepted: boolean;
+}
+
+export interface ApplicationFormSchema
+  extends Address,
+    TransferAddress,
+    ParentInformation,
+    SpecialNeeds,
+    ApplicationTypeAndBiometrics,
+    Oath {
+  // Personal Information
+  firstName: string;
+  lastName: string;
+  middleName?: string;
+  sex: 'male' | 'female' | '';
+  dob: string;
+  placeOfBirthCityMun: string;
+  placeOfBirthProvince: string;
+  citizenshipType: 'byBirth' | 'naturalized' | 'reacquired' | '';
+  naturalizationDate?: string;
+  naturalizationCertNo?: string;
+
+  yearsOfResidency?: number;
+  monthsOfResidency?: number;
+
+  residencyYearsCityMun?: number;
+  residencyMonthsCityMun?: number;
+  residencyYearsPhilippines?: number;
+
+  professionOccupation?: string;
+  tin?: string;
+
+  civilStatus: 'single' | 'married' | '';
+  spouseName?: string;
+}
 
 export const applicationFormSchema = z.object({
   // Part 1: Personal Information
-  firstName: nonEmptyString,
-  lastName: nonEmptyString,
-  middleName: optionalString,
+  firstName: z.string(),
+  lastName: z.string(),
+  middleName: z.string().optional(),
 
-  sex: z.enum(['male', 'female', ''], { errorMap: () => ({ message: "Please select sex" }) }).refine(val => val !== '', { message: "Please select sex"}),
-  dob: nonEmptyString.refine(val => !isNaN(Date.parse(val)), { message: "Invalid date of birth" }),
-  placeOfBirthCityMun: nonEmptyString,
-  placeOfBirthProvince: nonEmptyString,
+  sex: z.enum(["male", "female", ""], {
+    errorMap: () => ({ message: "Please select a sex" })
+  }),
+  dob: z.string(),
+  placeOfBirthCityMun: z.string(),
+  placeOfBirthProvince: z.string(),
 
-  citizenshipType: z.enum(['byBirth', 'naturalized', 'reacquired', ''], { errorMap: () => ({message: "Select citizenship basis"})}).refine(val => val !== '', {message: "Select citizenship basis"}),
-  naturalizationDate: optionalString, // Date string
-  naturalizationCertNo: optionalString,
-  
+  citizenshipType: z.enum(["byBirth", "naturalized", "reacquired", ""], {
+    errorMap: () => ({ message: "Please select a citizenship type" })
+  }),
+  naturalizationDate: z.string().optional(),
+  naturalizationCertNo: z.string().optional(),
   // Residence/Address (Current)
   houseNoStreet: nonEmptyString,
   barangay: nonEmptyString,
   cityMunicipality: nonEmptyString,
   province: nonEmptyString,
-  zipCode: nonEmptyString.refine(val => /^[0-9]{4,5}$/.test(val), { message: "Invalid zip code" }),
-  yearsOfResidency: z.coerce.number().min(0, "Years cannot be negative").optional(), // For current address
-  monthsOfResidency: z.coerce.number().min(0).max(11).optional(), // For current address
+  zipCode: nonEmptyString,
+  yearsOfResidency: z.number().optional(),
+  monthsOfResidency: z.number().optional(),
 
   // Period of Residence (General)
-  residencyYearsCityMun: z.coerce.number().min(0).optional(), // In current City/Municipality
-  residencyMonthsCityMun: z.coerce.number().min(0).max(11).optional(), // In current City/Municipality
-  residencyYearsPhilippines: z.coerce.number().min(0).optional(), // In Philippines
+  residencyYearsCityMun: z.number().optional(),
+  residencyMonthsCityMun: z.number().optional(),
+  residencyYearsPhilippines: z.number().optional(),
 
-  professionOccupation: optionalString,
-  tin: optionalString.refine(val => !val || /^[0-9-]+$/.test(val), { message: "Invalid TIN format" }),
+  professionOccupation: z.string().optional(),
+  tin: z.string().optional(),
 
-  civilStatus: z.enum(['single', 'married', ''], { errorMap: () => ({ message: "Please select civil status" }) }).refine(val => val !== '', { message: "Please select civil status"}),
-  spouseName: optionalString, // Required if civilStatus is 'married'
+  civilStatus: z.enum(["single", "married", ""], {
+    errorMap: () => ({ message: "Please select a civil status" })
+  }),
+  spouseName: z.string().optional(),
 
   // Parent Information
   fatherFirstName: nonEmptyString,
@@ -48,9 +128,9 @@ export const applicationFormSchema = z.object({
 
   // Special Needs / Assistance
   isIlliterate: z.boolean().default(false),
-  isPwd: z.boolean().default(false), // Person with Disability
+  isPwd: z.boolean().default(false),
   isIndigenousPerson: z.boolean().default(false),
-  disabilityType: optionalString, // Required if isPwd is true
+  disabilityType: optionalString,
   assistorName: optionalString,
   assistorRelationship: optionalString, 
   assistorAddress: optionalString,
@@ -58,21 +138,31 @@ export const applicationFormSchema = z.object({
   isSenior: z.boolean().default(false), 
 
   // Application Type and Biometrics
-  applicationType: z.enum(['register', 'transfer', ''], { errorMap: () => ({ message: "Please select an application type" }) }).refine(val => val !== '', { message: "Please select an application type"}), // UPDATED
-  biometricsFile: optionalString, 
+applicationType: z.enum([
+  'register',
+  'transfer',
+  'reactivation',
+  'change-correction',
+  'inclusion-reinstatement',
+  ''
+], {
+  errorMap: () => ({ message: "Please select an application type" })
+}).refine(val => val !== '', {
+  message: "Please select an application type"
+}),
+
+transferType: z.enum(['transfer-within', 'transfer-from', '']).optional(),
+inclusionType: z.enum(['inclusion', 'reinstatement', '']).optional(),  biometricsFile: optionalString, 
 
   // Conditional Fields for Transfer
-  transferHouseNoStreet: optionalString,
-  transferBarangay: optionalString,
-  transferCityMunicipality: optionalString,
-  transferProvince: optionalString,
-  transferZipCode: optionalString.refine(val => !val || /^[0-9]{4,5}$/.test(val), { message: "Invalid zip code" }),
+  transferHouseNoStreet: z.string().optional(),
+  transferBarangay: z.string().optional(),
+  transferCityMunicipality: z.string().optional(),
+  transferProvince: z.string().optional(),
+  transferZipCode: z.string().optional(),
 
-  // REMOVED fields for reactivation, changeCorrection
-  // reactivationReasons: z.array(z.string()).optional().default([]),
-  // reactivationEvidence: optionalString,
-  // presentData: optionalString,
-  // newCorrectedData: optionalString,
+  // Part 2: Oath
+  oathAccepted: z.boolean(),
 
 }).superRefine((data, ctx) => {
   if (data.citizenshipType === 'naturalized' || data.citizenshipType === 'reacquired') {
@@ -96,10 +186,6 @@ export const applicationFormSchema = z.object({
     if (!data.transferProvince) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous Province required for transfer", path: ["transferProvince"] });
     if (!data.transferZipCode) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous Zip Code required for transfer", path: ["transferZipCode"] });
   }
-
-  // REMOVED superRefine logic for reactivation and changeCorrection
-  // if (data.applicationType === 'reactivation') { ... }
-  // if (data.applicationType === 'changeCorrection') { ... }
 });
 
 export type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
