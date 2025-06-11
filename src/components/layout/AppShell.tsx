@@ -2,7 +2,7 @@
 'use client';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   SidebarProvider,
   Sidebar,
@@ -38,12 +38,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const pathname = usePathname(); // Ensure pathname is defined
   const logoSrc = "/vrams_logo.png"; 
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   const getAvatarFallback = () => {
     if (user?.role === 'officer') return "EO";
-    if (user?.username) {
-      return user.username.substring(0, 2).toUpperCase();
-    }
+    if (user?.username) return user?.username?.substring(0, 2).toUpperCase() || 'U';
     return <UserCircle size={20} />;
   };
 
@@ -104,13 +107,12 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Welcome, {user?.username || 'Officer'}</DropdownMenuLabel>
+              <DropdownMenuLabel>{user?.username || 'My Account'}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {/* Settings item removed */}
-              <DropdownMenuItem onClick={logout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Logout</span>
-              </DropdownMenuItem>
+              {user?.role === 'public' && (
+                <DropdownMenuItem onClick={() => router.push('/public/profile')}>Profile</DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </header>

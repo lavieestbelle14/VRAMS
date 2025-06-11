@@ -1,317 +1,225 @@
-
 'use client';
 import type { ReactNode } from 'react';
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase/client';
+import type { User } from '@supabase/supabase-js';
 
 type UserRole = 'officer' | 'public';
 
 interface AuthenticatedUser {
+  id: string; // Supabase auth user ID
   email: string;
   username: string;
   role: UserRole;
 }
 
-interface StoredUser extends AuthenticatedUser {
-  passwordHash: string; // For a mock system, this will be plain text. In real app, a hash.
-}
-
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (email: string, passwordAttempt: string, intendedRole: UserRole) => void;
-  signUp: (username: string, email: string, passwordAttempt: string, confirmPasswordAttempt: string) => void;
-  logout: () => void;
+  login: (email: string, passwordAttempt: string, intendedRole: UserRole) => Promise<void>;
+  signUp: (username: string, email: string, passwordAttempt: string) => Promise<void>;
+  logout: () => Promise<void>;
   isLoading: boolean;
   user: AuthenticatedUser | null;
-  resetPassword: (email: string, token: string, newPass: string, confirmPass: string) => Promise<boolean>;
   updateUserProfile: (updates: { username?: string }) => Promise<boolean>;
-  updateUserPassword: (currentPass: string, newPass: string, confirmPass: string) => Promise<boolean>;
+  updateUserPassword: (newPass: string) => Promise<boolean>;
+  sendPasswordResetEmail: (email: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const USERS_DB_KEY = 'vrams_users_db';
-const CURRENT_USER_KEY = 'vrams_current_user';
-
-// Define these paths once, outside the effect, if they don't change
 const publicUserAuthenticatedPaths = [
   '/public/home',
   '/public/apply',
   '/public/track-status',
-  '/public/application-submitted', // Note: often includes [id]
+  '/public/application-submitted',
   '/public/profile',
   '/public/faq',
-  '/public/schedule-biometrics' // Note: often includes [id]
+  '/public/schedule-biometrics'
 ];
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
 
-  const getMockUsersDB = (): StoredUser[] => {
-    if (typeof window === 'undefined') return [];
-    const db = localStorage.getItem(USERS_DB_KEY);
-    return db ? JSON.parse(db) : [];
-  };
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setIsLoading(true);
+      const currentUser = session?.user;
+      if (currentUser) {
+        const { data: profile, error } = await supabase
+          .from('profile')
+          .select('role, username')
+          .eq('auth_id', currentUser.id)
+          .single();
 
-  const saveMockUsersDB = (users: StoredUser[]) => {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem(USERS_DB_KEY, JSON.stringify(users));
-  };
+        if (error) {
+          console.error('Error fetching user profile:', error);
+          await supabase.auth.signOut();
+          setUser(null);
+        } else if (profile) {
+          setUser({
+            id: currentUser.id,
+            email: currentUser.email!,
+            role: profile.role as UserRole,
+            username: profile.username,
+          });
+        }
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
 
-  const seedInitialUsers = useCallback(() => {
-    let users = getMockUsersDB();
-    if (!users.some(u => u.email.toLowerCase() === 'officer@comelec.gov.ph')) {
-      users.push({
-        email: 'officer@comelec.gov.ph',
-        username: 'Officer',
-        passwordHash: 'password123',
-        role: 'officer'
-      });
-      saveMockUsersDB(users);
-    }
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
-
-  const checkAuthStatus = useCallback(() => {
-    setIsLoading(true);
-    seedInitialUsers();
-    const storedUser = localStorage.getItem(CURRENT_USER_KEY);
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser) as AuthenticatedUser;
-      setUser(parsedUser);
-      setIsAuthenticated(true);
-    } else {
-      setUser(null);
-      setIsAuthenticated(false);
-    }
-    setIsLoading(false);
-  }, [seedInitialUsers]);
-
   useEffect(() => {
-    checkAuthStatus();
-  }, [checkAuthStatus]);
+    if (isLoading) return;
 
- useEffect(() => {
-    if (isLoading) {
-      return;
-    }
-
+    const isAuthenticated = !!user;
     const currentPath = pathname;
 
-    // If it's the landing page, do nothing further and allow it to render.
-    if (currentPath === '/') {
-      return;
-    }
-
-    const isTermsPage = currentPath.startsWith('/public/terms-of-service');
-    const isPrivacyPage = currentPath.startsWith('/public/privacy-policy');
-
-    if (isTermsPage || isPrivacyPage) {
+    if (currentPath === '/' || currentPath.startsWith('/public/terms-of-service') || currentPath.startsWith('/public/privacy-policy')) {
       return;
     }
 
     const isOfficerPath = currentPath.startsWith('/dashboard');
     const isPathRequiringPublicUserAuth = publicUserAuthenticatedPaths.some(p => currentPath.startsWith(p));
     const isAuthPage = currentPath === '/auth';
-    // isLandingPage is effectively handled by the early return now for currentPath === '/'
     const isPasswordResetPage = currentPath.startsWith('/public/forgot-password') || currentPath.startsWith('/public/reset-password');
 
-
-    if (isAuthenticated && user) { 
+    if (isAuthenticated) {
       if (user.role === 'officer') {
-        if (!isOfficerPath) { // Officer is authenticated but not on a dashboard page
-          router.push('/dashboard');
-        }
+        if (!isOfficerPath) router.push('/dashboard');
       } else if (user.role === 'public') {
-        if (isOfficerPath) { // Public user tries to access officer dashboard
-          router.push('/public/home');
-        } else if (isAuthPage) { // Authenticated public user on login page
-          router.push('/public/home');
-        }
+        if (isOfficerPath || isAuthPage) router.push('/public/home');
       }
-    } else { // User is NOT authenticated
-      // Redirect to login IF:
-      // 1. It's an officer path OR
-      // 2. It's a path requiring public user auth
-      // AND it's NOT the auth page itself AND it's NOT a password reset page.
+    } else {
       if (!isAuthPage && !isPasswordResetPage && (isOfficerPath || isPathRequiringPublicUserAuth)) {
         router.push('/auth');
       }
     }
-  }, [isAuthenticated, isLoading, user, pathname, router]);
+  }, [user, isLoading, pathname, router]);
 
-
-  const login = (email: string, passwordAttempt: string, intendedRole: UserRole) => {
-    const users = getMockUsersDB();
-    const foundUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-
-    if (foundUser && foundUser.passwordHash === passwordAttempt) {
-      if (foundUser.role !== intendedRole) {
-        toast({ title: 'Login Failed', description: `Please use the ${intendedRole === 'officer' ? 'Officer' : 'Public User'} login tab.`, variant: 'destructive' });
-        return;
-      }
-      const authenticatedUser: AuthenticatedUser = {
-        email: foundUser.email,
-        username: foundUser.username,
-        role: foundUser.role
-      };
-      setUser(authenticatedUser);
-      setIsAuthenticated(true);
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(authenticatedUser));
-      toast({ title: 'Login Successful', description: `Welcome, ${authenticatedUser.username}!` });
-      // Redirection is handled by the useEffect hook
-    } else {
-      toast({ title: 'Login Failed', description: 'Invalid email or password.', variant: 'destructive' });
-    }
-  };
-
-  const signUp = (username: string, email: string, passwordAttempt: string, confirmPasswordAttempt: string) => {
-    if (passwordAttempt !== confirmPasswordAttempt) {
-      toast({ title: 'Sign Up Failed', description: 'Passwords do not match.', variant: 'destructive' });
-      return;
-    }
-
-    const users = getMockUsersDB();
-    if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-      toast({ title: 'Sign Up Failed', description: 'Email already registered.', variant: 'destructive' });
-      return;
-    }
-
-    const newUser: StoredUser = {
-      username,
+  const login = async (email: string, passwordAttempt: string, intendedRole: UserRole) => {
+    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
       email,
-      passwordHash: passwordAttempt, // In a real app, hash this password
-      role: 'public'
-    };
-    users.push(newUser);
-    saveMockUsersDB(users);
+      password: passwordAttempt,
+    });
 
-    const authenticatedUser: AuthenticatedUser = {
-      username: newUser.username,
-      email: newUser.email,
-      role: newUser.role
-    };
-    setUser(authenticatedUser);
-    setIsAuthenticated(true);
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(authenticatedUser));
-    toast({ title: 'Sign Up Successful', description: 'Your account has been created.' });
-    router.push('/public/home'); // Redirect to a logged-in page
+    if (loginError || !loginData.user) {
+      toast({ title: 'Login Failed', description: loginError?.message || 'Invalid credentials.', variant: 'destructive' });
+      return;
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from('profile')
+      .select('role, username')
+      .eq('auth_id', loginData.user.id)
+      .single();
+
+    if (profileError || !profile) {
+      toast({ title: 'Login Failed', description: 'Could not retrieve user profile.', variant: 'destructive' });
+      await supabase.auth.signOut();
+      return;
+    }
+
+    if (profile.role !== intendedRole) {
+      toast({ title: 'Login Failed', description: `Please use the correct login tab for your role.`, variant: 'destructive' });
+      await supabase.auth.signOut();
+      return;
+    }
+
+    toast({ title: 'Login Successful', description: `Welcome, ${profile.username}!` });
   };
 
-  const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem(CURRENT_USER_KEY);
-    router.push('/'); 
+  const signUp = async (username: string, email: string, passwordAttempt: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password: passwordAttempt,
+      options: {
+        data: {
+          username: username,
+        },
+      },
+    });
+
+    if (error) {
+      toast({ title: 'Sign Up Failed', description: error.message, variant: 'destructive' });
+      return;
+    }
+    if (data.user) {
+      toast({ title: 'Sign Up Successful', description: 'Your account has been created.' });
+    } else {
+      toast({ title: 'Sign Up Almost Done', description: 'Please check your email to confirm your account.', variant: 'default' });
+    }
   };
 
-  const resetPassword = async (email: string, token: string, newPass: string, confirmPass: string): Promise<boolean> => {
-    if (newPass !== confirmPass) {
-      toast({ title: "Password Reset Failed", description: "New passwords do not match.", variant: "destructive" });
+  const logout = async () => {
+    await supabase.auth.signOut();
+    router.push('/auth');
+  };
+
+  const sendPasswordResetEmail = async (email: string): Promise<boolean> => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/public/reset-password`,
+    });
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
       return false;
     }
-    if (newPass.length < 8) { 
-      toast({ title: "Password Reset Failed", description: "New password must be at least 8 characters.", variant: "destructive" });
+    toast({ title: 'Success', description: 'Password reset link sent. Please check your email.' });
+    return true;
+  };
+
+  const updateUserPassword = async (newPass: string): Promise<boolean> => {
+    const { error } = await supabase.auth.updateUser({ password: newPass });
+    if (error) {
+      toast({ title: 'Update Failed', description: error.message, variant: 'destructive' });
       return false;
     }
-    if (!token.startsWith("RESET-")) { 
-        toast({ title: "Password Reset Failed", description: "Invalid reset token format.", variant: "destructive" });
-        return false;
-    }
-
-    let users = getMockUsersDB();
-    const userIndex = users.findIndex(u => u.email.toLowerCase() === email.toLowerCase() && u.role === 'public');
-
-    if (userIndex === -1) {
-      toast({ title: "Password Reset Failed", description: "Public user email not found.", variant: "destructive" });
-      return false;
-    }
-
-    users[userIndex].passwordHash = newPass; 
-    saveMockUsersDB(users);
-    toast({ title: "Password Reset Successful", description: "You can now log in with your new password." });
+    toast({ title: 'Password Updated', description: 'Your password has been successfully updated.' });
     return true;
   };
 
   const updateUserProfile = async (updates: { username?: string }): Promise<boolean> => {
     if (!user) return false;
 
-    const users = getMockUsersDB();
-    const userIndex = users.findIndex(u => u.email.toLowerCase() === user.email.toLowerCase());
+    const { error } = await supabase
+      .from('profile')
+      .update({ username: updates.username })
+      .eq('auth_id', user.id);
 
-    if (userIndex === -1) {
-      toast({ title: 'Error', description: 'User not found.', variant: 'destructive' });
+    if (error) {
+      toast({ title: 'Error', description: 'Failed to update profile.', variant: 'destructive' });
       return false;
     }
 
-    // Update the user in the mock DB
-    const updatedUserInDB = { ...users[userIndex], ...updates };
-    users[userIndex] = updatedUserInDB;
-    saveMockUsersDB(users);
-
-    // Update the user in the context state
-    const updatedUserInContext: AuthenticatedUser = {
-      ...user,
-      ...updates
-    };
-    setUser(updatedUserInContext);
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUserInContext));
-
+    setUser({ ...user, ...updates });
     toast({ title: 'Success', description: 'Your profile has been updated.' });
     return true;
   };
 
-  const updateUserPassword = async (currentPass: string, newPass: string, confirmPass: string): Promise<boolean> => {
-     if (!user || !isAuthenticated || user.role !== 'public') {
-      toast({ title: "Password Change Failed", description: "You must be logged in as a public user.", variant: "destructive" });
-      return false;
-    }
-    if (newPass !== confirmPass) {
-      toast({ title: "Password Change Failed", description: "New passwords do not match.", variant: "destructive" });
-      return false;
-    }
-    if (newPass.length < 8) { 
-      toast({ title: "Password Change Failed", description: "New password must be at least 8 characters.", variant: "destructive" });
-      return false;
-    }
-
-    let users = getMockUsersDB();
-    const userIndex = users.findIndex(u => u.username.toLowerCase() === user.username.toLowerCase());
-
-    if (userIndex === -1) {
-      toast({ title: "Password Change Failed", description: "User not found.", variant: "destructive" });
-      return false;
-    }
-    if (users[userIndex].passwordHash !== currentPass) {
-      toast({ title: "Password Change Failed", description: "Incorrect current password.", variant: "destructive" });
-      return false;
-    }
-
-    users[userIndex].passwordHash = newPass; 
-    saveMockUsersDB(users);
-    toast({ title: "Password Changed Successfully", description: "Your password has been updated." });
-    return true;
+  const value: AuthContextType = {
+    isAuthenticated: !!user,
+    user,
+    login,
+    signUp,
+    logout,
+    isLoading,
+    updateUserProfile,
+    updateUserPassword,
+    sendPasswordResetEmail,
   };
 
-
-  if (isLoading && !pathname.startsWith('/public/terms-of-service') && !pathname.startsWith('/public/privacy-policy') && pathname !== '/') {
-    return <div className="flex h-screen items-center justify-center"><svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-  </svg></div>;
-  }
-
-  return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, signUp, logout, isLoading, resetPassword, updateUserProfile, updateUserPassword }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
