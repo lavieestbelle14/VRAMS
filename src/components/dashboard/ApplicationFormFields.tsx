@@ -90,6 +90,7 @@ export function ApplicationFormFields() {
 
       // Conditional fields
       transferHouseNoStreet: '', transferBarangay: '', transferCityMunicipality: '', transferProvince: '', transferZipCode: '',
+      transferNewHouseNo: '',
       transferYears: undefined,
       transferMonths: undefined,
       oathAccepted: false,
@@ -472,7 +473,16 @@ const assistorName = form.watch('assistorName');
                           <FormItem>
                             <FormLabel>House No. & Street</FormLabel>
                             <FormControl>
-                              <Input {...field} value={typeof field.value === 'boolean' ? '' : field.value ?? ''} />
+                              <Input
+                                {...field}
+                                value={
+                                  typeof field.value === 'boolean'
+                                    ? ''
+                                    : field.value instanceof File
+                                      ? ''
+                                      : field.value ?? ''
+                                }
+                              />
                             </FormControl>
                           </FormItem>
                         )}
@@ -511,23 +521,50 @@ const assistorName = form.watch('assistorName');
                       </div>
                       
 <div className="prose prose-sm text-muted-foreground">
-  <p className="text-black">
-    I have resided in my new residence for 
-    <Input 
-      className="w-20 inline-block mx-1 h-6"
-      type="number"
-      value={form.getValues('transferYears') ?? ''}
-      onChange={(e) => form.setValue('transferYears', e.target.value)}
-    /> years and for 
-    <Input 
-      className="w-20 inline-block mx-1 h-6"
-      type="number"
-      min="0"
-      max="11"
-      value={form.getValues('transferMonths') ?? ''}
-      onChange={(e) => form.setValue('transferMonths', e.target.value)}
-    /> months.
-  </p>
+  <div className="flex items-center gap-2">
+    <span className="text-black">I have resided in my new residence for</span>
+    <FormField
+      control={form.control}
+      name="transferYears"
+      render={({ field }) => (
+        <FormItem className="flex-shrink-0 w-20">
+          <FormControl>
+            <Input 
+              type="number"
+              min="0"
+              className="h-8 text-center"
+              placeholder="0"
+              {...field}
+              value={field.value ?? ''}
+              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : '')}
+            />
+          </FormControl>
+        </FormItem>
+      )}
+    />
+    <span className="text-black">years and for</span>
+    <FormField
+      control={form.control}
+      name="transferMonths"
+      render={({ field }) => (
+        <FormItem className="flex-shrink-0 w-20">
+          <FormControl>
+            <Input 
+              type="number"
+              min="0"
+              max="11"
+              className="h-8 text-center"
+              placeholder="0"
+              {...field}
+              value={field.value ?? ''}
+              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : '')}
+            />
+          </FormControl>
+        </FormItem>
+      )}
+    />
+    <span className="text-black">months.</span>
+  </div>
 </div>
                     </div>
                   </div>
@@ -967,6 +1004,124 @@ const assistorName = form.watch('assistorName');
             />
   </DisableableSection>
         ))}
+{formSection("ID Verification", "Required for new registrations. Upload clear photos of your valid ID and a selfie.", (
+  <DisableableSection isDisabled={applicationType !== 'register'}>
+    <div className="space-y-6">
+      <p className="text-sm text-muted-foreground">
+        Please provide clear photos of your valid government-issued ID and a selfie of yourself holding the ID.
+        Each file should not exceed 5MB.
+      </p>
+
+      <FormField
+        control={form.control}
+        name="idFrontPhoto"
+        render={({ field: { onChange, value, ...field } }) => (
+          <FormItem>
+            <FormLabel>ID Front Photo</FormLabel>
+            <FormControl>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    if (file.size > 5 * 1024 * 1024) {
+                      toast({
+                        title: "File too large",
+                        description: "Please select a file smaller than 5MB",
+                        variant: "destructive",
+                      });
+                      e.target.value = '';
+                      return;
+                    }
+                    onChange(file);
+                  }
+                }}
+                {...field}
+              />
+            </FormControl>
+            <FormDescription>
+              Upload a clear photo of the front of your valid ID
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="idBackPhoto"
+        render={({ field: { onChange, value, ...field } }) => (
+          <FormItem>
+            <FormLabel>ID Back Photo</FormLabel>
+            <FormControl>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    if (file.size > 5 * 1024 * 1024) {
+                      toast({
+                        title: "File too large",
+                        description: "Please select a file smaller than 5MB",
+                        variant: "destructive",
+                      });
+                      e.target.value = '';
+                      return;
+                    }
+                    onChange(file);
+                  }
+                }}
+                {...field}
+              />
+            </FormControl>
+            <FormDescription>
+              Upload a clear photo of the back of your valid ID
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="selfieWithId"
+        render={({ field: { onChange, value, ...field } }) => (
+          <FormItem>
+            <FormLabel>Selfie with ID</FormLabel>
+            <FormControl>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    if (file.size > 5 * 1024 * 1024) {
+                      toast({
+                        title: "File too large",
+                        description: "Please select a file smaller than 5MB",
+                        variant: "destructive",
+                      });
+                      e.target.value = '';
+                      return;
+                    }
+                    onChange(file);
+                  }
+                }}
+                {...field}
+              />
+            </FormControl>
+            <FormDescription>
+              Upload a selfie of yourself holding your ID (make sure both your face and ID are clearly visible)
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </div>
+  </DisableableSection>
+))}
 
         {formSection("Biometrics", "", (
         <FormField
@@ -1005,32 +1160,35 @@ const assistorName = form.watch('assistorName');
 
     <div className="flex items-start space-x-3 mt-4">
       <FormField
-        control={form.control}
-        name="oathAccepted"
-        render={({
-          field,
-        }: {
-          field: import("react-hook-form").ControllerRenderProps<ApplicationFormValues, "oathAccepted">;
-        }) => (
-          <FormItem className="flex items-start space-x-3 space-y-0">
-            <FormControl>
-              <Checkbox
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            </FormControl>
-            <div className="space-y-1 leading-none">
-              <FormLabel>
-                I understand and agree to the oath stated above
-              </FormLabel>
-              <FormDescription>
-                By checking this box, I confirm that I have read, understood, and agree to the oath.
-                I understand that providing false information may result in legal consequences.
-              </FormDescription>
-            </div>
-          </FormItem>
-        )}
-      />
+  control={form.control}
+  name="oathAccepted"
+  render={({
+    field,
+  }: {
+    field: import("react-hook-form").ControllerRenderProps<ApplicationFormValues, "oathAccepted">;
+  }) => (
+    <FormItem className="flex items-start space-x-3 space-y-0">
+      <FormControl>
+        <Checkbox
+          checked={field.value}
+          onCheckedChange={field.onChange}
+          required
+          aria-required="true"
+        />
+      </FormControl>
+      <div className="space-y-1 leading-none">
+        <FormLabel className="text-base font-semibold">
+          I understand and agree to the oath stated above *
+        </FormLabel>
+        <FormDescription>
+          By checking this box, I confirm that I have read, understood, and agree to the oath.
+          I understand that providing false information may result in legal consequences.
+        </FormDescription>
+      </div>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
     </div>
   </>
 ))}

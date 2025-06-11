@@ -75,10 +75,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     });
 
+<<<<<<< HEAD
     return () => {
       authListener.subscription.unsubscribe();
     };
   }, []);
+=======
+  const seedInitialUsers = useCallback(() => {
+  try {
+    let users = getMockUsersDB();
+    
+    // Add null check for the user object and email
+    if (!users.some(u => u?.email && u.email.toLowerCase() === 'officer@comelec.gov.ph')) {
+      users.push({
+        email: 'officer@comelec.gov.ph',
+        username: 'Officer',
+        passwordHash: 'password123',
+        role: 'officer' as UserRole
+      });
+      saveMockUsersDB(users);
+    }
+  } catch (error) {
+    console.error('Error seeding initial users:', error);
+  }
+}, []);
+>>>>>>> master
 
   useEffect(() => {
     if (isLoading) return;
@@ -108,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, isLoading, pathname, router]);
 
+<<<<<<< HEAD
   const login = async (email: string, passwordAttempt: string, intendedRole: UserRole) => {
     const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
       email,
@@ -139,6 +161,121 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     toast({ title: 'Login Successful', description: `Welcome, ${profile.username}!` });
   };
+=======
+
+  const login = (email: string, passwordAttempt: string, intendedRole: UserRole) => {
+  try {
+    const users = getMockUsersDB();
+    if (!email) {
+      toast({ title: 'Login Failed', description: 'Email is required.', variant: 'destructive' });
+      return;
+    }
+
+    const foundUser = users.find(u => 
+      u?.email && // Add null check
+      u.email.toLowerCase() === email.toLowerCase()
+    );
+
+    if (foundUser && foundUser.passwordHash === passwordAttempt) {
+      if (foundUser.role !== intendedRole) {
+        toast({ 
+          title: 'Login Failed', 
+          description: `Please use the ${intendedRole === 'officer' ? 'Officer' : 'Public User'} login tab.`, 
+          variant: 'destructive' 
+        });
+        return;
+      }
+
+      const authenticatedUser: AuthenticatedUser = {
+        email: foundUser.email,
+        username: foundUser.username,
+        role: foundUser.role
+      };
+
+      setUser(authenticatedUser);
+      setIsAuthenticated(true);
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(authenticatedUser));
+      toast({ title: 'Login Successful', description: `Welcome, ${authenticatedUser.username}!` });
+    } else {
+      toast({ title: 'Login Failed', description: 'Invalid email or password.', variant: 'destructive' });
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    toast({ 
+      title: 'Login Failed', 
+      description: 'An unexpected error occurred. Please try again.', 
+      variant: 'destructive' 
+    });
+  }
+};
+
+  const signUp = (username: string, email: string, passwordAttempt: string, confirmPasswordAttempt: string) => {
+  try {
+    // Validate inputs
+    if (!email || !username || !passwordAttempt || !confirmPasswordAttempt) {
+      toast({ 
+        title: 'Sign Up Failed', 
+        description: 'All fields are required.', 
+        variant: 'destructive' 
+      });
+      return;
+    }
+
+    if (passwordAttempt !== confirmPasswordAttempt) {
+      toast({ 
+        title: 'Sign Up Failed', 
+        description: 'Passwords do not match.', 
+        variant: 'destructive' 
+      });
+      return;
+    }
+
+    const users = getMockUsersDB();
+    
+    // Add null check when checking for existing email
+    if (users.some(u => u?.email && u.email.toLowerCase() === email.toLowerCase())) {
+      toast({ 
+        title: 'Sign Up Failed', 
+        description: 'Email already registered.', 
+        variant: 'destructive' 
+      });
+      return;
+    }
+
+    const newUser: StoredUser = {
+      username,
+      email,
+      passwordHash: passwordAttempt,
+      role: 'public'
+    };
+    users.push(newUser);
+    saveMockUsersDB(users);
+
+    const authenticatedUser: AuthenticatedUser = {
+      username: newUser.username,
+      email: newUser.email,
+      role: newUser.role
+    };
+    
+    setUser(authenticatedUser);
+    setIsAuthenticated(true);
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(authenticatedUser));
+    
+    toast({ 
+      title: 'Sign Up Successful', 
+      description: 'Your account has been created.' 
+    });
+    router.push('/public/home');
+  } catch (error) {
+    console.error('Sign up error:', error);
+    toast({ 
+      title: 'Sign Up Failed', 
+      description: 'An unexpected error occurred. Please try again.', 
+      variant: 'destructive' 
+    });
+  }
+};
+>>>>>>> master
 
   const signUp = async (username: string, email: string, passwordAttempt: string) => {
     // First check if a user with this email already exists
@@ -217,8 +354,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const updateUserProfile = async (updates: { username?: string }): Promise<boolean> => {
-    if (!user) return false;
+  try {
+    if (!user) {
+      toast({ title: 'Update Failed', description: 'You must be logged in to update your profile.', variant: 'destructive' });
+      return false;
+    }
 
+    if (!updates.username || updates.username.trim() === '') {
+      toast({ title: 'Update Failed', description: 'Username cannot be empty.', variant: 'destructive' });
+      return false;
+    }
+
+<<<<<<< HEAD
     const { error } = await supabase
       .from('profile')
       .update({ username: updates.username })
@@ -231,8 +378,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setUser({ ...user, ...updates });
     toast({ title: 'Success', description: 'Your profile has been updated.' });
+=======
+    const users = getMockUsersDB();
+    const userIndex = users.findIndex(u => u?.email && u.email.toLowerCase() === user.email.toLowerCase());
+
+    if (userIndex === -1) {
+      toast({ title: 'Update Failed', description: 'User not found.', variant: 'destructive' });
+      return false;
+    }
+
+    // Check if username is already taken by another user
+    const isUsernameTaken = users.some((u, index) => 
+      index !== userIndex && 
+      u?.username?.toLowerCase() === updates.username?.toLowerCase()
+    );
+
+    if (isUsernameTaken) {
+      toast({ title: 'Update Failed', description: 'Username is already taken.', variant: 'destructive' });
+      return false;
+    }
+
+    // Update the user in the mock DB
+    users[userIndex] = {
+      ...users[userIndex],
+      username: updates.username
+    };
+    saveMockUsersDB(users);
+
+    // Update the authenticated user in context
+    const updatedUser: AuthenticatedUser = {
+      ...user,
+      username: updates.username
+    };
+    setUser(updatedUser);
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
+
+    toast({ 
+      title: 'Profile Updated', 
+      description: 'Your username has been successfully updated.' 
+    });
+>>>>>>> master
     return true;
-  };
+  } catch (error) {
+    console.error('Profile update error:', error);
+    toast({ 
+      title: 'Update Failed', 
+      description: 'An unexpected error occurred. Please try again.', 
+      variant: 'destructive' 
+    });
+    return false;
+  }
+};
 
   const value: AuthContextType = {
     isAuthenticated: !!user,

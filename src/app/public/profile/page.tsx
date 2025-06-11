@@ -34,9 +34,12 @@ export default function PublicProfilePage() {
   const router = useRouter();
 
   const profileForm = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: { username: '', email: '' },
-  });
+  resolver: zodResolver(profileSchema),
+  defaultValues: {
+    username: '',
+    email: '',
+  },
+});
 
   const passwordForm = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordSchema),
@@ -44,17 +47,22 @@ export default function PublicProfilePage() {
   });
 
   useEffect(() => {
-    if (user) {
-      profileForm.reset({
-        username: user.username,
-        email: user.email,
-      });
-    }
-  }, [user, profileForm]);
+  if (user) {
+    profileForm.reset({
+      username: user.username || '',
+      email: user.email || '', // Use the email from user object instead of username
+    });
+  }
+}, [user, profileForm]);
 
   const onProfileSubmit = async (data: ProfileFormValues) => {
-    await updateUserProfile({ username: data.username });
-  };
+  const success = await updateUserProfile({ username: data.username });
+  if (success) {
+    toast({ title: "Profile Updated", description: "Your username has been saved." });
+  } else {
+    toast({ title: "Update Failed", description: "Could not update profile. Please try again.", variant: "destructive" });
+  }
+};
 
   const onPasswordSubmit = async (data: PasswordFormValues) => {
     const success = await updateUserPassword(data.newPassword);
@@ -86,46 +94,54 @@ export default function PublicProfilePage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center"><User className="mr-2 h-5 w-5 text-primary" /> Personal Information</CardTitle>
-          <CardDescription>Update your username. Email is not editable.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...profileForm}>
-            <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-6">
-              <FormField
-                control={profileForm.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Your username" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={profileForm.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input {...field} readOnly className="bg-muted/50 cursor-not-allowed" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" disabled={profileForm.formState.isSubmitting}>
-                <Save className="mr-2 h-4 w-4" /> Save Changes
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+  <CardHeader>
+    <CardTitle className="flex items-center">
+      <User className="mr-2 h-5 w-5 text-primary" /> User Information
+    </CardTitle>
+    <CardDescription>Update your username. Email is not editable here.</CardDescription>
+  </CardHeader>
+  <CardContent>
+    <Form {...profileForm}>
+      <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-6">
+        <FormField
+          control={profileForm.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Username</FormLabel>
+              <FormControl>
+                <Input placeholder="johndoe" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={profileForm.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input placeholder="user@example.com" {...field} readOnly className="bg-muted/50 cursor-not-allowed" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="submit" disabled={profileForm.formState.isSubmitting}>
+          {profileForm.formState.isSubmitting ? 
+          <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg> : 
+          <Save className="mr-2 h-4 w-4" />}
+          Save Profile Changes
+        </Button>
+      </form>
+    </Form>
+  </CardContent>
+</Card>
 
       <Card>
         <CardHeader>
