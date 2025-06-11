@@ -154,6 +154,19 @@ applicationType: z.enum([
 transferType: z.enum(['transfer-within', 'transfer-from', '']).optional(),
 inclusionType: z.enum(['inclusion', 'reinstatement', '']).optional(),  biometricsFile: optionalString, 
 
+// ID Verification (Required for Registration)
+  idFrontPhoto: z.instanceof(File).optional().refine(
+    (file) => !file || file.size <= 5 * 1024 * 1024,
+    "File size must be less than 5MB"
+  ),
+  idBackPhoto: z.instanceof(File).optional().refine(
+    (file) => !file || file.size <= 5 * 1024 * 1024,
+    "File size must be less than 5MB"
+  ),
+  selfieWithId: z.instanceof(File).optional().refine(
+    (file) => !file || file.size <= 5 * 1024 * 1024,
+    "File size must be less than 5MB"
+  ),
   // Conditional Fields for Transfer
   transferHouseNoStreet: z.string().optional(),
   transferBarangay: z.string().optional(),
@@ -162,7 +175,9 @@ inclusionType: z.enum(['inclusion', 'reinstatement', '']).optional(),  biometric
   transferZipCode: z.string().optional(),
 
   // Part 2: Oath
-  oathAccepted: z.boolean(),
+oathAccepted: z.boolean().refine((val) => val === true, {
+  message: "You must accept the oath to submit the application"
+}),
 
 }).superRefine((data, ctx) => {
   if (data.citizenshipType === 'naturalized' || data.citizenshipType === 'reacquired') {
@@ -178,7 +193,29 @@ inclusionType: z.enum(['inclusion', 'reinstatement', '']).optional(),  biometric
   if ((data.assistorName || data.assistorAddress) && !data.assistorRelationship) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Assistor relationship is required if assistor details are provided", path: ["assistorRelationship"]});
   }
-
+if (data.applicationType === 'register') {
+    if (!data.idFrontPhoto) {
+      ctx.addIssue({ 
+        code: z.ZodIssueCode.custom, 
+        message: "Front photo of ID is required for registration", 
+        path: ["idFrontPhoto"] 
+      });
+    }
+    if (!data.idBackPhoto) {
+      ctx.addIssue({ 
+        code: z.ZodIssueCode.custom, 
+        message: "Back photo of ID is required for registration", 
+        path: ["idBackPhoto"] 
+      });
+    }
+    if (!data.selfieWithId) {
+      ctx.addIssue({ 
+        code: z.ZodIssueCode.custom, 
+        message: "Selfie with ID is required for registration", 
+        path: ["selfieWithId"] 
+      });
+    }
+  }
   if (data.applicationType === 'transfer') {
     if (!data.transferHouseNoStreet) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous House No./Street required for transfer", path: ["transferHouseNoStreet"] });
     if (!data.transferBarangay) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous Barangay required for transfer", path: ["transferBarangay"] });
