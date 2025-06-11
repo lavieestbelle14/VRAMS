@@ -141,6 +141,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (username: string, email: string, passwordAttempt: string) => {
+    // First check if a user with this email already exists
+    const { data: existingUsers, error: checkError } = await supabase
+      .from('profile')
+      .select('email')
+      .eq('email', email);
+
+    if (checkError) {
+      toast({ title: 'Error', description: 'An error occurred while checking existing accounts.', variant: 'destructive' });
+      return;
+    }
+
+    if (existingUsers && existingUsers.length > 0) {
+      toast({ 
+        title: 'Account Exists', 
+        description: 'An account with this email already exists. Please log in instead.', 
+        variant: 'destructive' 
+      });
+      return;
+    }
+
+    // If email is not in use, proceed with sign up
     const { data, error } = await supabase.auth.signUp({
       email,
       password: passwordAttempt,
@@ -152,13 +173,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (error) {
-      toast({ title: 'Sign Up Failed', description: error.message, variant: 'destructive' });
+      toast({ 
+        title: 'Sign Up Failed', 
+        description: error.message, 
+        variant: 'destructive' 
+      });
       return;
     }
+
     if (data.user) {
-      toast({ title: 'Sign Up Successful', description: 'Your account has been created.' });
-    } else {
-      toast({ title: 'Sign Up Almost Done', description: 'Please check your email to confirm your account.', variant: 'default' });
+      toast({ 
+        title: 'Sign Up Successful', 
+        description: 'Your account has been created. Please check your email to confirm your account.' 
+      });
     }
   };
 
