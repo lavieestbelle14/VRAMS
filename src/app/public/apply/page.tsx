@@ -21,18 +21,11 @@ export default function PublicNewApplicationPage() {
         </Button>
       </div>
       
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle>Voter Registration Application Form</CardTitle>
-          <CardDescription>
-            Please fill out all required fields accurately. This information will be used for your official voter registration.
-            Ensure all details match your official documents.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ApplicationFormFields />
-        </CardContent>
-      </Card>
+      <Card className="shadow-lg rounded-lg border">
+  <CardContent className="p-6">
+    <ApplicationFormFields />
+  </CardContent>
+</Card>
     </div>
   );
 }

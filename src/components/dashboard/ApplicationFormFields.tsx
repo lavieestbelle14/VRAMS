@@ -25,6 +25,24 @@ import { useRouter } from 'next/navigation';
 import { saveApplication } from '@/lib/applicationStore';
 import { classifyApplicantType, type ClassifyApplicantTypeInput } from '@/ai/flows/classify-applicant-type';
 
+const DisableableSection = ({ 
+  isDisabled, 
+  children 
+}: { 
+  isDisabled: boolean; 
+  children: React.ReactNode 
+}) => (
+  <div className={isDisabled ? "opacity-60 pointer-events-none" : ""}>
+    {isDisabled && (
+      <div className="mb-4 p-4 bg-muted rounded-lg">
+        <p className="text-sm text-muted-foreground">
+          This section is auto-filled from your existing voter record for non-registration applications.
+        </p>
+      </div>
+    )}
+    {children}
+  </div>
+);
 const DRAFT_STORAGE_KEY = 'vrams_application_draft_v2';
 const LAST_SUBMITTED_FINGERPRINT_KEY = 'vrams_last_submitted_fingerprint_v1';
 
@@ -72,11 +90,16 @@ export function ApplicationFormFields() {
 
       // Conditional fields
       transferHouseNoStreet: '', transferBarangay: '', transferCityMunicipality: '', transferProvince: '', transferZipCode: '',
-      
+      transferYears: undefined,
+      transferMonths: undefined,
       oathAccepted: false,
+      inclusionPrecinctNo: '',
+
 
     },
   });
+  // Add inside the ApplicationFormFields component, after form is declared
+  // (Removed duplicate shouldDisableSection declaration)
 
   // Auto-save draft to localStorage
   useEffect(() => {
@@ -161,11 +184,15 @@ export function ApplicationFormFields() {
   };
 
 
-  const applicationType = form.watch('applicationType');
-  const civilStatus = form.watch('civilStatus');
-  const isPwd = form.watch('isPwd');
-  const citizenshipType = form.watch('citizenshipType');
-  const assistorName = form.watch('assistorName');
+const applicationType = form.watch('applicationType');
+const transferType = form.watch('transferType');
+const shouldDisableSection = applicationType && 
+  applicationType !== 'register' && 
+  !(applicationType === 'transfer' && transferType === 'transfer-from');
+const civilStatus = form.watch('civilStatus');
+const isPwd = form.watch('isPwd');
+const citizenshipType = form.watch('citizenshipType');
+const assistorName = form.watch('assistorName');
 
   const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> = async (data) => {
     try {
@@ -270,12 +297,407 @@ export function ApplicationFormFields() {
       <CardContent className="space-y-4">{children}</CardContent>
     </Card>
   );
-  
+  const DeclarationFields = ({prefix = ""}: {prefix?: string}) => (
+  <div className="space-y-4 text-sm">
+        <p className="text-sm text-muted-foreground mb-4">Note: (For Applicants with existing Registration Records)</p>
+
+    <div className="flex items-baseline gap-2">
+      <span>I,</span>
+      <FormField
+        control={form.control}
+        name={`${prefix}declarantName`}
+        render={({ field }) => (
+          <FormItem className="flex-1">
+            <FormControl>
+              <Input {...field} className="h-7" value={typeof field.value === 'boolean' ? '' : field.value ?? ''} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <span>, Filipino, born on</span>
+      <FormField
+        control={form.control}
+        name={`${prefix}declarantBirthDate`}
+        render={({ field }) => (
+          <FormItem className="flex-1">
+            <FormControl>
+              <Input {...field} className="h-7" type="date" value={typeof field.value === 'boolean' || typeof field.value === 'undefined' ? '' : field.value} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <span>, a duly registered</span>
+    </div>
+    <div className="flex items-baseline gap-2">
+      <span>voter in Precinct No.</span>
+      <FormField
+        control={form.control}
+        name={`${prefix}declarantPrecinct`}
+        render={({ field }) => (
+          <FormItem className="w-24">
+            <FormControl>
+              <Input {...field} className="h-7" value={typeof field.value === 'boolean' ? '' : field.value ?? ''} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <span>of Barangay</span>
+      <FormField
+        control={form.control}
+        name={`${prefix}declarantBarangay`}
+        render={({ field }) => (
+          <FormItem className="flex-1">
+            <FormControl>
+              <Input {...field} className="h-7" value={typeof field.value === 'boolean' || typeof field.value === 'undefined' ? '' : field.value} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <span>, City/Municipality of</span>
+      <FormField
+        control={form.control}
+        name={`${prefix}declarantCity`}
+        render={({ field }) => (
+          <FormItem className="flex-1">
+            <FormControl>
+              <Input {...field} className="h-7" value={typeof field.value === 'boolean' || typeof field.value === 'undefined' ? '' : field.value} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <span>,</span>
+    </div>
+    <div className="flex items-baseline gap-2">
+      <span>Province of</span>
+      <FormField
+        control={form.control}
+        name={`${prefix}declarantProvince`}
+        render={({ field }) => (
+          <FormItem className="flex-1">
+            <FormControl>
+              <Input {...field} className="h-7" value={typeof field.value === 'boolean' || typeof field.value === 'undefined' ? '' : field.value} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <span>, do HEREBY APPLY FOR:</span>
+    </div>
+  </div>
+);
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+  <Form {...form}>
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      {/* Place Application Type first */}
+      {formSection("Application Type", "", (
+  <>
+    <FormField
+      control={form.control}
+      name="applicationType"
+      render={({ field }) => (
+        <FormItem className="space-y-3">
+          <FormLabel>Type of Application</FormLabel>
+          <FormControl>
+<RadioGroup onValueChange={field.onChange} value={field.value ?? ''} className="flex flex-col space-y-2">
+              {/* Registration */}
+<FormItem className="space-y-1">
+  <div className="flex items-center space-x-3">
+    <FormControl>
+      <RadioGroupItem value="register" />
+    </FormControl>
+    <FormLabel className="font-normal">Application for Registration</FormLabel>
+  </div>
+  {field.value === 'register' && (
+    <div className="ml-8 space-y-4">
+      {/* Note removed */}
+    </div>
+  )}
+</FormItem>
+
+               {/* Transfer */}
+              <FormItem className="space-y-1">
+                <div className="flex items-center space-x-3">
+                  <FormControl>
+                    <RadioGroupItem value="transfer" />
+                  </FormControl>
+                  <FormLabel className="font-normal">Application for Transfer of Registration Record</FormLabel>
+                </div>
+
+{field.value === 'transfer' && (
+  <div className="ml-8 space-y-4">
+    <DeclarationFields prefix="transfer_" />
+    <FormField
+      control={form.control}
+      name="transferType"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Transfer Type</FormLabel>
+          <FormControl>
+            <RadioGroup 
+              onValueChange={field.onChange} 
+              value={field.value ?? ''} 
+              className="space-y-2"
+            >
+              <FormItem className="flex items-center space-x-2">
+                <FormControl>
+                  <RadioGroupItem value="transfer-within" />
+                </FormControl>
+                <FormLabel className="font-normal">
+                  Within the same City/Municipality/District
+                </FormLabel>
+              </FormItem>
+              <FormItem className="flex items-center space-x-2">
+                <FormControl>
+                  <RadioGroupItem value="transfer-from" />
+                </FormControl>
+                <FormLabel className="font-normal">
+                  From another City/Municipality/District
+                </FormLabel>
+              </FormItem>
+            </RadioGroup>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+    <div className="space-y-4">
+                      <p className="text-sm font-medium">My New Residence is:</p>
+                      <FormField name="transferNewHouseNo" control={form.control}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>House No. & Street</FormLabel>
+                            <FormControl>
+                              <Input {...field} value={typeof field.value === 'boolean' ? '' : field.value ?? ''} />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <div className="grid grid-cols-3 gap-4">
+                        <FormField name="transferNewBarangay" control={form.control}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Barangay</FormLabel>
+                              <FormControl>
+                                <Input {...field} value={typeof field.value === 'boolean' ? '' : field.value ?? ''} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField name="transferNewCity" control={form.control}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>City/Municipality</FormLabel>
+                              <FormControl>
+                                <Input {...field} value={typeof field.value === 'boolean' || typeof field.value === 'undefined' ? '' : field.value} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField name="transferNewProvince" control={form.control}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Province</FormLabel>
+                              <FormControl>
+                                <Input {...field} value={typeof field.value === 'boolean' ? '' : field.value ?? ''} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+<div className="prose prose-sm text-muted-foreground">
+  <p className="text-black">
+    I have resided in my new residence for 
+    <Input 
+      className="w-20 inline-block mx-1 h-6"
+      type="number"
+      value={form.getValues('transferYears') ?? ''}
+      onChange={(e) => form.setValue('transferYears', e.target.value)}
+    /> years and for 
+    <Input 
+      className="w-20 inline-block mx-1 h-6"
+      type="number"
+      min="0"
+      max="11"
+      value={form.getValues('transferMonths') ?? ''}
+      onChange={(e) => form.setValue('transferMonths', e.target.value)}
+    /> months.
+  </p>
+</div>
+                    </div>
+                  </div>
+                )}
+              </FormItem>
+
+              {/* Reactivation */}
+              <FormItem className="space-y-2">
+                <div className="flex items-center space-x-3">
+                  <FormControl>
+                    <RadioGroupItem value="reactivation" />
+                  </FormControl>
+                  <FormLabel className="font-normal">Application for Reactivation of Registration Record</FormLabel>
+                </div>
+                {field.value === 'reactivation' && (
+  <div className="ml-8 space-y-4">
+    <DeclarationFields prefix="reactivation_" />
+                    <RadioGroup name="deactivationReason" className="ml-4 space-y-2">
+                      <FormItem className="flex items-center space-x-2">
+                        <FormControl>
+                          <RadioGroupItem value="1" />
+                        </FormControl>
+                        <FormLabel className="font-normal text-sm">1. Sentenced by final judgment to suffer imprisonment for not less than one (1) year;</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2">
+                        <FormControl>
+                          <RadioGroupItem value="2" />
+                        </FormControl>
+                        <FormLabel className="font-normal text-sm">2. Convicted by final judgment of a crime involving disloyalty to the duly constituted government, etc.;</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2">
+                        <FormControl>
+                          <RadioGroupItem value="3" />
+                        </FormControl>
+                        <FormLabel className="font-normal text-sm">3. Declared by competent authority to be insane or incompetent;</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2">
+                        <FormControl>
+                          <RadioGroupItem value="4" />
+                        </FormControl>
+                        <FormLabel className="font-normal text-sm">4. Failed to vote in two (2) successive preceding regular elections;</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2">
+                        <FormControl>
+                          <RadioGroupItem value="5" />
+                        </FormControl>
+                        <FormLabel className="font-normal text-sm">5. Loss of Filipino citizenship; or</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2">
+                        <FormControl>
+                          <RadioGroupItem value="6" />
+                        </FormControl>
+                        <FormLabel className="font-normal text-sm">6. Exclusion by a court order;</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2">
+                        <FormControl>
+                          <RadioGroupItem value="7" />
+                        </FormControl>
+                        <FormLabel className="font-normal text-sm">7. Failure to Validate.</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                    <p className="text-sm text-muted-foreground mt-2">That said ground no longer exists, as evidenced by the attached certification/order of the court (in cases of 1,2,3,5, and 6).</p>
+                  </div>
+                )}
+              </FormItem>
+
+              {/* Change/Correction */}
+              <FormItem className="space-y-2">
+                <div className="flex items-center space-x-3">
+                  <FormControl>
+                    <RadioGroupItem value="change-correction" />
+                  </FormControl>
+                  <FormLabel className="font-normal">Application for Change of Name due to Marriage or Court Order/Correction of Entries</FormLabel>
+                </div>
+                {field.value === 'change-correction' && (
+  <div className="ml-8 space-y-4">
+    <DeclarationFields prefix="change_" />
+                    <FormField name="presentData" control={form.control}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Present Data/Information:</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={typeof field.value === 'boolean' ? '' : field.value ?? ''} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField name="newData" control={form.control}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>New/Corrected Data/Information:</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={typeof field.value === 'boolean' || typeof field.value === 'undefined' ? '' : field.value} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+              </FormItem>
+
+              {/* Inclusion/Reinstatement */}
+<FormItem className="space-y-2">
+  <div className="flex items-center space-x-3">
+    <FormControl>
+      <RadioGroupItem value="inclusion-reinstatement" />
+    </FormControl>
+    <FormLabel className="font-normal">Application for Inclusion of Records in the Book of Voters / Reinstatement of Name</FormLabel>
+  </div>
+  {field.value === 'inclusion-reinstatement' && (
+  <div className="ml-8 space-y-4">
+    <DeclarationFields prefix="inclusion_" />
+    
+    <RadioGroup name="inclusionType" className="space-y-2">
+      <FormItem className="flex items-center space-x-2">
+        <FormControl>
+          <RadioGroupItem value="inclusion" />
+        </FormControl>
+        <FormLabel className="font-normal">
+          Inclusion of VRR in the precinct book of voters
+        </FormLabel>
+      </FormItem>
+      <FormItem className="flex items-center space-x-2">
+        <FormControl>
+          <RadioGroupItem value="reinstatement" />
+        </FormControl>
+        <FormLabel className="font-normal">
+          Reinstatement of the name of the registered voter which has been omitted in the list of voters
+        </FormLabel>
+      </FormItem>
+    </RadioGroup>
+
+    <div className="prose prose-sm text-muted-foreground mb-4">
+      <p>
+        I do hereby request that my name which has been omitted in the list of voters/my registration record which has not been
+        included in the precinct book of voters of Precinct No. <Input 
+          className="w-20 inline-block mx-1 h-6" 
+          value={form.watch('inclusionPrecinctNo') || ''} 
+          onChange={(e) => form.setValue('inclusionPrecinctNo', e.target.value)}
+        />, be reinstated/included therein. The said reinstatement of
+        name/inclusion of registration record is necessary and valid.
+      </p>
+    </div>
+  </div>
+)}
+              </FormItem>
+            </RadioGroup>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  </>
+))}
+      
+<Card className="mb-6 bg-muted/50">
+  <CardContent className="pt-6">
+    <h2 className="text-2xl font-semibold text-center mb-2">
+      Voter Registration Application Form
+    </h2>
+    <p className="text-center text-muted-foreground">
+      Please fill out all required fields accurately. This information will be used for your official voter registration.
+      Ensure all details match your official documents.
+    </p>
+  </CardContent>
+</Card>
+
         {formSection("Part 1: Personal Information", "To be filled out by Applicant.", (
-          <>
+          <DisableableSection isDisabled={shouldDisableSection}>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField control={form.control} name="lastName" render={({ field }) => (<FormItem><FormLabel>Last Name</FormLabel><FormControl><Input placeholder="Dela Cruz" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
               <FormField control={form.control} name="firstName" render={({ field }) => (<FormItem><FormLabel>First Name</FormLabel><FormControl><Input placeholder="Juan" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
@@ -365,11 +787,13 @@ export function ApplicationFormFields() {
             </div>
             <FormField control={form.control} name={"contactNumber" as keyof ApplicationFormValues} render={({ field }) => (<FormItem><FormLabel>Contact No. (Optional)</FormLabel><FormControl><Input placeholder="09123456789" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
             <FormField control={form.control} name={"email" as keyof ApplicationFormValues} render={({ field }) => (<FormItem><FormLabel>Email (Optional)</FormLabel><FormControl><Input type="email" placeholder="juan.delacruz@example.com" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
-          </>
+            </DisableableSection>
+
         ))}
 
         {formSection("Citizenship", "", (
-           <>
+        <DisableableSection isDisabled={shouldDisableSection}>
+
             <FormField control={form.control} name="citizenshipType" render={({ field }) => (
                 <FormItem><FormLabel>Citizenship Basis</FormLabel><Select onValueChange={field.onChange} value={field.value ?? ''}>
                     <FormControl><SelectTrigger><SelectValue placeholder="Select citizenship basis" /></SelectTrigger></FormControl>
@@ -398,11 +822,13 @@ export function ApplicationFormFields() {
                     <FormField control={form.control} name="naturalizationCertNo" render={({ field }) => (<FormItem><FormLabel>Certificate No./Order of Approval</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
                 </div>
             )}
-           </>
+             </DisableableSection>
+
         ))}
 
         {formSection("Residence/Address (Current)", "", (
-          <>
+          <DisableableSection isDisabled={shouldDisableSection}>
+
             <FormField control={form.control} name="houseNoStreet" render={({ field }) => (<FormItem><FormLabel>House No. / Street / Subdivision</FormLabel><FormControl><Input placeholder="123 Rizal St, Pleasant Village" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField control={form.control} name="barangay" render={({ field }) => (<FormItem><FormLabel>Barangay</FormLabel><FormControl><Input placeholder="Pembo" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
@@ -414,29 +840,31 @@ export function ApplicationFormFields() {
                 <FormField control={form.control} name="yearsOfResidency" render={({ field }) => (<FormItem><FormLabel>Years at Current Address</FormLabel><FormControl><Input type="number" placeholder="5" {...field} value={typeof field.value === 'boolean' ? '' : field.value ?? ''} onChange={e => field.onChange(parseInt(e.target.value,10) || undefined)} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField control={form.control} name="monthsOfResidency" render={({ field }) => (<FormItem><FormLabel>Months at Current Address</FormLabel><FormControl><Input type="number" placeholder="3" min="0" max="11" {...field} value={typeof field.value === 'boolean' ? '' : field.value ?? ''} onChange={e => field.onChange(parseInt(e.target.value,10) || undefined)} /></FormControl><FormMessage /></FormItem>)} />
             </div>
-          </>
+            </DisableableSection>
+
         ))}
 
         {formSection("Period of Residence (General)", "How long you've lived in your current area and in the Philippines.", (
-            <>
+  <DisableableSection isDisabled={shouldDisableSection}>
                 <Label className="text-sm font-medium">In the City/Municipality</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField control={form.control} name="residencyYearsCityMun" render={({ field }) => (<FormItem><FormLabel>No. of Years</FormLabel><FormControl><Input type="number" placeholder="10" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseInt(e.target.value,10) || undefined)} /></FormControl><FormMessage /></FormItem>)} />
                     <FormField control={form.control} name="residencyMonthsCityMun" render={({ field }) => (<FormItem><FormLabel>No. of Months</FormLabel><FormControl><Input type="number" placeholder="6" min="0" max="11" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseInt(e.target.value,10) || undefined)} /></FormControl><FormMessage /></FormItem>)} />
                 </div>
                 <FormField control={form.control} name="residencyYearsPhilippines" render={({ field }) => (<FormItem><FormLabel>In the Philippines (No. of Years)</FormLabel><FormControl><Input type="number" placeholder="25" {...field} value={field.value ?? ''} onChange={e => field.onChange(parseInt(e.target.value,10) || undefined)} /></FormControl><FormMessage /></FormItem>)} />
-            </>
+              </DisableableSection>
+
         ))}
 
         {formSection("Profession / Occupation & TIN", "", (
-            <>
+  <DisableableSection isDisabled={shouldDisableSection}>
                 <FormField control={form.control} name="professionOccupation" render={({ field }) => (<FormItem><FormLabel>Profession / Occupation (Optional)</FormLabel><FormControl><Input placeholder="Engineer" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField control={form.control} name="tin" render={({ field }) => (<FormItem><FormLabel>TIN (Optional)</FormLabel><FormControl><Input placeholder="123-456-789-000" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
-            </>
+  </DisableableSection>
         ))}
         
         {formSection("Civil Status & Parents", "", (
-          <>
+  <DisableableSection isDisabled={shouldDisableSection}>
             <FormField control={form.control} name="civilStatus" render={({ field }) => (
               <FormItem><FormLabel>Civil Status</FormLabel><Select onValueChange={field.onChange} value={field.value ?? ''}>
                   <FormControl><SelectTrigger><SelectValue placeholder="Select civil status" /></SelectTrigger></FormControl>
@@ -453,11 +881,11 @@ export function ApplicationFormFields() {
                 <FormField control={form.control} name="motherFirstName" render={({ field }) => (<FormItem><FormLabel>Mother's First Name</FormLabel><FormControl><Input placeholder="Maria" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
                 <FormField control={form.control} name="motherLastName" render={({ field }) => (<FormItem><FormLabel>Mother's Maiden Last Name</FormLabel><FormControl><Input placeholder="Santos" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
             </div>
-          </>
+  </DisableableSection>
         ))}
 
         {formSection("Special Needs / Assistance (Optional)", "Information for voters with special needs.", (
-          <>
+  <DisableableSection isDisabled={shouldDisableSection}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-2">
                 <FormField control={form.control} name="isIlliterate" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-3 space-y-0 p-2 border rounded-md"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="font-normal">Illiterate</FormLabel></FormItem>)} />
                 <FormField control={form.control} name="isPwd" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-3 space-y-0 p-2 border rounded-md"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="font-normal">Person with Disability (PWD)</FormLabel></FormItem>)} />
@@ -537,131 +965,29 @@ export function ApplicationFormFields() {
                 </FormItem>
               )}
             />
-          </>
+  </DisableableSection>
         ))}
 
-        {formSection("Application Type & Biometrics", "", (
-          <>
-    <FormField
-  control={form.control}
-  name="applicationType"
-  render={({
-    field,
-  }: {
-    field: import("react-hook-form").ControllerRenderProps<ApplicationFormValues, "applicationType">;
-  }) => (
-    <FormItem className="space-y-3">
-      <FormLabel>Application Type</FormLabel>
-      <FormControl>
-        <RadioGroup onValueChange={field.onChange} value={field.value ?? ''} className="flex flex-col space-y-1">
-          <FormItem className="flex items-center space-x-3 space-y-0">
-            <FormControl>
-              <RadioGroupItem value="register" />
-            </FormControl>
-            <FormLabel className="font-normal">Application for Registration</FormLabel>
-          </FormItem>
-
-          <FormItem className="flex items-center space-x-3 space-y-0">
-            <FormControl>
-              <RadioGroupItem value="transfer" />
-            </FormControl>
-            <FormLabel className="font-normal">Application for Transfer of Registration Record</FormLabel>
-            {field.value === 'transfer' && (
-              <div className="ml-8 flex items-center space-x-6">
-                <FormItem className="flex items-center space-x-2">
-                  <FormControl>
-                    <RadioGroupItem value="transfer-within" />
-                  </FormControl>
-                  <FormLabel className="font-normal">Within the same City/Municipality/District</FormLabel>
-                </FormItem>
-                <FormItem className="flex items-center space-x-2">
-                  <FormControl>
-                    <RadioGroupItem value="transfer-from" />
-                  </FormControl>
-                  <FormLabel className="font-normal">From another City/Municipality/District</FormLabel>
-                </FormItem>
-              </div>
-            )}
-          </FormItem>
-
-          <FormItem className="flex items-center space-x-3 space-y-0">
-            <FormControl>
-              <RadioGroupItem value="reactivation" />
-            </FormControl>
-            <FormLabel className="font-normal">Application for Reactivation of Registration Record</FormLabel>
-          </FormItem>
-
-          <FormItem className="flex items-center space-x-3 space-y-0">
-            <FormControl>
-              <RadioGroupItem value="change-correction" />
-            </FormControl>
-            <FormLabel className="font-normal">Application for Change of Name due to Marriage or Court Order/Correction of Entries</FormLabel>
-          </FormItem>
-
-          <FormItem className="flex items-center space-x-3 space-y-0">
-            <FormControl>
-              <RadioGroupItem value="inclusion-reinstatement" />
-            </FormControl>
-            <FormLabel className="font-normal">Application for Inclusion of Records in the Book of Voters / Reinstatement of Name</FormLabel>
-            {field.value === 'inclusion-reinstatement' && (
-              <div className="ml-8 flex items-center space-x-6">
-                <FormItem className="flex items-center space-x-2">
-                  <FormControl>
-                    <RadioGroupItem value="inclusion" />
-                  </FormControl>
-                  <FormLabel className="font-normal">Inclusion of VRR in the precinct book of voters</FormLabel>
-                </FormItem>
-                <FormItem className="flex items-center space-x-2">
-                  <FormControl>
-                    <RadioGroupItem value="reinstatement" />
-                  </FormControl>
-                  <FormLabel className="font-normal">Reinstatement of the name of the registered voter</FormLabel>
-                </FormItem>
-              </div>
-            )}
-          </FormItem>
-        </RadioGroup>
-      </FormControl>
-      <FormMessage />
-    </FormItem>
-  )}
-/>
-
-            {applicationType === 'transfer' && (
-              <>
-                <Separator className="my-4" />
-                <h4 className="text-md font-semibold mb-2">Previous Address Details (For Transfer)</h4>
-                <FormField control={form.control} name="transferHouseNoStreet" render={({ field }) => (<FormItem><FormLabel>House No. / Street / Subdivision</FormLabel><FormControl><Input placeholder="456 Bonifacio St" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField control={form.control} name="transferBarangay" render={({ field }) => (<FormItem><FormLabel>Barangay</FormLabel><FormControl><Input placeholder="San Antonio" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="transferCityMunicipality" render={({ field }) => (<FormItem><FormLabel>City / Municipality</FormLabel><FormControl><Input placeholder="Pasig City" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
-                    <FormField control={form.control} name="transferProvince" render={({ field }) => (<FormItem><FormLabel>Province</FormLabel><FormControl><Input placeholder="Metro Manila" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
-                </div>
-                <FormField control={form.control} name="transferZipCode" render={({ field }) => (<FormItem><FormLabel>Zip Code</FormLabel><FormControl><Input placeholder="1600" {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>)} />
-              </>
-            )}
-            
-            <Separator className="my-4" />
-            <FormField
-              control={form.control}
-              name="biometricsFile"
-              render={({
-                field,
-              }: {
-                field: import("react-hook-form").ControllerRenderProps<ApplicationFormValues, "biometricsFile">;
-              }) => (
-                <FormItem>
-                  <FormLabel>Biometrics Data (Thumbprints/Signatures)</FormLabel>
-                  <FormControl>
-                    <Input type="text" placeholder="e.g., Captured on-site" {...field} value={field.value ?? ''} />
-                  </FormControl>
-                  <FormDescription>Indicate status of biometrics capture. Actual capture is done on-site.</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </>
-        ))}
+        {formSection("Biometrics", "", (
+        <FormField
+          control={form.control}
+          name="biometricsFile"
+          render={({
+            field,
+          }: {
+            field: import("react-hook-form").ControllerRenderProps<ApplicationFormValues, "biometricsFile">;
+          }) => (
+            <FormItem>
+              <FormLabel>Biometrics Data (Thumbprints/Signatures)</FormLabel>
+              <FormControl>
+                <Input type="text" placeholder="For on-site capture" {...field} value={field.value ?? ''} />
+              </FormControl>
+              <FormDescription>Actual biometrics capture will be done on-site at the COMELEC office.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      ))}
 
         {formSection("Part 2: OATH", "", (
   <>
