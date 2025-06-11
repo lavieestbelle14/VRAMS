@@ -8,10 +8,9 @@ import { useToast } from '@/hooks/use-toast';
 type UserRole = 'officer' | 'public';
 
 interface AuthenticatedUser {
-  username: string; // This will store the email
+  email: string;
+  username: string;
   role: UserRole;
-  firstName?: string;
-  lastName?: string;
 }
 
 interface StoredUser extends AuthenticatedUser {
@@ -21,12 +20,12 @@ interface StoredUser extends AuthenticatedUser {
 interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, passwordAttempt: string, intendedRole: UserRole) => void;
-  signUp: (firstName: string, lastName: string, email: string, passwordAttempt: string, confirmPasswordAttempt: string) => void;
+  signUp: (username: string, email: string, passwordAttempt: string, confirmPasswordAttempt: string) => void;
   logout: () => void;
   isLoading: boolean;
   user: AuthenticatedUser | null;
   resetPassword: (email: string, token: string, newPass: string, confirmPass: string) => Promise<boolean>;
-  updateUserProfile: (updates: { firstName?: string; lastName?: string }) => Promise<boolean>;
+  updateUserProfile: (updates: { username?: string }) => Promise<boolean>;
   updateUserPassword: (currentPass: string, newPass: string, confirmPass: string) => Promise<boolean>;
 }
 
@@ -67,13 +66,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const seedInitialUsers = useCallback(() => {
     let users = getMockUsersDB();
-    if (!users.some(u => u.username.toLowerCase() === 'officer@comelec.gov.ph')) {
+    if (!users.some(u => u.email.toLowerCase() === 'officer@comelec.gov.ph')) {
       users.push({
-        username: 'officer@comelec.gov.ph',
+        email: 'officer@comelec.gov.ph',
+        username: 'Officer',
         passwordHash: 'password123',
-        role: 'officer',
-        firstName: 'Officer',
-        lastName: 'User'
+        role: 'officer'
       });
       saveMockUsersDB(users);
     }
@@ -151,7 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (email: string, passwordAttempt: string, intendedRole: UserRole) => {
     const users = getMockUsersDB();
-    const foundUser = users.find(u => u.username.toLowerCase() === email.toLowerCase());
+    const foundUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
 
     if (foundUser && foundUser.passwordHash === passwordAttempt) {
       if (foundUser.role !== intendedRole) {
@@ -159,37 +157,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       const authenticatedUser: AuthenticatedUser = {
+        email: foundUser.email,
         username: foundUser.username,
-        role: foundUser.role,
-        firstName: foundUser.firstName,
-        lastName: foundUser.lastName
+        role: foundUser.role
       };
       setUser(authenticatedUser);
       setIsAuthenticated(true);
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(authenticatedUser));
-      toast({ title: 'Login Successful', description: `Welcome, ${authenticatedUser.firstName || authenticatedUser.username}!` });
+      toast({ title: 'Login Successful', description: `Welcome, ${authenticatedUser.username}!` });
       // Redirection is handled by the useEffect hook
     } else {
       toast({ title: 'Login Failed', description: 'Invalid email or password.', variant: 'destructive' });
     }
   };
 
-  const signUp = (firstName: string, lastName: string, email: string, passwordAttempt: string, confirmPasswordAttempt: string) => {
+  const signUp = (username: string, email: string, passwordAttempt: string, confirmPasswordAttempt: string) => {
     if (passwordAttempt !== confirmPasswordAttempt) {
       toast({ title: 'Sign Up Failed', description: 'Passwords do not match.', variant: 'destructive' });
       return;
     }
 
     const users = getMockUsersDB();
-    if (users.some(u => u.username.toLowerCase() === email.toLowerCase())) {
+    if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
       toast({ title: 'Sign Up Failed', description: 'Email already registered.', variant: 'destructive' });
       return;
     }
 
     const newUser: StoredUser = {
-      firstName,
-      lastName,
-      username: email,
+      username,
+      email,
       passwordHash: passwordAttempt, // In a real app, hash this password
       role: 'public'
     };
@@ -198,15 +194,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const authenticatedUser: AuthenticatedUser = {
       username: newUser.username,
-      role: newUser.role,
-      firstName: newUser.firstName,
-      lastName: newUser.lastName
+      email: newUser.email,
+      role: newUser.role
     };
     setUser(authenticatedUser);
     setIsAuthenticated(true);
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(authenticatedUser));
-    toast({ title: 'Sign Up Successful!', description: 'You can now log in or proceed.' });
-    // Redirect to /public/home is handled by the useEffect
+    toast({ title: 'Sign Up Successful', description: 'Your account has been created.' });
+    router.push('/public/home'); // Redirect to a logged-in page
   };
 
   const logout = () => {
@@ -231,7 +226,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     let users = getMockUsersDB();
-    const userIndex = users.findIndex(u => u.username.toLowerCase() === email.toLowerCase() && u.role === 'public');
+    const userIndex = users.findIndex(u => u.email.toLowerCase() === email.toLowerCase() && u.role === 'public');
 
     if (userIndex === -1) {
       toast({ title: "Password Reset Failed", description: "Public user email not found.", variant: "destructive" });
@@ -244,28 +239,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return true;
   };
 
-  const updateUserProfile = async (updates: { firstName?: string; lastName?: string }): Promise<boolean> => {
-    if (!user || !isAuthenticated || user.role !== 'public') {
-      toast({ title: "Update Failed", description: "You must be logged in as a public user.", variant: "destructive" });
-      return false;
-    }
-    let users = getMockUsersDB();
-    const userIndex = users.findIndex(u => u.username.toLowerCase() === user.username.toLowerCase());
+  const updateUserProfile = async (updates: { username?: string }): Promise<boolean> => {
+    if (!user) return false;
+
+    const users = getMockUsersDB();
+    const userIndex = users.findIndex(u => u.email.toLowerCase() === user.email.toLowerCase());
 
     if (userIndex === -1) {
-      toast({ title: "Update Failed", description: "User not found.", variant: "destructive" });
+      toast({ title: 'Error', description: 'User not found.', variant: 'destructive' });
       return false;
     }
 
-    const updatedUserDetails = { ...users[userIndex], ...updates };
-    users[userIndex] = updatedUserDetails;
+    // Update the user in the mock DB
+    const updatedUserInDB = { ...users[userIndex], ...updates };
+    users[userIndex] = updatedUserInDB;
     saveMockUsersDB(users);
 
-    const updatedAuthUser = { ...user, ...updates };
-    setUser(updatedAuthUser);
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedAuthUser));
+    // Update the user in the context state
+    const updatedUserInContext: AuthenticatedUser = {
+      ...user,
+      ...updates
+    };
+    setUser(updatedUserInContext);
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUserInContext));
 
-    toast({ title: "Profile Updated", description: "Your profile information has been updated." });
+    toast({ title: 'Success', description: 'Your profile has been updated.' });
     return true;
   };
 

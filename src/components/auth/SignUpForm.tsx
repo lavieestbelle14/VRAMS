@@ -13,8 +13,7 @@ import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 import Link from 'next/link';
 
 const signUpSchema = z.object({
-  firstName: z.string().min(1, { message: 'First name is required' }),
-  lastName: z.string().min(1, { message: 'Last name is required' }),
+  username: z.string().min(2, { message: 'Username must be at least 2 characters' }),
   email: z.string().email({ message: 'Invalid email address' }),
   password: z.string()
     .min(8, { message: 'Password must be at least 8 characters long' })
@@ -38,8 +37,7 @@ export function SignUpForm() {
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
-      firstName: '',
-      lastName: '',
+      username: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -50,40 +48,25 @@ export function SignUpForm() {
   const currentPassword = form.watch('password');
 
   function onSubmit(data: SignUpFormValues) {
-    signUp(data.firstName, data.lastName, data.email, data.password, data.confirmPassword);
+    signUp(data.username, data.email, data.password, data.confirmPassword);
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>First Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Juan" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Last Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Dela Cruz" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Username</FormLabel>
+              <FormControl>
+                <Input placeholder="juandelacruz" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="email"

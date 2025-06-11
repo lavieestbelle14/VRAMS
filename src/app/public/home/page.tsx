@@ -47,7 +47,7 @@ export default function PublicHomePage() {
         <CardHeader>
           <CardTitle className="text-3xl flex items-center">
             <User className="mr-3 h-8 w-8" />
-            Welcome, {user?.firstName || 'User'}!
+            Welcome, {user?.username || 'User'}!
           </CardTitle>
           <CardDescription className="text-primary-foreground/90 text-lg">
             Your gateway to voter registration services.

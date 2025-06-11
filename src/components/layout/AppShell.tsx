@@ -41,16 +41,10 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const getAvatarFallback = () => {
     if (user?.role === 'officer') return "EO";
-    if (user?.firstName && user?.lastName) {
-      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
-    }
-    if (user?.firstName) {
-      return user.firstName.substring(0, 2).toUpperCase();
-    }
     if (user?.username) {
       return user.username.substring(0, 2).toUpperCase();
     }
-    return <UserCircle size={20}/>;
+    return <UserCircle size={20} />;
   };
 
   return (
@@ -110,7 +104,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Welcome, Officer!</DropdownMenuLabel>
+              <DropdownMenuLabel>Welcome, {user?.username || 'Officer'}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {/* Settings item removed */}
               <DropdownMenuItem onClick={logout}>
