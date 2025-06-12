@@ -232,7 +232,7 @@ export default function LandingPage() {
             <span className="font-bold text-2xl bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">VRAMS</span>
           </a>
           <nav className="flex items-center gap-4 text-sm lg:gap-6 ml-auto">
-            <a href="/auth?tab=public-login">
+            <a href="/auth?tab=login">
               <Button variant="outline" className="hover:bg-blue-50 hover:border-blue-300 transition-all duration-200">Login</Button>
             </a>
             <a href="/auth?tab=sign-up">
@@ -276,7 +276,7 @@ export default function LandingPage() {
                       Register Now <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </a>
-                  <a href="/auth?tab=public-login">
+                  <a href="/auth?tab=login">
                     <Button variant="outline" size="lg" className="w-full min-[400px]:w-auto border-2 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 text-lg px-8 py-6">
                       Access Portal
                     </Button>
@@ -463,7 +463,7 @@ export default function LandingPage() {
                 <a href="/auth?tab=sign-up" className="block text-gray-400 hover:text-white transition-colors">
                   Register to Vote
                 </a>
-                <a href="/auth?tab=public-login" className="block text-gray-400 hover:text-white transition-colors">
+                <a href="/auth?tab=login" className="block text-gray-400 hover:text-white transition-colors">
                   Check Application Status
                 </a>
                 <a href="#features" className="block text-gray-400 hover:text-white transition-colors">
