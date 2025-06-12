@@ -20,7 +20,7 @@ interface AuthenticatedUser {
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (email: string, passwordAttempt: string, intendedRole: UserRole) => Promise<void>;
+  login: (email: string, passwordAttempt: string) => Promise<void>;
   signUp: (username: string, email: string, passwordAttempt: string) => Promise<void>;
   logout: () => Promise<void>;
   isLoading: boolean;
@@ -129,7 +129,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     }
   }, [user, isLoading, pathname, router]);
 
-  const login = useCallback(async (email: string, passwordAttempt: string, intendedRole: UserRole) => {
+  const login = useCallback(async (email: string, passwordAttempt: string) => {
     const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
       email,
       password: passwordAttempt,
@@ -152,11 +152,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       return;
     }
 
-    if (profile.role !== intendedRole) {
-      toast({ title: 'Login Failed', description: `Please use the correct login tab for your role.`, variant: 'destructive' });
-      await supabase.auth.signOut();
-      return;
-    }
+
 
     toast({ title: 'Login Successful', description: `Welcome, ${profile.username}!` });
   }, [toast]);

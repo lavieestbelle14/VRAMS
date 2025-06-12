@@ -2,8 +2,7 @@
 'use client';
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { LoginForm } from '@/components/auth/LoginForm';
-import { PublicLoginForm } from '@/components/auth/PublicLoginForm';
+import { UnifiedLoginForm } from '@/components/auth/UnifiedLoginForm';
 import { SignUpForm } from '@/components/auth/SignUpForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,8 +13,8 @@ function AuthPageContent() {
   const tab = searchParams.get('tab');
   const logoSrc = "/vrams_logo.png"; 
 
-  const validTabs = ['officer-login', 'public-login', 'sign-up'];
-  const initialTab = validTabs.includes(tab || '') ? tab : 'public-login';
+  const validTabs = ['login', 'sign-up'];
+  const initialTab = validTabs.includes(tab || '') ? tab : 'login';
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
@@ -38,17 +37,13 @@ function AuthPageContent() {
           <CardDescription className="text-center">Login or sign up to continue.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue={initialTab || 'public-login'} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="officer-login">Officer Login</TabsTrigger>
-              <TabsTrigger value="public-login">Public Login</TabsTrigger>
+          <Tabs defaultValue={initialTab || 'login'} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="sign-up">Sign Up</TabsTrigger>
             </TabsList>
-            <TabsContent value="officer-login" className="pt-4">
-              <LoginForm />
-            </TabsContent>
-            <TabsContent value="public-login" className="pt-4">
-              <PublicLoginForm />
+            <TabsContent value="login" className="pt-4">
+              <UnifiedLoginForm />
             </TabsContent>
             <TabsContent value="sign-up" className="pt-4">
               <SignUpForm />
