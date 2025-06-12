@@ -1,5 +1,5 @@
-
 'use client';
+import Link from 'next/link';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/contexts/AuthContext';
-import Link from 'next/link';
 import { LogIn, Eye, EyeOff } from 'lucide-react';
 
 const loginSchema = z.object({
@@ -18,7 +17,7 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-export function LoginForm() {
+export function UnifiedLoginForm() {
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,7 +33,7 @@ export function LoginForm() {
   async function onSubmit(values: LoginFormValues) {
     setIsSubmitting(true);
     try {
-      await login(values.email, values.password, 'officer');
+      await login(values.email, values.password);
     } finally {
       setIsSubmitting(false);
     }
@@ -50,7 +49,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="officer@comelec.gov.ph" {...field} />
+                <Input type="email" placeholder="user@example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -68,7 +67,7 @@ export function LoginForm() {
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
                     {...field}
-                    className="pr-10" 
+                    className="pr-10"
                   />
                 </FormControl>
                 <Button
@@ -77,7 +76,7 @@ export function LoginForm() {
                   size="sm"
                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
@@ -95,11 +94,11 @@ export function LoginForm() {
           ) : (
             <LogIn className="mr-2 h-4 w-4" />
           )}
-          Login as Officer
+          Login
         </Button>
         <div className="text-sm text-center">
           <Link href="/public/forgot-password" className="font-medium text-primary hover:underline">
-            Forgot Password?
+            Forgot your password?
           </Link>
         </div>
       </form>
