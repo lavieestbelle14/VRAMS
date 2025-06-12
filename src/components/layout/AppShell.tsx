@@ -1,5 +1,5 @@
-
 'use client';
+import React, { useState } from 'react';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -40,9 +40,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const logoSrc = "/vrams_logo.png"; 
   const router = useRouter();
 
-  const handleLogout = async () => {
-    await logout();
-  };
+
 
   const getAvatarFallback = () => {
     if (user?.role === 'officer') return "EO";
@@ -112,7 +110,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               {user?.role === 'public' && (
                 <DropdownMenuItem onClick={() => router.push('/public/profile')}>Profile</DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => logout()}>Log out</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </header>

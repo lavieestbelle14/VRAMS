@@ -1,10 +1,13 @@
 'use client';
-import type { ReactNode } from 'react';
-import { createContext, useContext, useState, useEffect } from 'react';
+
+import type { ReactNode, FC } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase/client';
-import type { User } from '@supabase/supabase-js';
+import type { User, Session } from '@supabase/supabase-js';
+
+// ---- TYPE DEFINITIONS ---- //
 
 type UserRole = 'officer' | 'public';
 
@@ -27,6 +30,8 @@ interface AuthContextType {
   sendPasswordResetEmail: (email: string) => Promise<boolean>;
 }
 
+// ---- CONTEXT CREATION ---- //
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const publicUserAuthenticatedPaths = [
@@ -39,61 +44,77 @@ const publicUserAuthenticatedPaths = [
   '/public/schedule-biometrics'
 ];
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+// ---- AUTH PROVIDER COMPONENT ---- //
+
+export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
 
-  useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setIsLoading(true);
-      const currentUser = session?.user;
-      if (currentUser) {
-        const { data: profile, error } = await supabase
-          .from('profile')
-          .select('role, username')
-          .eq('auth_id', currentUser.id)
-          .single();
+  const handleSession = useCallback(async (session: Session | null) => {
+    const supabaseUser = session?.user;
+    if (supabaseUser) {
+      const { data: profile, error } = await supabase
+        .from('profile')
+        .select('role, username')
+        .eq('auth_id', supabaseUser.id)
+        .single();
 
-        if (error) {
-          console.error('Error fetching user profile:', error);
-          await supabase.auth.signOut();
-          setUser(null);
-        } else if (profile) {
-          setUser({
-            id: currentUser.id,
-            email: currentUser.email!,
-            role: profile.role as UserRole,
-            username: profile.username,
-          });
-        }
-      } else {
+      if (error || !profile) {
+        console.error('Error fetching profile or profile not found:', error);
+        // Don't sign out here, just clear local state
         setUser(null);
+      } else {
+        setUser({
+          id: supabaseUser.id,
+          email: supabaseUser.email!,
+          role: profile.role as UserRole,
+          username: profile.username,
+        });
       }
-      setIsLoading(false);
+    } else {
+      setUser(null);
+    }
+    setIsLoading(false);
+  }, [toast]);
+
+  useEffect(() => {
+    const getInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      handleSession(session);
+    };
+
+    getInitialSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      handleSession(session);
     });
+
+    // Proactively sync on tab focus
+    const handleFocus = () => getInitialSession();
+    window.addEventListener('focus', handleFocus);
 
     return () => {
       authListener.subscription.unsubscribe();
+      window.removeEventListener('focus', handleFocus);
     };
-  }, []);
+  }, [handleSession]);
 
   useEffect(() => {
     if (isLoading) return;
 
     const isAuthenticated = !!user;
-    const currentPath = pathname;
-
-    if (currentPath === '/' || currentPath.startsWith('/public/terms-of-service') || currentPath.startsWith('/public/privacy-policy')) {
+    
+    if (pathname === '/' || pathname.startsWith('/public/terms-of-service') || pathname.startsWith('/public/privacy-policy')) {
       return;
     }
 
-    const isOfficerPath = currentPath.startsWith('/dashboard');
-    const isPathRequiringPublicUserAuth = publicUserAuthenticatedPaths.some(p => currentPath.startsWith(p));
-    const isAuthPage = currentPath === '/auth';
-    const isPasswordResetPage = currentPath.startsWith('/public/forgot-password') || currentPath.startsWith('/public/reset-password');
+    const isOfficerPath = pathname.startsWith('/dashboard');
+    const isPathRequiringPublicUserAuth = publicUserAuthenticatedPaths.some(p => pathname.startsWith(p));
+    const isAuthPage = pathname === '/auth';
+    const isPasswordResetPage = pathname.startsWith('/public/forgot-password') || pathname.startsWith('/public/reset-password');
 
     if (isAuthenticated) {
       if (user.role === 'officer') {
@@ -108,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, isLoading, pathname, router]);
 
-  const login = async (email: string, passwordAttempt: string, intendedRole: UserRole) => {
+  const login = useCallback(async (email: string, passwordAttempt: string, intendedRole: UserRole) => {
     const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
       email,
       password: passwordAttempt,
@@ -118,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast({ title: 'Login Failed', description: loginError?.message || 'Invalid credentials.', variant: 'destructive' });
       return;
     }
-
+    
     const { data: profile, error: profileError } = await supabase
       .from('profile')
       .select('role, username')
@@ -138,10 +159,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     toast({ title: 'Login Successful', description: `Welcome, ${profile.username}!` });
-  };
+  }, [toast]);
 
-  const signUp = async (username: string, email: string, passwordAttempt: string) => {
-    // First check if a user with this email already exists
+  const signUp = useCallback(async (username: string, email: string, passwordAttempt: string) => {
     const { data: existingUsers, error: checkError } = await supabase
       .from('profile')
       .select('email')
@@ -161,7 +181,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // If email is not in use, proceed with sign up
     const { data, error } = await supabase.auth.signUp({
       email,
       password: passwordAttempt,
@@ -173,28 +192,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (error) {
-      toast({ 
-        title: 'Sign Up Failed', 
-        description: error.message, 
-        variant: 'destructive' 
-      });
+      toast({ title: 'Sign Up Failed', description: error.message, variant: 'destructive' });
       return;
     }
 
     if (data.user) {
-      toast({ 
-        title: 'Sign Up Successful', 
-        description: 'Your account has been created. Please check your email to confirm your account.' 
-      });
+      toast({ title: 'Sign Up Successful', description: 'Your account has been created. Please check your email to confirm your account.' });
     }
-  };
+  }, [toast]);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await supabase.auth.signOut();
     router.push('/auth');
-  };
+  }, [router]);
 
-  const sendPasswordResetEmail = async (email: string): Promise<boolean> => {
+  const sendPasswordResetEmail = useCallback(async (email: string): Promise<boolean> => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/public/reset-password`,
     });
@@ -204,9 +216,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     toast({ title: 'Success', description: 'Password reset link sent. Please check your email.' });
     return true;
-  };
+  }, [toast]);
 
-  const updateUserPassword = async (newPass: string): Promise<boolean> => {
+  const updateUserPassword = useCallback(async (newPass: string): Promise<boolean> => {
     const { error } = await supabase.auth.updateUser({ password: newPass });
     if (error) {
       toast({ title: 'Update Failed', description: error.message, variant: 'destructive' });
@@ -214,9 +226,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     toast({ title: 'Password Updated', description: 'Your password has been successfully updated.' });
     return true;
-  };
+  }, [toast]);
 
-  const updateUserProfile = async (updates: { username?: string }): Promise<boolean> => {
+  const updateUserProfile = useCallback(async (updates: { username?: string }): Promise<boolean> => {
     if (!user) return false;
 
     const { error } = await supabase
@@ -228,26 +240,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast({ title: 'Error', description: 'Failed to update profile.', variant: 'destructive' });
       return false;
     }
-
-    setUser({ ...user, ...updates });
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    handleSession(session);
+    
     toast({ title: 'Success', description: 'Your profile has been updated.' });
     return true;
-  };
+  }, [user, handleSession, toast]);
 
-  const value: AuthContextType = {
+  const value = useMemo(() => ({
     isAuthenticated: !!user,
     user,
+    isLoading,
     login,
     signUp,
     logout,
-    isLoading,
     updateUserProfile,
     updateUserPassword,
     sendPasswordResetEmail,
-  };
+  }), [user, isLoading, login, signUp, logout, updateUserProfile, updateUserPassword, sendPasswordResetEmail]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
+};
+
+// ---- HOOK EXPORT ---- //
 
 export function useAuth() {
   const context = useContext(AuthContext);

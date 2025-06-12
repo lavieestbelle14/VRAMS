@@ -1,5 +1,5 @@
-
 'use client';
+import React, { useState } from 'react';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -54,9 +54,7 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const logoSrc = "/vrams_logo.png"; 
 
-  const handleLogout = async () => {
-    await logout();
-  };
+
 
   const getAvatarFallback = () => {
     if (user?.username) {
@@ -149,7 +147,7 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
+              <DropdownMenuItem onSelect={() => logout()}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Logout</span>
               </DropdownMenuItem>
