@@ -1,5 +1,5 @@
-
 'use client';
+import React, { useState } from 'react';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -54,13 +54,9 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const logoSrc = "/vrams_logo.png"; 
 
+
+
   const getAvatarFallback = () => {
-    if (user?.firstName && user?.lastName) {
-      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
-    }
-    if (user?.firstName) {
-      return user.firstName.substring(0, 2).toUpperCase();
-    }
     if (user?.username) {
       return user.username.substring(0, 2).toUpperCase();
     }
@@ -142,7 +138,7 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{user?.firstName || user?.username || 'Public User'}</DropdownMenuLabel>
+              <DropdownMenuLabel>{user?.username || 'Public User'}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/public/profile" className="flex items-center w-full">
@@ -151,7 +147,7 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout}>
+              <DropdownMenuItem onSelect={() => logout()}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Logout</span>
               </DropdownMenuItem>

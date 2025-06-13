@@ -23,7 +23,6 @@ import { CalendarIcon, Save, Trash2 } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { saveApplication } from '@/lib/applicationStore';
-import { classifyApplicantType, type ClassifyApplicantTypeInput } from '@/ai/flows/classify-applicant-type';
 
 const DisableableSection = ({ 
   isDisabled, 
@@ -249,23 +248,6 @@ const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> =
         };
       }
       
-      const classificationInput: ClassifyApplicantTypeInput = {
-        personalInfo: `${data.firstName} ${data.lastName}, DOB: ${data.dob}, Sex: ${data.sex}, Citizenship: ${data.citizenshipType}, Profession: ${data.professionOccupation || 'N/A'}`,
-        addressDetails: `${data.houseNoStreet}, ${data.barangay}, ${data.cityMunicipality}, ${data.province}. Residency: ${data.yearsOfResidency || 0}yr ${data.monthsOfResidency || 0}mo.`,
-        applicationType: data.applicationType,
-        biometrics: data.biometricsFile || 'Not provided',
-        civilDetails: `Status: ${data.civilStatus}, Spouse: ${data.spouseName || 'N/A'}`,
-        specialSectorNeeds: [
-            data.isIlliterate && "Illiterate", data.isPwd && `PWD (${data.disabilityType || 'N/A'})`, data.isIndigenousPerson && "Indigenous",
-            data.isSenior && "Senior Citizen", data.prefersGroundFloor && "Prefers Ground Floor Voting",
-            data.assistorName && `Assisted by ${data.assistorName} (${data.assistorRelationship || 'N/A'})`
-        ].filter(Boolean).join(', ') || 'None',
-        previousAddressInfo: data.applicationType === 'transfer' ? `${data.transferHouseNoStreet}, ${data.transferBarangay}` : undefined,
-      };
-      
-      const classificationResult = await classifyApplicantType(classificationInput);
-      newApplication.classification = classificationResult;
-
       // Store fingerprint of successfully submitted data
       if (typeof window !== 'undefined') {
         const submittedFingerprint = generateFingerprint(data);
