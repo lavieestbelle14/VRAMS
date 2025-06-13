@@ -194,8 +194,11 @@ const civilStatus = form.watch('civilStatus');
 const isPwd = form.watch('isPwd');
 const citizenshipType = form.watch('citizenshipType');
 const assistorName = form.watch('assistorName');
+const showDeclarationFields = applicationType === 'transfer' || applicationType === 'transfer-reactivation';
+const isRegistered = false; // TODO: Replace with actual registration status check from your auth/user system
 
-  const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> = async (data) => {
+
+const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> = async (data) => {
     try {
       const personalInfo: PersonalInfo = {
         firstName: data.firstName, lastName: data.lastName, middleName: data.middleName,
@@ -403,6 +406,14 @@ const assistorName = form.watch('assistorName');
       render={({ field }) => (
         <FormItem className="space-y-3">
           <FormLabel>Type of Application</FormLabel>
+{!isRegistered && (
+  <div className="mb-4 p-4 bg-muted rounded-lg">
+    <p className="text-sm text-muted-foreground">
+      Note: You must complete voter registration first before you can apply for other types of applications.
+    </p>
+  </div>
+)}
+
           <FormControl>
 <RadioGroup onValueChange={field.onChange} value={field.value ?? ''} className="flex flex-col space-y-2">
               {/* Registration */}
@@ -422,16 +433,21 @@ const assistorName = form.watch('assistorName');
 
                {/* Transfer */}
               <FormItem className="space-y-1">
-                <div className="flex items-center space-x-3">
-                  <FormControl>
-                    <RadioGroupItem value="transfer" />
-                  </FormControl>
-                  <FormLabel className="font-normal">Application for Transfer of Registration Record</FormLabel>
-                </div>
+    <div className="flex items-center space-x-3">
+      <FormControl>
+        <RadioGroupItem value="transfer" disabled={!isRegistered} />
+      </FormControl>
+      <FormLabel className={cn("font-normal", !isRegistered && "text-muted-foreground")}>
+        Application for Transfer of Registration Record
+      </FormLabel>
+      {!isRegistered && (
+        <span className="text-xs text-muted-foreground ml-2">(Requires registration)</span>
+      )}
+    </div>
 
 {field.value === 'transfer' && (
-  <div className="ml-8 space-y-4">
-    <DeclarationFields prefix="transfer_" />
+      <div className="ml-8 space-y-4">
+        <DeclarationFields prefix="transfer_" />
     <FormField
       control={form.control}
       name="transferType"
@@ -573,15 +589,19 @@ const assistorName = form.watch('assistorName');
 
               {/* Reactivation */}
               <FormItem className="space-y-2">
-                <div className="flex items-center space-x-3">
-                  <FormControl>
-                    <RadioGroupItem value="reactivation" />
-                  </FormControl>
-                  <FormLabel className="font-normal">Application for Reactivation of Registration Record</FormLabel>
-                </div>
+    <div className="flex items-center space-x-3">
+      <FormControl>
+        <RadioGroupItem value="reactivation" disabled={!isRegistered} />
+      </FormControl>
+      <FormLabel className={cn("font-normal", !isRegistered && "text-muted-foreground")}>
+        Application for Reactivation of Registration Record
+      </FormLabel>
+      {!isRegistered && (
+        <span className="text-xs text-muted-foreground ml-2">(Requires registration)</span>
+      )}
+    </div>
                 {field.value === 'reactivation' && (
   <div className="ml-8 space-y-4">
-    <DeclarationFields prefix="reactivation_" />
                     <RadioGroup name="deactivationReason" className="ml-4 space-y-2">
                       <FormItem className="flex items-center space-x-2">
                         <FormControl>
@@ -630,18 +650,41 @@ const assistorName = form.watch('assistorName');
                   </div>
                 )}
               </FormItem>
-
+{/* Transfer with Reactivation */}
+  <FormItem className="space-y-1">
+    <div className="flex items-center space-x-3">
+      <FormControl>
+        <RadioGroupItem value="transfer-reactivation" disabled={!isRegistered} />
+      </FormControl>
+      <FormLabel className={cn("font-normal", !isRegistered && "text-muted-foreground")}>
+        Application for Transfer with Reactivation
+      </FormLabel>
+      {!isRegistered && (
+        <span className="text-xs text-muted-foreground ml-2">(Requires registration)</span>
+      )}
+    </div>
+    {(field.value === 'transfer' || field.value === 'reactivation') && (
+      <div className="ml-8 space-y-4">
+        <DeclarationFields prefix="transfer_" />
+        {/* Rest of transfer specific fields */}
+      </div>
+    )}
+  </FormItem>
               {/* Change/Correction */}
               <FormItem className="space-y-2">
-                <div className="flex items-center space-x-3">
-                  <FormControl>
-                    <RadioGroupItem value="change-correction" />
-                  </FormControl>
-                  <FormLabel className="font-normal">Application for Change of Name due to Marriage or Court Order/Correction of Entries</FormLabel>
-                </div>
+    <div className="flex items-center space-x-3">
+      <FormControl>
+        <RadioGroupItem value="change-correction" disabled={!isRegistered} />
+      </FormControl>
+      <FormLabel className={cn("font-normal", !isRegistered && "text-muted-foreground")}>
+        Application for Change of Name/Correction of Entries
+      </FormLabel>
+      {!isRegistered && (
+        <span className="text-xs text-muted-foreground ml-2">(Requires registration)</span>
+      )}
+    </div>
                 {field.value === 'change-correction' && (
   <div className="ml-8 space-y-4">
-    <DeclarationFields prefix="change_" />
                     <FormField name="presentData" control={form.control}
                       render={({ field }) => (
                         <FormItem>
@@ -668,16 +711,19 @@ const assistorName = form.watch('assistorName');
 
               {/* Inclusion/Reinstatement */}
 <FormItem className="space-y-2">
-  <div className="flex items-center space-x-3">
-    <FormControl>
-      <RadioGroupItem value="inclusion-reinstatement" />
-    </FormControl>
-    <FormLabel className="font-normal">Application for Inclusion of Records in the Book of Voters / Reinstatement of Name</FormLabel>
-  </div>
+    <div className="flex items-center space-x-3">
+      <FormControl>
+        <RadioGroupItem value="inclusion-reinstatement" disabled={!isRegistered} />
+      </FormControl>
+      <FormLabel className={cn("font-normal", !isRegistered && "text-muted-foreground")}>
+        Application for Inclusion/Reinstatement
+      </FormLabel>
+      {!isRegistered && (
+        <span className="text-xs text-muted-foreground ml-2">(Requires registration)</span>
+      )}
+    </div>
   {field.value === 'inclusion-reinstatement' && (
-  <div className="ml-8 space-y-4">
-    <DeclarationFields prefix="inclusion_" />
-    
+  <div className="ml-8 space-y-4">    
     <RadioGroup name="inclusionType" className="space-y-2">
       <FormItem className="flex items-center space-x-2">
         <FormControl>
