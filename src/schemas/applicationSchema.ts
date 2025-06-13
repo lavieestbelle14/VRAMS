@@ -40,6 +40,7 @@ export interface SpecialNeeds {
 
 export interface ApplicationTypeAndBiometrics {
   applicationType: 'register' | 'transfer' | '';
+  
   biometricsFile?: string;
 }
 
@@ -151,9 +152,11 @@ applicationType: z.enum([
   message: "Please select an application type"
 }),
 
-transferType: z.enum(['transfer-within', 'transfer-from', '']).optional(),
+transferType: z.enum(['transfer-record', 'transfer-reactivation']).optional(),
 inclusionType: z.enum(['inclusion', 'reinstatement', '']).optional(),  biometricsFile: optionalString, 
 
+transferLocationType: z.enum(['same-city', 'different-city']).optional(),
+transfer_reactivation_civilStatus: z.enum(['single', 'married', 'widowed', 'legally-separated']).optional(),
 // ID Verification (Required for Registration)
   idFrontPhoto: z.instanceof(File).optional().refine(
     (file) => !file || file.size <= 5 * 1024 * 1024,

@@ -187,15 +187,17 @@ export function ApplicationFormFields() {
 
 const applicationType = form.watch('applicationType');
 const transferType = form.watch('transferType');
+// Update the shouldDisableSection logic
 const shouldDisableSection = applicationType && 
   applicationType !== 'register' && 
-  !(applicationType === 'transfer' && transferType === 'transfer-from');
+  !(applicationType === 'transfer' && form.watch('transferType') === 'transfer-from') && 
+  !(applicationType === 'transfer-reactivation' && form.watch('transferReactivationType') === 'transfer-from'); // Add this line
 const civilStatus = form.watch('civilStatus');
 const isPwd = form.watch('isPwd');
 const citizenshipType = form.watch('citizenshipType');
 const assistorName = form.watch('assistorName');
 const showDeclarationFields = applicationType === 'transfer' || applicationType === 'transfer-reactivation';
-const isRegistered = false; // TODO: Replace with actual registration status check from your auth/user system
+const isRegistered = true; // TODO: Replace with actual registration status check from your auth/user system
 
 
 const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> = async (data) => {
@@ -423,6 +425,9 @@ const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> =
       <RadioGroupItem value="register" />
     </FormControl>
     <FormLabel className="font-normal">Application for Registration</FormLabel>
+                  <span className="text-xs text-muted-foreground ml-2">
+                    (Accomplish Personal Information at the Voter Registration Application Form part)
+                  </span>
   </div>
   {field.value === 'register' && (
     <div className="ml-8 space-y-4">
@@ -446,268 +451,571 @@ const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> =
     </div>
 
 {field.value === 'transfer' && (
-      <div className="ml-8 space-y-4">
-        <DeclarationFields prefix="transfer_" />
-    <FormField
-      control={form.control}
-      name="transferType"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Transfer Type</FormLabel>
-          <FormControl>
-            <RadioGroup 
-              onValueChange={field.onChange} 
-              value={field.value ?? ''} 
-              className="space-y-2"
-            >
-              <FormItem className="flex items-center space-x-2">
-                <FormControl>
-                  <RadioGroupItem value="transfer-within" />
-                </FormControl>
-                <FormLabel className="font-normal">
-                  Within the same City/Municipality/District
-                </FormLabel>
-              </FormItem>
-              <FormItem className="flex items-center space-x-2">
-                <FormControl>
-                  <RadioGroupItem value="transfer-from" />
-                </FormControl>
-                <FormLabel className="font-normal">
-                  From another City/Municipality/District
-                </FormLabel>
-              </FormItem>
-            </RadioGroup>
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-    <div className="space-y-4">
-                      <p className="text-sm font-medium">My New Residence is:</p>
-                      <FormField name="transferNewHouseNo" control={form.control}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>House No. & Street</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                value={
-                                  typeof field.value === 'boolean'
-                                    ? ''
-                                    : field.value instanceof File
-                                      ? ''
-                                      : field.value ?? ''
-                                }
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      <div className="grid grid-cols-3 gap-4">
-                        <FormField name="transferNewBarangay" control={form.control}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Barangay</FormLabel>
-                              <FormControl>
-                                <Input {...field} value={typeof field.value === 'boolean' ? '' : field.value ?? ''} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField name="transferNewCity" control={form.control}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>City/Municipality</FormLabel>
-                              <FormControl>
-                                <Input {...field} value={typeof field.value === 'boolean' || typeof field.value === 'undefined' ? '' : field.value} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField name="transferNewProvince" control={form.control}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Province</FormLabel>
-                              <FormControl>
-                                <Input {...field} value={typeof field.value === 'boolean' ? '' : field.value ?? ''} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
-<div className="prose prose-sm text-muted-foreground">
-  <div className="flex items-center gap-2">
-    <span className="text-black">I have resided in my new residence for</span>
-    <FormField
-      control={form.control}
-      name="transferYears"
-      render={({ field }) => (
-        <FormItem className="flex-shrink-0 w-20">
-          <FormControl>
-            <Input 
-              type="number"
-              min="0"
-              className="h-8 text-center"
-              placeholder="0"
-              {...field}
-              value={field.value ?? ''}
-              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : '')}
-            />
-          </FormControl>
-        </FormItem>
-      )}
-    />
-    <span className="text-black">years and for</span>
-    <FormField
-      control={form.control}
-      name="transferMonths"
-      render={({ field }) => (
-        <FormItem className="flex-shrink-0 w-20">
-          <FormControl>
-            <Input 
-              type="number"
-              min="0"
-              max="11"
-              className="h-8 text-center"
-              placeholder="0"
-              {...field}
-              value={field.value ?? ''}
-              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : '')}
-            />
-          </FormControl>
-        </FormItem>
-      )}
-    />
-    <span className="text-black">months.</span>
-  </div>
-</div>
+  <div className="ml-8 space-y-4">
+    <Card className="mb-4">
+      <CardContent className="pt-6">
+        
+        <div className="space-y-4 text-sm">
+          <DeclarationFields prefix="transfer_" />
+        </div>
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardContent className="pt-6">
+<p className="font-medium mb-4">APPLICATION FOR TRANSFER OF REGISTRATION RECORD</p>        
+        <FormField
+          control={form.control}
+          name="transferType"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <RadioGroup 
+                  onValueChange={field.onChange} 
+                  value={field.value ?? ''} 
+                  className="space-y-2"
+                >
+                  <FormItem className="flex items-center space-x-2">
+                    <FormControl>
+                      <RadioGroupItem value="transfer-within" />
+                    </FormControl>
+                    <FormLabel className="font-normal">
+                      Within the same City/Municipality/District
+                    </FormLabel>
+                  </FormItem>
+                  <FormItem className="flex items-center space-x-2">
+                    <FormControl>
+                      <RadioGroupItem value="transfer-from" />
+                    </FormControl>
+                    <div className="flex items-center">
+                      <FormLabel className="font-normal">
+                        From another City/Municipality/District
+                      </FormLabel>
+                      <span className="text-xs text-muted-foreground ml-2">
+                        (Accomplish Personal Information at the Voter Registration Application Form part)
+                      </span>
                     </div>
+                  </FormItem>
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </CardContent>
+    </Card>
+    <div className="space-y-4">
+  <Card>
+    <CardContent className="pt-6">
+      <p className="font-medium mb-4">My New Residence is:</p>
+      <FormField name="transferNewHouseNo" control={form.control}
+        render={({ field }) => (
+          <FormItem>
+            <div className="text-sm">House No./Street</div>
+            <FormControl>
+              <Input {...field} value={field.value ?? ''} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <div className="grid grid-cols-3 gap-4 mt-4">
+        <FormField name="transferNewBarangay" control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <div className="text-sm">Barangay</div>
+              <FormControl>
+                <Input {...field} value={field.value ?? ''} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField name="transferNewCity" control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <div className="text-sm">City/Municipality</div>
+              <FormControl>
+                <Input {...field} value={field.value ?? ''} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField name="transferNewProvince" control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <div className="text-sm">Province</div>
+              <FormControl>
+                <Input {...field} value={field.value ?? ''} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <div className="space-y-4 text-sm mt-4">
+        <div className="flex items-baseline gap-2">
+          <span>I have resided in my new residence for</span>
+          <FormField
+            control={form.control}
+            name="transferReactivationYears"
+            render={({ field }) => (
+              <FormItem className="w-20">
+                <FormControl>
+                  <Input 
+                    type="number"
+                    min="0"
+                    className="text-center h-7"
+                    {...field}
+                    value={field.value ?? ''}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <span>years and</span>
+          <FormField
+            control={form.control}
+            name="transferReactivationMonths"
+            render={({ field }) => (
+              <FormItem className="w-20">
+                <FormControl>
+                  <Input 
+                    type="number"
+                    min="0"
+                    max="11"
+                    className="text-center h-7"
+                    {...field}
+                    value={field.value ?? ''}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <span>months.</span>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+</div>
                   </div>
                 )}
               </FormItem>
 
               {/* Reactivation */}
-              <FormItem className="space-y-2">
-    <div className="flex items-center space-x-3">
-      <FormControl>
-        <RadioGroupItem value="reactivation" disabled={!isRegistered} />
-      </FormControl>
-      <FormLabel className={cn("font-normal", !isRegistered && "text-muted-foreground")}>
-        Application for Reactivation of Registration Record
-      </FormLabel>
-      {!isRegistered && (
-        <span className="text-xs text-muted-foreground ml-2">(Requires registration)</span>
-      )}
-    </div>
-                {field.value === 'reactivation' && (
-  <div className="ml-8 space-y-4">
-                    <RadioGroup name="deactivationReason" className="ml-4 space-y-2">
-                      <FormItem className="flex items-center space-x-2">
-                        <FormControl>
-                          <RadioGroupItem value="1" />
-                        </FormControl>
-                        <FormLabel className="font-normal text-sm">1. Sentenced by final judgment to suffer imprisonment for not less than one (1) year;</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-2">
-                        <FormControl>
-                          <RadioGroupItem value="2" />
-                        </FormControl>
-                        <FormLabel className="font-normal text-sm">2. Convicted by final judgment of a crime involving disloyalty to the duly constituted government, etc.;</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-2">
-                        <FormControl>
-                          <RadioGroupItem value="3" />
-                        </FormControl>
-                        <FormLabel className="font-normal text-sm">3. Declared by competent authority to be insane or incompetent;</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-2">
-                        <FormControl>
-                          <RadioGroupItem value="4" />
-                        </FormControl>
-                        <FormLabel className="font-normal text-sm">4. Failed to vote in two (2) successive preceding regular elections;</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-2">
-                        <FormControl>
-                          <RadioGroupItem value="5" />
-                        </FormControl>
-                        <FormLabel className="font-normal text-sm">5. Loss of Filipino citizenship; or</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-2">
-                        <FormControl>
-                          <RadioGroupItem value="6" />
-                        </FormControl>
-                        <FormLabel className="font-normal text-sm">6. Exclusion by a court order;</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-2">
-                        <FormControl>
-                          <RadioGroupItem value="7" />
-                        </FormControl>
-                        <FormLabel className="font-normal text-sm">7. Failure to Validate.</FormLabel>
-                      </FormItem>
-                    </RadioGroup>
-                    <p className="text-sm text-muted-foreground mt-2">That said ground no longer exists, as evidenced by the attached certification/order of the court (in cases of 1,2,3,5, and 6).</p>
-                  </div>
-                )}
-              </FormItem>
-{/* Transfer with Reactivation */}
-  <FormItem className="space-y-1">
-    <div className="flex items-center space-x-3">
-      <FormControl>
-        <RadioGroupItem value="transfer-reactivation" disabled={!isRegistered} />
-      </FormControl>
-      <FormLabel className={cn("font-normal", !isRegistered && "text-muted-foreground")}>
-        Application for Transfer with Reactivation
-      </FormLabel>
-      {!isRegistered && (
-        <span className="text-xs text-muted-foreground ml-2">(Requires registration)</span>
-      )}
-    </div>
-    {(field.value === 'transfer' || field.value === 'reactivation') && (
-      <div className="ml-8 space-y-4">
-        <DeclarationFields prefix="transfer_" />
-        {/* Rest of transfer specific fields */}
-      </div>
+<FormItem className="space-y-2">
+  <div className="flex items-center space-x-3">
+    <FormControl>
+      <RadioGroupItem value="reactivation" disabled={!isRegistered} />
+    </FormControl>
+    <FormLabel className={cn("font-normal", !isRegistered && "text-muted-foreground")}>
+      Application for Reactivation of Registration Record
+    </FormLabel>
+    {!isRegistered && (
+      <span className="text-xs text-muted-foreground ml-2">(Requires registration)</span>
     )}
-  </FormItem>
-              {/* Change/Correction */}
-              <FormItem className="space-y-2">
-    <div className="flex items-center space-x-3">
-      <FormControl>
-        <RadioGroupItem value="change-correction" disabled={!isRegistered} />
-      </FormControl>
-      <FormLabel className={cn("font-normal", !isRegistered && "text-muted-foreground")}>
-        Application for Change of Name/Correction of Entries
-      </FormLabel>
-      {!isRegistered && (
-        <span className="text-xs text-muted-foreground ml-2">(Requires registration)</span>
-      )}
+  </div>
+  {field.value === 'reactivation' && (
+    <div className="ml-8 space-y-4">
+      <Card>
+        <CardContent className="pt-6">
+          <h4 className="text-sm font-medium mb-4">Reason for Deactivation</h4>
+          <RadioGroup name="deactivationReason" className="space-y-2">
+            <FormItem className="flex items-center space-x-2">
+              <FormControl>
+                <RadioGroupItem value="1" />
+              </FormControl>
+              <FormLabel className="font-normal text-sm">
+                1. Sentenced by final judgment to suffer imprisonment for not less than one (1) year;
+              </FormLabel>
+            </FormItem>
+            <FormItem className="flex items-center space-x-2">
+              <FormControl>
+                <RadioGroupItem value="2" />
+              </FormControl>
+              <FormLabel className="font-normal text-sm">
+                2. Convicted by final judgment of a crime involving disloyalty to the duly constituted government, etc.;
+              </FormLabel>
+            </FormItem>
+            <FormItem className="flex items-center space-x-2">
+              <FormControl>
+                <RadioGroupItem value="3" />
+              </FormControl>
+              <FormLabel className="font-normal text-sm">
+                3. Declared by competent authority to be insane or incompetent;
+              </FormLabel>
+            </FormItem>
+            <FormItem className="flex items-center space-x-2">
+              <FormControl>
+                <RadioGroupItem value="4" />
+              </FormControl>
+              <FormLabel className="font-normal text-sm">
+                4. Failed to vote in two (2) successive preceding regular elections;
+              </FormLabel>
+            </FormItem>
+            <FormItem className="flex items-center space-x-2">
+              <FormControl>
+                <RadioGroupItem value="5" />
+              </FormControl>
+              <FormLabel className="font-normal text-sm">
+                5. Loss of Filipino citizenship; or
+              </FormLabel>
+            </FormItem>
+            <FormItem className="flex items-center space-x-2">
+              <FormControl>
+                <RadioGroupItem value="6" />
+              </FormControl>
+              <FormLabel className="font-normal text-sm">
+                6. Exclusion by a court order;
+              </FormLabel>
+            </FormItem>
+            <FormItem className="flex items-center space-x-2">
+              <FormControl>
+                <RadioGroupItem value="7" />
+              </FormControl>
+              <FormLabel className="font-normal text-sm">
+                7. Failure to Validate.
+              </FormLabel>
+            </FormItem>
+          </RadioGroup>
+          <p className="text-sm text-muted-foreground mt-4">
+            That said ground no longer exists, as evidenced by the attached certification/order of the court (in cases of 1,2,3,5, and 6).
+          </p>
+        </CardContent>
+      </Card>
     </div>
-                {field.value === 'change-correction' && (
+  )}
+</FormItem>
+{/* Transfer with Reactivation */}
+<FormItem className="space-y-2">
+  <div className="flex items-center space-x-3">
+    <FormControl>
+      <RadioGroupItem value="transfer-reactivation" disabled={!isRegistered} />
+    </FormControl>
+    <FormLabel className={cn("font-normal", !isRegistered && "text-muted-foreground")}>
+      Application for Transfer with Reactivation
+    </FormLabel>
+    {!isRegistered && (
+      <span className="text-xs text-muted-foreground ml-2">(Requires registration)</span>
+    )}
+  </div>
+
+  {field.value === 'transfer-reactivation' && (
   <div className="ml-8 space-y-4">
-                    <FormField name="presentData" control={form.control}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Present Data/Information:</FormLabel>
-                          <FormControl>
-                            <Input {...field} value={typeof field.value === 'boolean' ? '' : field.value ?? ''} />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField name="newData" control={form.control}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>New/Corrected Data/Information:</FormLabel>
-                          <FormControl>
-                            <Input {...field} value={typeof field.value === 'boolean' || typeof field.value === 'undefined' ? '' : field.value} />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                )}
+    {/* Note Card */}
+    <Card>
+      <CardContent className="pt-6">
+        
+        <DeclarationFields prefix="transfer_reactivation_" />
+      </CardContent>
+    </Card>
+    
+    {/* Transfer Section Card */}
+    <Card>
+      <CardContent className="pt-6">
+<p className="font-medium mb-4">APPLICATION FOR TRANSFER OF RECORD</p>        <FormField
+          control={form.control}
+          name="transferReactivationType"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <RadioGroup 
+                  onValueChange={field.onChange} 
+                  value={field.value ?? ''} 
+                  className="space-y-2"
+                >
+                  <FormItem className="flex items-center space-x-2">
+                    <FormControl>
+                      <RadioGroupItem value="transfer-within" />
+                    </FormControl>
+                    <FormLabel className="font-normal">
+                      Within the same City/Municipality/District
+                    </FormLabel>
+                  </FormItem>
+                  <FormItem className="flex items-center space-x-2">
+                    <FormControl>
+                      <RadioGroupItem value="transfer-from" />
+                    </FormControl>
+                    <div className="flex items-center">
+                      <FormLabel className="font-normal">
+                        From another City/Municipality/District
+                      </FormLabel>
+                      <span className="text-xs text-muted-foreground ml-2">
+                        (Accomplish Personal Information at the Voter Registration Application Form part)
+                      </span>
+                    </div>
+                  </FormItem>
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </CardContent>
+    </Card>
+
+    <div className="space-y-4">
+  <Card>
+    <CardContent className="pt-6">
+      <p className="font-medium mb-4">My New Residence is:</p>
+      <FormField name="transferNewHouseNo" control={form.control}
+        render={({ field }) => (
+          <FormItem>
+            <div className="text-sm">House No./Street</div>
+            <FormControl>
+              <Input {...field} value={field.value ?? ''} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <div className="grid grid-cols-3 gap-4 mt-4">
+        <FormField name="transferNewBarangay" control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <div className="text-sm">Barangay</div>
+              <FormControl>
+                <Input {...field} value={field.value ?? ''} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField name="transferNewCity" control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <div className="text-sm">City/Municipality</div>
+              <FormControl>
+                <Input {...field} value={field.value ?? ''} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField name="transferNewProvince" control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <div className="text-sm">Province</div>
+              <FormControl>
+                <Input {...field} value={field.value ?? ''} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <div className="space-y-4 text-sm mt-4">
+        <div className="flex items-baseline gap-2">
+          <span>I have resided in my new residence for</span>
+          <FormField
+            control={form.control}
+            name="transferReactivationYears"
+            render={({ field }) => (
+              <FormItem className="w-20">
+                <FormControl>
+                  <Input 
+                    type="number"
+                    min="0"
+                    className="text-center h-7"
+                    {...field}
+                    value={field.value ?? ''}
+                  />
+                </FormControl>
               </FormItem>
+            )}
+          />
+          <span>years and</span>
+          <FormField
+            control={form.control}
+            name="transferReactivationMonths"
+            render={({ field }) => (
+              <FormItem className="w-20">
+                <FormControl>
+                  <Input 
+                    type="number"
+                    min="0"
+                    max="11"
+                    className="text-center h-7"
+                    {...field}
+                    value={field.value ?? ''}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <span>months.</span>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+
+        {/* Reactivation Section */}
+<Card>
+  <CardContent className="pt-6">
+    <div className="space-y-4">
+      <p className="font-medium">Further, I do hereby apply for the reactivation of my registration record which was deactivated due to: </p>
+      <span className="text-xs text-muted-foreground ml-2">
+                    (please check appropriate box):
+                      </span>
+      <RadioGroup name="reactivationReason" className="space-y-2">
+        <FormItem className="flex items-center space-x-2">
+          <FormControl>
+            <RadioGroupItem value="1" />
+          </FormControl>
+          <FormLabel className="font-normal text-sm">
+            1. Sentence by final judgment to suffer imprisonment for not less than one (1) year;
+          </FormLabel>
+        </FormItem>
+        <FormItem className="flex items-center space-x-2">
+          <FormControl>
+            <RadioGroupItem value="2" />
+          </FormControl>
+          <FormLabel className="font-normal text-sm">
+            2. Conviction by final judgment of any crime involving disloyalty to the duly constituted government, etc;
+          </FormLabel>
+        </FormItem>
+        <FormItem className="flex items-center space-x-2">
+          <FormControl>
+            <RadioGroupItem value="3" />
+          </FormControl>
+          <FormLabel className="font-normal text-sm">
+            3. Declaration of insanity or incompetence by a competent authority;
+          </FormLabel>
+        </FormItem>
+        <FormItem className="flex items-center space-x-2">
+          <FormControl>
+            <RadioGroupItem value="4" />
+          </FormControl>
+          <FormLabel className="font-normal text-sm">
+            4. Failure to vote in two (2) successive preceding regular elections;
+          </FormLabel>
+        </FormItem>
+        <FormItem className="flex items-center space-x-2">
+          <FormControl>
+            <RadioGroupItem value="5" />
+          </FormControl>
+          <FormLabel className="font-normal text-sm">
+            5. Loss of Filipino Citizenship;
+          </FormLabel>
+        </FormItem>
+        <FormItem className="flex items-center space-x-2">
+          <FormControl>
+            <RadioGroupItem value="6" />
+          </FormControl>
+          <FormLabel className="font-normal text-sm">
+            6. Exclusion by a court order;
+          </FormLabel>
+        </FormItem>
+        <FormItem className="flex items-center space-x-2">
+          <FormControl>
+            <RadioGroupItem value="6" />
+          </FormControl>
+          <FormLabel className="font-normal text-sm">
+                7. Failure to Validate.
+              </FormLabel>
+        </FormItem>
+
+      </RadioGroup>
+      <p className="text-sm text-muted-foreground mt-2">
+        That said ground no longer exists, as evidenced by the attached certification/order of the court (in cases of 1,2,3,5, and 6).
+      </p>
+    </div>
+  </CardContent>
+</Card>
+      </div>
+    </div>
+  )}
+</FormItem>
+  {/* Change/Correction */}
+<FormItem className="space-y-2">
+  <div className="flex items-center space-x-3">
+    <FormControl>
+      <RadioGroupItem value="change-correction" disabled={!isRegistered} />
+    </FormControl>
+    <FormLabel className={cn("font-normal", !isRegistered && "text-muted-foreground")}>
+      Application for Change of Name/Correction of Entries
+    </FormLabel>
+    {!isRegistered && (
+      <span className="text-xs text-muted-foreground ml-2">(Requires registration)</span>
+    )}
+  </div>
+  {field.value === 'change-correction' && (
+    <div className="ml-8 space-y-4">
+      <Card>
+        <CardContent className="pt-6">
+          <p className="text-sm text-muted-foreground mb-4">
+            (Attach required supporting documents such as Certified Copy or Certificate of Court Order or Certificate of Live Birth, and others)
+          </p>
+          
+          <div className="space-y-4">
+            <FormField name="presentData" control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Present Data/Information:</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={typeof field.value === 'boolean' ? '' : field.value ?? ''} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            
+            <FormField name="newData" control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>New/Corrected Data/Information:</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={typeof field.value === 'boolean' || typeof field.value === 'undefined' ? '' : field.value} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="supportingDocument"
+              render={({ field: { onChange, value, ...field } }) => (
+                <FormItem>
+                  <FormLabel>Supporting Document</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          if (file.size > 5 * 1024 * 1024) {
+                            toast({
+                              title: "File too large",
+                              description: "Please select a file smaller than 5MB",
+                              variant: "destructive",
+                            });
+                            e.target.value = '';
+                            return;
+                          }
+                          onChange(file);
+                        }
+                      }}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Upload your supporting document (PDF, JPG, PNG format, max 5MB)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )}
+</FormItem>
 
               {/* Inclusion/Reinstatement */}
 <FormItem className="space-y-2">
@@ -724,36 +1032,78 @@ const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> =
     </div>
   {field.value === 'inclusion-reinstatement' && (
   <div className="ml-8 space-y-4">    
-    <RadioGroup name="inclusionType" className="space-y-2">
-      <FormItem className="flex items-center space-x-2">
-        <FormControl>
-          <RadioGroupItem value="inclusion" />
-        </FormControl>
-        <FormLabel className="font-normal">
-          Inclusion of VRR in the precinct book of voters
-        </FormLabel>
-      </FormItem>
-      <FormItem className="flex items-center space-x-2">
-        <FormControl>
-          <RadioGroupItem value="reinstatement" />
-        </FormControl>
-        <FormLabel className="font-normal">
-          Reinstatement of the name of the registered voter which has been omitted in the list of voters
-        </FormLabel>
-      </FormItem>
-    </RadioGroup>
+    <Card>
+      <CardContent className="pt-6">
+        <h4 className="text-sm font-medium mb-4">Select Application Type</h4>
+        <RadioGroup name="inclusionType" className="space-y-2">
+          <FormItem className="flex items-center space-x-2">
+            <FormControl>
+              <RadioGroupItem value="inclusion" />
+            </FormControl>
+            <FormLabel className="font-normal">
+              Inclusion of VRR in the precinct book of voters
+            </FormLabel>
+          </FormItem>
+          <FormItem className="flex items-center space-x-2">
+            <FormControl>
+              <RadioGroupItem value="reinstatement" />
+            </FormControl>
+            <FormLabel className="font-normal">
+              Reinstatement of the name of the registered voter which has been omitted in the list of voters
+            </FormLabel>
+          </FormItem>
+        </RadioGroup>
 
-    <div className="prose prose-sm text-muted-foreground mb-4">
-      <p>
-        I do hereby request that my name which has been omitted in the list of voters/my registration record which has not been
-        included in the precinct book of voters of Precinct No. <Input 
-          className="w-20 inline-block mx-1 h-6" 
-          value={form.watch('inclusionPrecinctNo') || ''} 
-          onChange={(e) => form.setValue('inclusionPrecinctNo', e.target.value)}
-        />, be reinstated/included therein. The said reinstatement of
-        name/inclusion of registration record is necessary and valid.
-      </p>
-    </div>
+ <div className="mt-6 space-y-4">
+  <div className="text-sm">
+    <p className="text-justify leading-relaxed" style={{ textIndent: '0' }}>
+      I do hereby request that my name which has been omitted in the list of voters/my registration record which has not been included in the precinct book of voters of Precinct No. 
+      <Input 
+        className="w-24 h-7 mx-1 inline-flex" 
+        value={form.watch('inclusionRequestPrecinctNo') || ''} 
+        onChange={(e) => form.setValue('inclusionRequestPrecinctNo', e.target.value)}
+      />
+      , be reinstated/included therein. The said reinstatement of name/inclusion of registration record is necessary and valid.
+    </p>
+  </div>
+</div>
+      </CardContent>
+    </Card>
+
+    {form.watch('inclusionType') === 'inclusion' && (
+      <Card>
+        <CardContent className="pt-6">
+          <h4 className="text-sm font-medium mb-4">Inclusion Request</h4>
+          <div className="prose prose-sm text-muted-foreground">
+            <p>
+              I do hereby request that my registration record which has not been included in the precinct book of voters 
+              of Precinct No. <Input 
+                className="w-20 inline-block mx-1 h-6" 
+                value={form.watch('inclusionPrecinctNo') || ''} 
+                onChange={(e) => form.setValue('inclusionPrecinctNo', e.target.value)}
+              />, be included therein. The said inclusion of registration record is necessary and valid.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    )}
+
+    {form.watch('inclusionType') === 'reinstatement' && (
+      <Card>
+        <CardContent className="pt-6">
+          <h4 className="text-sm font-medium mb-4">Reinstatement Request</h4>
+          <div className="prose prose-sm text-muted-foreground">
+            <p>
+              I do hereby request that my name which has been omitted in the list of voters of Precinct No. <Input 
+                className="w-20 inline-block mx-1 h-6" 
+                value={form.watch('inclusionPrecinctNo') || ''} 
+                onChange={(e) => form.setValue('inclusionPrecinctNo', e.target.value)}
+              />, be reinstated therein. The said reinstatement of name is necessary and valid.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    )}
   </div>
 )}
               </FormItem>
