@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, XCircle, Info } from "lucide-react";
 import { format } from "date-fns";
 import type { Application } from "@/types";
+import RejectApplicationModal from "./RejectApplicationModal";
+
 
 interface ApplicationTrackingTableProps {
   applications: Application[];
@@ -31,6 +33,9 @@ const getStatusInfo = (status: string) => {
 export function ApplicationTrackingTable({ applications }: ApplicationTrackingTableProps) {
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [selectedAppForReject, setSelectedAppForReject] = useState<Application | null>(null);
 
   const handleViewDetails = (application: Application) => {
     setSelectedApplication(application);
@@ -84,6 +89,16 @@ export function ApplicationTrackingTable({ applications }: ApplicationTrackingTa
                   >
                     View Details
                   </Button>
+                  <Button
+  variant ="destructive"
+  className ="ml-2"
+  onClick={() => {
+    setSelectedAppForReject(application);
+    setShowRejectModal(true);
+  }}
+>
+  Reject
+</Button>
                 </TableCell>
               </TableRow>
             );
@@ -96,6 +111,16 @@ export function ApplicationTrackingTable({ applications }: ApplicationTrackingTa
         isOpen={isModalOpen}
         onClose={handleCloseModal}
       />
+       <RejectApplicationModal
+        isOpen={showRejectModal}
+        onClose={() => setShowRejectModal(false)}
+        onReject={(reason) => {
+          // TODO: Call your API or update state here
+          setShowRejectModal(false);
+          setSelectedAppForReject(null);
+        }}
+      />
+
     </div>
   );
 }

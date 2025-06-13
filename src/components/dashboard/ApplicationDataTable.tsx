@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { deleteApplicationById } from '@/lib/applicationStore'; 
 import { useToast } from '@/hooks/use-toast';
+import { DateRange } from "react-day-picker";
 
 interface ApplicationDataTableProps {
   applications: Application[];
@@ -41,7 +42,7 @@ export function ApplicationDataTable({ applications: initialApplications }: Appl
   
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
-  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({ from: undefined, to: undefined });
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -111,21 +112,20 @@ export function ApplicationDataTable({ applications: initialApplications }: Appl
       filtered = filtered.filter(app => app.applicationType === typeFilter);
     }
     // Date range filter
-    if (dateRange.from) {
-      const fromDate = startOfDay(dateRange.from);
-      filtered = filtered.filter(app => {
-        const submissionDate = parseISO(app.submissionDate);
-        return isValid(submissionDate) && submissionDate >= fromDate;
-      });
-    }
-    if (dateRange.to) {
-      const toDate = endOfDay(dateRange.to);
-      filtered = filtered.filter(app => {
-        const submissionDate = parseISO(app.submissionDate);
-        return isValid(submissionDate) && submissionDate <= toDate;
-      });
-    }
-
+if (dateRange?.from) {
+  const fromDate = startOfDay(dateRange.from);
+  filtered = filtered.filter(app => {
+    const submissionDate = parseISO(app.submissionDate);
+    return isValid(submissionDate) && submissionDate >= fromDate;
+  });
+}
+if (dateRange?.to) {
+  const toDate = endOfDay(dateRange.to);
+  filtered = filtered.filter(app => {
+    const submissionDate = parseISO(app.submissionDate);
+    return isValid(submissionDate) && submissionDate <= toDate;
+  });
+}
     // Sorting
     return filtered.sort((a, b) => {
       let valA: string | number = '';
@@ -237,37 +237,46 @@ export function ApplicationDataTable({ applications: initialApplications }: Appl
                 variant={"outline"}
                 className={cn(
                   "w-full sm:w-[280px] justify-start text-left font-normal",
-                  !dateRange.from && !dateRange.to && "text-muted-foreground"
+                  !dateRange?.from && !dateRange?.to && "text-muted-foreground"
                 )}
               >
                 <CalendarIconLucide className="mr-2 h-4 w-4" />
-                {dateRange.from ? (
-                  dateRange.to ? (
-                    <>
-                      {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
-                    </>
-                  ) : (
-                    format(dateRange.from, "LLL dd, y")
-                  )
-                ) : (
-                  <span>Pick a date range</span>
-                )}
+               {dateRange?.from ? (
+  dateRange?.to ? (
+    <>
+      {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
+    </>
+  ) : (
+    format(dateRange.from, "LLL dd, y")
+  )
+) : (
+  <span>Pick a date range</span>
+)}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 initialFocus
                 mode="range"
-                defaultMonth={dateRange.from}
+                defaultMonth={dateRange?.from}
                 selected={dateRange}
                 onSelect={setDateRange}
                 numberOfMonths={2}
               />
             </PopoverContent>
           </Popover>
-          <Button variant="outline" onClick={() => { setSearchTerm(''); setStatusFilter('all'); setTypeFilter('all'); setDateRange({}); }} className="w-full sm:w-auto">
-            Clear Filters
-          </Button>
+          <Button
+  variant="outline"
+  onClick={() => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setTypeFilter('all');
+    setDateRange(undefined); // <-- change this
+  }}
+  className="w-full sm:w-auto"
+>
+  Clear Filters
+</Button>
           <Button variant="outline" onClick={exportToCSV} className="w-full sm:w-auto ml-auto">
             <FileDown className="mr-2 h-4 w-4" /> Export to CSV
           </Button>

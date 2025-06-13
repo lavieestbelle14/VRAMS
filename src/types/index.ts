@@ -59,6 +59,7 @@ export interface SpecialNeeds {
 }
 
 export interface Application {
+  rejectionReason?: string;
   id: string;
   personalInfo: PersonalInfo;
   addressDetails: AddressDetails; // Current address
