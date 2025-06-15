@@ -99,6 +99,9 @@ export function ApplicationFormFields() {
       transferNewHouseNo: '',
       transferYears: undefined,
       transferMonths: undefined,
+      correctionField: undefined,
+      presentData: '',
+      newData: '',
 
       // Part 2: Oath
       oathAccepted: false,
@@ -213,6 +216,9 @@ export function ApplicationFormFields() {
       applicationType: undefined,
       biometricsFile: 'For on-site capture', 
       transferHouseNoStreet: '', transferBarangay: '', transferCityMunicipality: '', transferProvince: '', transferZipCode: '',
+      correctionField: undefined,
+      presentData: '',
+      newData: '',
     });
     toast({ title: "Draft Cleared", description: "The application form has been reset." });
   };
