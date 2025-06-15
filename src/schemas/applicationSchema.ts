@@ -188,23 +188,46 @@ export const applicationFormSchema = z.object({
     message: "You must accept the declaration to submit the application."
   }),
 
+  correctionField: z.enum([
+    'Name',
+    'Contact Number',
+    'Email Address',
+    'Spouse name',
+    'Date of Birth',
+    'Place of Birth',
+    'Father\'s Name',
+    'Mother\'s Maiden Name',
+    'Other'
+  ]).optional(),
+  presentData: z.string().optional(),
+  newData: z.string().optional(),
+
 }).superRefine((data, ctx) => {
   if (data.citizenshipType === 'naturalized' || data.citizenshipType === 'reacquired') {
     if (!data.naturalizationDate) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Required for naturalized/reacquired status", path: ["naturalizationDate"] });
     if (!data.naturalizationCertNo) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Required for naturalized/reacquired status", path: ["naturalizationCertNo"] });
+  }
+  if (data.applicationType === 'change-correction') {
+    if (!data.correctionField) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Please select a field to correct.", path: ["correctionField"] });
+    }
+    if (!data.presentData) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Present data is required.", path: ["presentData"] });
+    }
+    if (!data.newData) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "New data is required.", path: ["newData"] });
+    }
+  } if (data.isIndigenousPerson && !data.indigenousTribe) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Tribe name is required.", path: ["indigenousTribe"] });
+  }
+  if ((data.assistorName || data.assistorAddress) && !data.assistorRelationship) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Assistor relationship is required if assistor details are provided", path: ["assistorRelationship"]});
   }
   if (data.civilStatus === 'married' && !data.spouseName) {
      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Spouse name is required if married", path: ["spouseName"] });
   }
   if (data.isPwd && !data.disabilityType) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Required for PWD", path: ["disabilityType"] });
-  }
-
-  if (data.isIndigenousPerson && !data.indigenousTribe) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Tribe name is required.", path: ["indigenousTribe"] });
-  }
-  if ((data.assistorName || data.assistorAddress) && !data.assistorRelationship) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Assistor relationship is required if assistor details are provided", path: ["assistorRelationship"]});
   }
   if (data.applicationType === 'register') {
     if (!data.idFrontPhoto) {

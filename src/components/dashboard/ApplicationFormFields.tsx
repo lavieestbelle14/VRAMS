@@ -1076,6 +1076,34 @@ const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> =
                         </p>
                         
                         <div className="space-y-4">
+                          <FormField
+                            control={form.control}
+                            name="correctionField"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Field to Correct</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select a field to correct" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="Name">Name</SelectItem>
+                                    <SelectItem value="Contact Number">Contact Number</SelectItem>
+                                    <SelectItem value="Email Address">Email Address</SelectItem>
+                                    <SelectItem value="Spouse name">Spouse name</SelectItem>
+                                    <SelectItem value="Date of Birth">Date of Birth</SelectItem>
+                                    <SelectItem value="Place of Birth">Place of Birth</SelectItem>
+                                    <SelectItem value="Father's Name">Father's Name</SelectItem>
+                                    <SelectItem value="Mother's Maiden Name">Mother's Maiden Name</SelectItem>
+                                    <SelectItem value="Other">Other</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
                           <FormField name="presentData" control={form.control}
                             render={({ field }) => (
                               <FormItem>
