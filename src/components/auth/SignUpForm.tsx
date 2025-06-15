@@ -161,20 +161,19 @@ export function SignUpForm() {
         <p className="px-2 text-center text-xs text-muted-foreground sm:px-8">
           By signing up, you agree to our{' '}
           <Link
-            href="/public/terms-of-service"
-            className="underline underline-offset-4 hover:text-primary"
-          >
-            Terms of Service
-          </Link>{' '}
-          and{' '}
-          <Link
-            href="/public/privacy-policy"
-            className="underline underline-offset-4 hover:text-primary"
-          >
-            Privacy Policy
-          </Link>
-          .
-        </p>
+  href="/public/terms-of-service"
+  className="underline underline-offset-4 hover:text-primary"
+>
+  Terms of Service
+</Link>{' '}
+and{' '}
+<Link
+  href="/public/privacy-policy"
+  className="underline underline-offset-4 hover:text-primary"
+>
+  Privacy Policy
+</Link>
+      </p>
       </form>
     </Form>
   );

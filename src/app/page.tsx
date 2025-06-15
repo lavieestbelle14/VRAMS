@@ -19,23 +19,24 @@ export default function VRAMSLandingPage() {
 
   const registrationTimeline = [
     {
-      date: "13OCT",
-      year: "2024",
+      date: "1 JUL",
+      year: "2025",
       title: "Start of Online Application",
       description: "Registration period begins"
     },
     {
-      date: "15NOV",
-      year: "2024",
-      title: "Document Verification",
-      description: "Submit required documents"
+      date: "11JUL",
+      year: "2025",
+      title: "End of Online Application",
+      description: "Registration period ends"
     },
-    {
-      date: "22NOV",
-      year: "2024",
-      title: "Final Registration",
-      description: "Last day to register"
-    }
+{
+  date: "1 DEC",
+  year: "2025",
+  title: "Barangay/SK Elections",
+  description: "Official election day for Barangay and SK positions"
+  
+}
   ];
 
   const features = [
@@ -46,13 +47,13 @@ export default function VRAMSLandingPage() {
     },
     {
       icon: ShieldCheck,
-      title: 'Military-Grade Security',
-      description: 'Your data protected with AES-256 encryption'
+      title: 'Privacy-Conscious Design',
+      description: 'Developed with careful consideration for user privacy'
     },
     {
       icon: Zap,
-      title: 'Instant Processing',
-      description: 'Real-time application status updates'
+      title: 'Application Status Tracking',
+      description: 'Stay informed with timely updates on your application progress'
     },
     {
       icon: Globe,
@@ -356,7 +357,7 @@ export default function VRAMSLandingPage() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">READY TO EXERCISE YOUR RIGHT TO VOTE?</h2>
           <p className="text-xl text-blue-100 max-w-3xl mx-auto mb-10">
-            Join millions of Filipinos who have already registered through our platform.
+            Because in a democracy, every vote counts — and every voter matters.
           </p>
           <Button 
             className="bg-yellow-400 hover:bg-yellow-300 text-blue-900 px-12 py-6 text-lg font-bold shadow-lg"

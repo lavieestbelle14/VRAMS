@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { getApplications } from '@/lib/applicationStore';
 import { ApplicationTrackingTable } from '@/components/applications/ApplicationTrackingTable';
 import type { Application } from '@/types';
-import { FileText } from 'lucide-react';
+import { FileText, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 export default function TrackStatusPage() {
   const [applications, setApplications] = useState<Application[]>([]);
@@ -29,9 +31,18 @@ export default function TrackStatusPage() {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight flex items-center text-primary">
-          <FileText className="mr-3 h-7 w-7" /> Application Tracking
-        </h2>
+        <div className="flex items-center">
+          <FileText className="mr-3 h-7 w-7 text-primary" />
+          <h2 className="text-3xl font-bold tracking-tight text-primary">
+            Application Tracking
+          </h2>
+        </div>
+        <Button variant="outline" className="bg-white hover:bg-yellow-400" asChild>
+          <Link href="/public/home">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Link>
+        </Button>
       </div>
 
       <Card>
