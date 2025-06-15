@@ -82,10 +82,9 @@ export interface ApplicationFormSchema
 }
 
 export const applicationFormSchema = z.object({
-  // Part 1: Personal Information
-  firstName: z.string(),
-  lastName: z.string(),
-  middleName: z.string().optional(),
+  registrationIntention: z.enum(['regular', 'katipunan']).optional(),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
 
   sex: z.enum(["male", "female", ""], {
     errorMap: () => ({ message: "Please select a sex" })
@@ -228,4 +227,8 @@ if (data.applicationType === 'register') {
   }
 });
 
-export type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
+export type ApplicationFormValues = {
+  registrationIntention?: 'regular' | 'katipunan' | undefined;
+  firstName: string;
+  lastName: string;
+}

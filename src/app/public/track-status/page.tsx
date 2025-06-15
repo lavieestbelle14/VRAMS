@@ -29,7 +29,7 @@ export default function TrackStatusPage() {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight flex items-center">
+        <h2 className="text-3xl font-bold tracking-tight flex items-center text-primary">
           <FileText className="mr-3 h-7 w-7" /> Application Tracking
         </h2>
       </div>
