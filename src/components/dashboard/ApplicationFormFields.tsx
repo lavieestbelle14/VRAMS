@@ -84,7 +84,7 @@ export function ApplicationFormFields() {
       fatherFirstName: '', fatherLastName: '', motherFirstName: '', motherLastName: '',
       
       // Special Needs
-      isIlliterate: false, isPwd: false, isIndigenousPerson: false, disabilityType: '',
+      isIlliterate: false, isPwd: false, isIndigenousPerson: false, indigenousTribe: '', disabilityType: '',
       assistorName: '', assistorRelationship: '', assistorAddress: '',
       prefersGroundFloor: false, isSenior: false,
 
@@ -108,6 +108,7 @@ export function ApplicationFormFields() {
   });
 
   const declarationAccepted = form.watch('declarationAccepted');
+  const isIndigenousPerson = form.watch('isIndigenousPerson');
 
   const [isDeclarationDialogOpen, setDeclarationDialogOpen] = useState(false);
   const [isConfirmButtonDisabled, setConfirmButtonDisabled] = useState(true);
@@ -206,7 +207,7 @@ export function ApplicationFormFields() {
       yearsOfResidency: undefined, monthsOfResidency: undefined,
       civilStatus: '', spouseName: '',
       fatherFirstName: '', fatherLastName: '', motherFirstName: '', motherLastName: '',
-      isIlliterate: false, isPwd: false, isIndigenousPerson: false, disabilityType: '',
+      isIlliterate: false, isPwd: false, isIndigenousPerson: false, indigenousTribe: '', disabilityType: '',
       assistorName: '', assistorRelationship: '', assistorAddress: '',
       prefersGroundFloor: false, isSenior: false,
       applicationType: undefined,
@@ -1454,6 +1455,23 @@ const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> =
                 <FormField control={form.control} name="isSenior" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-3 space-y-0 p-2 border rounded-md"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="font-normal">Senior Citizen</FormLabel></FormItem>)} />
                 <FormField control={form.control} name="prefersGroundFloor" render={({ field }) => (<FormItem className="flex flex-row items-center space-x-3 space-y-0 p-2 border rounded-md"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel className="font-normal">Prefers Ground Floor Voting</FormLabel></FormItem>)} />
             </div>
+
+            {isIndigenousPerson && (
+              <FormField
+                control={form.control}
+                name="indigenousTribe"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tribe Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Aeta, Ati, Badjao" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             {isPwd && (
                 <FormField
                   control={form.control}

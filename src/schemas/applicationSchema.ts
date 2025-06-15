@@ -30,6 +30,7 @@ export interface SpecialNeeds {
   isIlliterate: boolean;
   isPwd: boolean;
   isIndigenousPerson: boolean;
+  indigenousTribe?: string;
   disabilityType?: string;
   assistorName?: string;
   assistorRelationship?: string;
@@ -130,6 +131,7 @@ export const applicationFormSchema = z.object({
   isIlliterate: z.boolean().default(false),
   isPwd: z.boolean().default(false),
   isIndigenousPerson: z.boolean().default(false),
+  indigenousTribe: optionalString,
   disabilityType: optionalString,
   assistorName: optionalString,
   assistorRelationship: optionalString, 
@@ -138,25 +140,26 @@ export const applicationFormSchema = z.object({
   isSenior: z.boolean().default(false), 
 
   // Application Type and Biometrics
-applicationType: z.enum([
-  'register',
-  'transfer',
-  'reactivation',
-  'change-correction',
-  'inclusion-reinstatement',
-  ''
-], {
-  errorMap: () => ({ message: "Please select an application type" })
-}).refine(val => val !== '', {
-  message: "Please select an application type"
-}),
+  applicationType: z.enum([
+    'register',
+    'transfer',
+    'reactivation',
+    'change-correction',
+    'inclusion-reinstatement',
+    ''
+  ], {
+    errorMap: () => ({ message: "Please select an application type" })
+  }).refine(val => val !== '', {
+    message: "Please select an application type"
+  }),
 
-transferType: z.enum(['transfer-record', 'transfer-reactivation']).optional(),
-inclusionType: z.enum(['inclusion', 'reinstatement', '']).optional(),  biometricsFile: optionalString, 
+  transferType: z.enum(['transfer-record', 'transfer-reactivation']).optional(),
+  inclusionType: z.enum(['inclusion', 'reinstatement', '']).optional(),  
+  biometricsFile: optionalString, 
 
-transferLocationType: z.enum(['same-city', 'different-city']).optional(),
-transfer_reactivation_civilStatus: z.enum(['single', 'married', 'widowed', 'legally-separated']).optional(),
-// ID Verification (Required for Registration)
+  transferLocationType: z.enum(['same-city', 'different-city']).optional(),
+  transfer_reactivation_civilStatus: z.enum(['single', 'married', 'widowed', 'legally-separated']).optional(),
+  // ID Verification (Required for Registration)
   idFrontPhoto: z.instanceof(File).optional().refine(
     (file) => !file || file.size <= 5 * 1024 * 1024,
     "File size must be less than 5MB"
@@ -177,13 +180,13 @@ transfer_reactivation_civilStatus: z.enum(['single', 'married', 'widowed', 'lega
   transferZipCode: z.string().optional(),
 
   // Part 2: Oath
-oathAccepted: z.boolean().refine((val) => val === true, {
-  message: "You must accept the oath to submit the application"
-}),
+  oathAccepted: z.boolean().refine((val) => val === true, {
+    message: "You must accept the oath to submit the application"
+  }),
 
-declarationAccepted: z.boolean().refine((val) => val === true, {
-  message: "You must accept the declaration to submit the application."
-}),
+  declarationAccepted: z.boolean().refine((val) => val === true, {
+    message: "You must accept the declaration to submit the application."
+  }),
 
 }).superRefine((data, ctx) => {
   if (data.citizenshipType === 'naturalized' || data.citizenshipType === 'reacquired') {
@@ -194,12 +197,16 @@ declarationAccepted: z.boolean().refine((val) => val === true, {
      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Spouse name is required if married", path: ["spouseName"] });
   }
   if (data.isPwd && !data.disabilityType) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Disability type is required if PWD", path: ["disabilityType"] });
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Required for PWD", path: ["disabilityType"] });
+  }
+
+  if (data.isIndigenousPerson && !data.indigenousTribe) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Tribe name is required.", path: ["indigenousTribe"] });
   }
   if ((data.assistorName || data.assistorAddress) && !data.assistorRelationship) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Assistor relationship is required if assistor details are provided", path: ["assistorRelationship"]});
   }
-if (data.applicationType === 'register') {
+  if (data.applicationType === 'register') {
     if (!data.idFrontPhoto) {
       ctx.addIssue({ 
         code: z.ZodIssueCode.custom, 
