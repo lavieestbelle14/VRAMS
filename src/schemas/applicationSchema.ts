@@ -181,6 +181,10 @@ oathAccepted: z.boolean().refine((val) => val === true, {
   message: "You must accept the oath to submit the application"
 }),
 
+declarationAccepted: z.boolean().refine((val) => val === true, {
+  message: "You must accept the declaration to submit the application."
+}),
+
 }).superRefine((data, ctx) => {
   if (data.citizenshipType === 'naturalized' || data.citizenshipType === 'reacquired') {
     if (!data.naturalizationDate) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Required for naturalized/reacquired status", path: ["naturalizationDate"] });

@@ -1,6 +1,6 @@
 
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { applicationFormSchema, type ApplicationFormValues } from '@/schemas/applicationSchema';
@@ -22,6 +22,7 @@ import { format } from "date-fns";
 import { CalendarIcon, Save, Trash2 } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { saveApplication } from '@/lib/applicationStore';
 
 
@@ -60,6 +61,7 @@ const generateFingerprint = (data: Partial<ApplicationFormValues>): string => {
 export function ApplicationFormFields() {
   const { toast } = useToast();
   const router = useRouter();
+
   const form = useForm<ApplicationFormValues, any, ApplicationFormValues>({
     resolver: zodResolver<ApplicationFormValues>(applicationFormSchema),
     defaultValues: {
@@ -90,17 +92,45 @@ export function ApplicationFormFields() {
       applicationType: undefined,
       biometricsFile: 'For on-site capture', 
 
+      declarationAccepted: false,
+
       // Conditional fields
       transferHouseNoStreet: '', transferBarangay: '', transferCityMunicipality: '', transferProvince: '', transferZipCode: '',
       transferNewHouseNo: '',
       transferYears: undefined,
       transferMonths: undefined,
+
+      // Part 2: Oath
       oathAccepted: false,
-      inclusionPrecinctNo: '',
-
-
+      katipunanDataConsent: undefined,
+      katipunanOathAccepted: false,
     },
   });
+
+  const declarationAccepted = form.watch('declarationAccepted');
+
+  const [isDeclarationDialogOpen, setDeclarationDialogOpen] = useState(false);
+  const [isConfirmButtonDisabled, setConfirmButtonDisabled] = useState(true);
+  const [countdown, setCountdown] = useState(3);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isDeclarationDialogOpen) {
+      setConfirmButtonDisabled(true);
+      setCountdown(3);
+      timer = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            setConfirmButtonDisabled(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [isDeclarationDialogOpen]);
   // Add inside the ApplicationFormFields component, after form is declared
   // (Removed duplicate shouldDisableSection declaration)
 
@@ -1958,11 +1988,70 @@ const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> =
     </div>
   ))
 ) : null}
+<div className="space-y-4">
+  <FormField
+    control={form.control}
+    name="declarationAccepted"
+    render={({ field }) => (
+      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow">
+        <FormControl>
+          <Checkbox
+            checked={field.value}
+            onCheckedChange={(checked) => {
+              if (checked) {
+                setDeclarationDialogOpen(true);
+              } else {
+                field.onChange(false);
+              }
+            }}
+          />
+        </FormControl>
+        <div className="space-y-1 leading-none">
+          <FormLabel>
+            I agree to the above declaration and affirm the truthfulness of all information provided.
+          </FormLabel>
+          <FormMessage />
+        </div>
+      </FormItem>
+    )}
+  />
+</div>
+
+<Dialog open={isDeclarationDialogOpen} onOpenChange={setDeclarationDialogOpen}>
+  <DialogContent hideCloseButton className="sm:max-w-[525px]">
+    <DialogHeader>
+      <DialogTitle>Declaration</DialogTitle>
+    </DialogHeader>
+    <div className="space-y-4 text-sm text-muted-foreground">
+      <p>
+        I hereby declare, under penalty of law, that all information provided in this online application form is true, complete, and accurate to the best of my knowledge and belief. I understand that any false or misleading statement may lead to the rejection of my application and/or legal consequences, including but not limited to those under the Revised Penal Code and other relevant laws.
+      </p>
+      <p>
+        I understand and agree to the processing of my personal data for the purpose of this application, in accordance with the Data Privacy Act of 2012 and the Commission on Elections (COMELEC) Data Privacy Policy. I have read and understood the terms and conditions outlined in this application.
+      </p>
+      <p>
+        Upon successful submission, your application will be reviewed by COMELEC personnel. You will be notified regarding the status of your application through the contact information you provided.
+      </p>
+    </div>
+    <DialogFooter>
+      <Button
+        onClick={() => {
+          form.setValue("declarationAccepted", true, { shouldValidate: true });
+          setDeclarationDialogOpen(false);
+        }}
+        disabled={isConfirmButtonDisabled}
+      >
+        {isConfirmButtonDisabled ? `Please read the declaration (${countdown})` : "I understand and agree"}
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
         <div className="flex justify-end space-x-2 pt-6">
             <Button type="button" onClick={handleClearDraft} className="btn-outline">
               <Trash2 className="mr-2 h-4 w-4" /> Clear Draft & Reset
             </Button>
-            <Button type="submit" disabled={form.formState.isSubmitting}>
+            <Button type="submit" disabled={form.formState.isSubmitting || !declarationAccepted}>
               {form.formState.isSubmitting ? (
                 <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
