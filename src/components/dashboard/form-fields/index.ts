@@ -17,3 +17,5 @@ export { KatipunanOathFields } from './KatipunanOathFields';
 export { ReactivationFields } from './ReactivationFields';
 export { TransferReactivationFields } from './TransferReactivationFields';
 export { InclusionReinstatementFields } from './InclusionReinstatementFields';
+export { TransferFields } from './TransferFields';
+export { ChangeCorrectionFields } from './ChangeCorrectionFields';

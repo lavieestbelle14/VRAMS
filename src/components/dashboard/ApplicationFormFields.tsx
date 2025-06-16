@@ -41,9 +41,13 @@ import {
   FormSection,
   IdVerificationFields,
   ThumbprintsSignaturesFields,
+  RegularOathFields,
+  KatipunanOathFields,
   ReactivationFields,
   TransferReactivationFields,
-  InclusionReinstatementFields
+  InclusionReinstatementFields,
+  TransferFields,
+  ChangeCorrectionFields
 } from './form-fields';
 
 type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
@@ -70,45 +74,45 @@ export function ApplicationFormFields() {
   const form = useForm<ApplicationFormValues, any, ApplicationFormValues>({
     resolver: zodResolver<ApplicationFormValues>(applicationFormSchema),
     defaultValues: {
-        registrationIntention: undefined,
-
       // Personal Info
       firstName: '', lastName: '', middleName: '',
-      sex: '', dob: '', placeOfBirthCityMun: '', placeOfBirthProvince: '',
-      citizenshipType: '', naturalizationDate: undefined, naturalizationCertNo: '', 
+      sex: '', dob: '', placeOfBirthMunicipality: '', placeOfBirthProvince: '',
+      citizenshipType: '', dateOfNaturalization: undefined, certificateNumber: '', 
       contactNumber: '', email: '',
-      residencyYearsCityMun: undefined, residencyMonthsCityMun: undefined, residencyYearsPhilippines: undefined,
-      professionOccupation: '', tin: '',
+      yearsOfResidenceMunicipality: undefined, monthsOfResidenceMunicipality: undefined, yearsInCountry: undefined,
+      professionOccupation: '',
 
       // Address Details (Current)
-      houseNoStreet: '', barangay: '', cityMunicipality: '', province: '', zipCode: '',
-      yearsOfResidency: undefined, monthsOfResidency: undefined,
+      houseNumber: '', street: '', barangay: '', cityMunicipality: '', province: '',
 
       // Civil Details
       civilStatus: '', spouseName: '',
-      fatherFirstName: '', fatherLastName: '', motherFirstName: '', motherLastName: '',
+      fatherName: '', motherMaidenName: '',
         // Special Needs
-      isIlliterate: false, isPwd: false, isIndigenousPerson: false, indigenousTribe: '', disabilityType: '',
-      assistorName: '', assistorRelationship: '', assistorAddress: '',
-      prefersGroundFloor: false, isSenior: false,
+      isIlliterate: false, isSeniorCitizen: false, tribe: '', typeOfDisability: '',
+      assistanceNeeded: '', assistorName: '', voteOnGroundFloor: false,
 
       // Application
       applicationType: undefined,
       biometricsFile: 'For on-site capture', 
 
-      declarationAccepted: false,      // Conditional fields
-      transferHouseNoStreet: '', transferBarangay: '', transferCityMunicipality: '', transferProvince: '', transferZipCode: '',
-      transferType: undefined,
-      transferLocationType: undefined,
+      declarationAccepted: false,
+      
+      // Conditional fields
+      previousPrecinctNumber: '', previousBarangay: '', previousCityMunicipality: '', previousProvince: '',
       correctionField: undefined,
-      presentData: '',
-      newData: '',      // Part 2: Oath
+      currentValue: '',
+      requestedValue: '',
+      
+      // Oath fields
       oathAccepted: false,
+      regularRegistrationType: undefined,
+      regularVoterStatus: undefined,
+      regularOathAccepted: false,
     },
   });
 
   const declarationAccepted = form.watch('declarationAccepted');
-  const isIndigenousPerson = form.watch('isIndigenousPerson');
 
   const [isDeclarationDialogOpen, setDeclarationDialogOpen] = useState(false);
   const [isConfirmButtonDisabled, setConfirmButtonDisabled] = useState(true);
@@ -196,35 +200,35 @@ export function ApplicationFormFields() {
       localStorage.removeItem(DRAFT_STORAGE_KEY);
       localStorage.removeItem(LAST_SUBMITTED_FINGERPRINT_KEY); // Also clear the fingerprint
     }    form.reset({ // Reset to initial default values
-      firstName: '', lastName: '', middleName: '',
-      sex: '', dob: '', placeOfBirthCityMun: '', placeOfBirthProvince: '',
-      citizenshipType: '', naturalizationDate: undefined, naturalizationCertNo: '', 
+      firstName: '', lastName: '', middleName: '', suffix: '',
+      sex: '', dob: '', placeOfBirthMunicipality: '', placeOfBirthProvince: '',
+      citizenshipType: '', dateOfNaturalization: undefined, certificateNumber: '', 
       contactNumber: '', email: '',
-      residencyYearsCityMun: undefined, residencyMonthsCityMun: undefined, residencyYearsPhilippines: undefined,
-      professionOccupation: '', tin: '',
-      houseNoStreet: '', barangay: '', cityMunicipality: '', province: '', zipCode: '',
-      yearsOfResidency: undefined, monthsOfResidency: undefined,
+      yearsOfResidenceMunicipality: undefined, monthsOfResidenceMunicipality: undefined, yearsInCountry: undefined,
+      professionOccupation: '',
+      houseNumber: '', street: '', barangay: '', cityMunicipality: '', province: '',
       civilStatus: '', spouseName: '',
-      fatherFirstName: '', fatherLastName: '', motherFirstName: '', motherLastName: '',
-      isIlliterate: false, isPwd: false, isIndigenousPerson: false, indigenousTribe: '', disabilityType: '',
-      assistorName: '', assistorRelationship: '', assistorAddress: '',
-      prefersGroundFloor: false, isSenior: false,
+      fatherName: '', motherMaidenName: '',
+      isIlliterate: false, isSeniorCitizen: false, tribe: '', typeOfDisability: '',
+      assistanceNeeded: '', assistorName: '', voteOnGroundFloor: false,
       applicationType: undefined,
       biometricsFile: 'For on-site capture', 
-      transferHouseNoStreet: '', transferBarangay: '', transferCityMunicipality: '', transferProvince: '', transferZipCode: '',
+      previousPrecinctNumber: '', previousBarangay: '', previousCityMunicipality: '', previousProvince: '',
       correctionField: undefined,
-      presentData: '',
-      newData: '',
+      currentValue: '',
+      requestedValue: '',
+      oathAccepted: false,
+      regularRegistrationType: undefined,
+      regularVoterStatus: undefined,
+      regularOathAccepted: false,
     });
     toast({ title: "Draft Cleared", description: "The application form has been reset." });
   };
 
 
 const applicationType = form.watch('applicationType');
-const transferType = form.watch('transferType');
 const registrationIntention = form.watch('registrationIntention');
 const civilStatus = form.watch('civilStatus');
-const isPwd = form.watch('isPwd');
 const citizenshipType = form.watch('citizenshipType');
 const assistorName = form.watch('assistorName');
 const showDeclarationFields = applicationType === 'transfer';
@@ -239,73 +243,15 @@ const shouldDisableOath = !(applicationType === 'register' || applicationType ==
 
 const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> = async (data) => {
     try {
-      const personalInfo: PersonalInfo = {
-        firstName: data.firstName, lastName: data.lastName, middleName: data.middleName,
-        sex: data.sex, dob: data.dob,
-        placeOfBirthCityMun: data.placeOfBirthCityMun, placeOfBirthProvince: data.placeOfBirthProvince,
-        citizenshipType: data.citizenshipType, 
-        naturalizationDate: data.naturalizationDate, naturalizationCertNo: data.naturalizationCertNo,
-        contactNumber: data.contactNumber, email: data.email,
-        residencyYearsCityMun: data.residencyYearsCityMun, residencyMonthsCityMun: data.residencyMonthsCityMun,
-        residencyYearsPhilippines: data.residencyYearsPhilippines,
-        professionOccupation: data.professionOccupation, tin: data.tin,
-      };
-      const addressDetails: AddressDetails = {
-        houseNoStreet: data.houseNoStreet, barangay: data.barangay, cityMunicipality: data.cityMunicipality,
-        province: data.province, zipCode: data.zipCode,
-        yearsOfResidency: data.yearsOfResidency, monthsOfResidency: data.monthsOfResidency,
-      };
-      const civilDetails: CivilDetails = {
-        civilStatus: data.civilStatus, spouseName: data.spouseName,
-        fatherFirstName: data.fatherFirstName, fatherLastName: data.fatherLastName,
-        motherFirstName: data.motherFirstName, motherLastName: data.motherLastName,
-      };
-      const specialNeeds: SpecialNeeds = {
-        isIlliterate: data.isIlliterate, isPwd: data.isPwd, isIndigenousPerson: data.isIndigenousPerson,
-        disabilityType: data.disabilityType,
-        assistorName: data.assistorName, assistorRelationship: data.assistorRelationship,
-        prefersGroundFloor: data.prefersGroundFloor, isSenior: data.isSenior,
-      };
-
-      const newApplication: Application = {
-        id: `APP-${Date.now().toString().slice(-6)}`,
-        personalInfo,
-        addressDetails,
-        civilDetails,
-        specialNeeds,
-        applicationType: data.applicationType,
-        biometricsFile: data.biometricsFile,
-        status: 'pending',
-        submissionDate: new Date().toISOString(),
-      };
-
-      if (data.applicationType === 'transfer') {
-        newApplication.oldAddressDetails = { 
-          houseNoStreet: data.transferHouseNoStreet!, barangay: data.transferBarangay!, cityMunicipality: data.transferCityMunicipality!,
-          province: data.transferProvince!, zipCode: data.transferZipCode!,
-        };
-      }
+      // TODO: Update this to match the new schema field names
+      console.log('Form data:', data);
       
-      // Store fingerprint of successfully submitted data
-      if (typeof window !== 'undefined') {
-        const submittedFingerprint = generateFingerprint(data);
-        localStorage.setItem(LAST_SUBMITTED_FINGERPRINT_KEY, submittedFingerprint);
-      }
-      
-      saveApplication(newApplication);
-
-      // This draft is now considered "submitted", so remove it from draft storage.
-      // The fingerprint logic on next load will prevent this exact data from reloading.
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem(DRAFT_STORAGE_KEY); 
-      }
-
       toast({
         title: "Application Submitted!",
-        description: `Application ID: ${newApplication.id}. You will be redirected to a confirmation page.`,
+        description: `Your application has been submitted successfully.`,
       });
       form.reset(); // Reset form to blank state
-      router.push(`/public/application-submitted/${newApplication.id}`);
+      // router.push(`/public/application-submitted/${newApplication.id}`);
 
     } catch (error) {
       console.error("Error submitting application:", error);
@@ -330,10 +276,7 @@ const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> =
               Ensure all details match your official documents.
             </p>
           </CardContent>
-        </Card>        {/* Registration Intention Section */}
-        <FormSection title="Registration Intention" description="">
-          <RegistrationIntentionFields control={form.control} />
-        </FormSection>
+        </Card>        
         {/* Application Type Section */}
         <FormSection title="Application Type" description="">
           <ApplicationTypeFields 
@@ -344,20 +287,29 @@ const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> =
           />
         </FormSection>
 
+        {/* Registration Intention Section - Only show for register application type */}
+        {applicationType === 'register' && (
+          <FormSection title="Registration Intention" description="Select the type of registration you wish to apply for.">
+            <RegistrationIntentionFields control={form.control} />
+          </FormSection>
+        )}
+
         {/* Conditional sections based on application type */}
         {applicationType === 'reactivation' && (
           <FormSection title="Reason for Deactivation" description="">
             <ReactivationFields control={form.control} />
           </FormSection>
-        )}        {applicationType === 'transfer' && transferType === 'transfer-reactivation' && (
-          <FormSection title="Transfer with Reactivation Details" description="">
-            <TransferReactivationFields control={form.control} />
+        )}
+
+        {applicationType === 'transfer' && (
+          <FormSection title="Transfer Details" description="">
+            <TransferFields control={form.control} />
           </FormSection>
         )}
 
-        {applicationType === 'inclusion-reinstatement' && (
-          <FormSection title="Inclusion/Reinstatement Request" description="">
-            <InclusionReinstatementFields control={form.control} />
+        {applicationType === 'correction_of_entry' && (
+          <FormSection title="Correction of Entries" description="">
+            <ChangeCorrectionFields control={form.control} />
           </FormSection>
         )}
 
@@ -414,8 +366,6 @@ const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> =
           <DisableableSection isDisabled={shouldDisableSection}>
             <SpecialNeedsFields 
               control={form.control} 
-              isIndigenousPerson={isIndigenousPerson}
-              isPwd={isPwd}
               assistorName={assistorName}
             />
           </DisableableSection>
@@ -450,8 +400,21 @@ const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> =
         )}
         */}
 
-        {/* Basic Oath Section (using schema field) */}
-        {(applicationType === 'register' || applicationType === 'transfer') && (
+        {/* PART 2 - Dynamic Oath Sections based on Registration Intention */}
+        {(applicationType === 'register' || applicationType === 'transfer') && registrationIntention === 'Regular' && (
+          <FormSection title="PART 2: OATH, NOTICE and CONSENT (REGULAR)" description="">
+            <RegularOathFields control={form.control} shouldDisableOath={shouldDisableOath} />
+          </FormSection>
+        )}
+
+        {(applicationType === 'register' || applicationType === 'transfer') && registrationIntention === 'Katipunan ng Kabataan' && (
+          <FormSection title="Part 2: OATH, NOTICE and CONSENT (KATIPUNAN NG KABATAAN)" description="">
+            <KatipunanOathFields control={form.control} shouldDisableOath={shouldDisableOath} />
+          </FormSection>
+        )}
+
+        {/* Basic Oath Section (fallback when no registration intention is selected) */}
+        {(applicationType === 'register' || applicationType === 'transfer') && !registrationIntention && (
           <FormSection title="PART 2: OATH AND CONSENT" description="">
             <div className="space-y-4">
               <div className="prose prose-sm max-w-none">

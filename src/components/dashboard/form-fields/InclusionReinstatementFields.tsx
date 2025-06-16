@@ -4,7 +4,6 @@ import { z } from 'zod';
 import { applicationFormSchema } from '@/schemas/applicationSchema';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 
 type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
@@ -74,24 +73,6 @@ export function InclusionReinstatementFields({ control }: InclusionReinstatement
           The said reinstatement of name/inclusion of registration record is necessary and valid.
         </p>
       </div>
-
-      <FormField
-        control={control}
-        name={"inclusionReason" as any}
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Additional Details/Reason (Optional)</FormLabel>
-            <FormControl>
-              <Textarea 
-                {...field} 
-                placeholder="Provide any additional details or reasons for the inclusion/reinstatement request..."
-                className="min-h-[100px]"
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
     </div>
   );
 }

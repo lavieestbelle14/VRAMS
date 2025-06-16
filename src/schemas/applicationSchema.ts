@@ -4,44 +4,37 @@ const nonEmptyString = z.string().min(1, { message: "This field is required" });
 const optionalString = z.string().optional();
 
 export interface Address {
-  houseNoStreet: string;
+  houseNumber: string;
+  street: string;
   barangay: string;
   cityMunicipality: string;
   province: string;
-  zipCode: string;
 }
 
 export interface TransferAddress {
-  transferHouseNoStreet?: string;
-  transferBarangay?: string;
-  transferCityMunicipality?: string;
-  transferProvince?: string;
-  transferZipCode?: string;
+  previousPrecinctNumber?: string;
+  previousBarangay?: string;
+  previousCityMunicipality?: string;
+  previousProvince?: string;
 }
 
 export interface ParentInformation {
-  fatherFirstName: string;
-  fatherLastName: string;
-  motherFirstName: string;
-  motherLastName: string;
+  fatherName: string;
+  motherMaidenName: string;
 }
 
 export interface SpecialNeeds {
   isIlliterate: boolean;
-  isPwd: boolean;
-  isIndigenousPerson: boolean;
-  indigenousTribe?: string;
-  disabilityType?: string;
+  isSeniorCitizen: boolean;
+  tribe?: string;
+  typeOfDisability?: string;
+  assistanceNeeded?: string;
   assistorName?: string;
-  assistorRelationship?: string;
-  assistorAddress?: string;
-  prefersGroundFloor: boolean;
-  isSenior: boolean;
+  voteOnGroundFloor: boolean;
 }
 
 export interface ApplicationTypeAndBiometrics {
-  applicationType: 'register' | 'transfer' | '';
-  
+  applicationType: 'register' | 'transfer' | 'reactivation' | 'transfer_with_reactivation' | 'correction_of_entry' | 'reinstatement' | '';
   biometricsFile?: string;
 }
 
@@ -60,127 +53,108 @@ export interface ApplicationFormSchema
   firstName: string;
   lastName: string;
   middleName?: string;
-  sex: 'male' | 'female' | '';
+  suffix?: string;
+  sex: 'M' | 'F' | '';
   dob: string;
-  placeOfBirthCityMun: string;
+  placeOfBirthMunicipality: string;
   placeOfBirthProvince: string;
-  citizenshipType: 'byBirth' | 'naturalized' | 'reacquired' | '';
-  naturalizationDate?: string;
-  naturalizationCertNo?: string;
+  citizenshipType: 'By Birth' | 'Naturalized' | 'Reacquired' | '';
+  dateOfNaturalization?: string;
+  certificateNumber?: string;
 
-  yearsOfResidency?: number;
-  monthsOfResidency?: number;
-
-  residencyYearsCityMun?: number;
-  residencyMonthsCityMun?: number;
-  residencyYearsPhilippines?: number;
+  yearsInCountry?: number;
+  yearsOfResidenceMunicipality?: number;
+  monthsOfResidenceMunicipality?: number;
 
   professionOccupation?: string;
-  tin?: string;
 
-  civilStatus: 'single' | 'married' | '';
+  civilStatus: 'Single' | 'Married' | 'Widowed' | 'Legally Separated' | '';
   spouseName?: string;
 }
 
 export const applicationFormSchema = z.object({
-  registrationIntention: z.enum(['regular', 'katipunan']).optional(),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   middleName: z.string().optional(),
+  suffix: z.string().optional(),
 
-  sex: z.enum(["male", "female", ""], {
+  sex: z.enum(["M", "F", ""], {
     errorMap: () => ({ message: "Please select a sex" })
   }),
   dob: z.string(),
-  placeOfBirthCityMun: z.string(),
+  placeOfBirthMunicipality: z.string(),
   placeOfBirthProvince: z.string(),
-  citizenshipType: z.enum(["byBirth", "naturalized", "reacquired", ""], {
+  citizenshipType: z.enum(["By Birth", "Naturalized", "Reacquired", ""], {
     errorMap: () => ({ message: "Please select a citizenship type" })
   }),
-  naturalizationDate: z.string().optional(),
-  naturalizationCertNo: z.string().optional(),
+  dateOfNaturalization: z.string().optional(),
+  certificateNumber: z.string().optional(),
 
   contactNumber: z.string().optional(),
   email: z.string().optional(),
 
   // Residence/Address (Current)
-  houseNoStreet: nonEmptyString,
+  houseNumber: nonEmptyString,
+  street: nonEmptyString,
   barangay: nonEmptyString,
   cityMunicipality: nonEmptyString,
   province: nonEmptyString,
-  zipCode: nonEmptyString,
-  yearsOfResidency: z.number().optional(),
-  monthsOfResidency: z.number().optional(),
-
-  // Period of Residence (General)
-  residencyYearsCityMun: z.number().optional(),
-  residencyMonthsCityMun: z.number().optional(),
-  residencyYearsPhilippines: z.number().optional(),
+  
+  yearsOfResidenceMunicipality: z.number().optional(),
+  monthsOfResidenceMunicipality: z.number().optional(),
+  yearsInCountry: z.number().optional(),
 
   professionOccupation: z.string().optional(),
-  tin: z.string().optional(),
 
-  civilStatus: z.enum(["single", "married", ""], {
+  civilStatus: z.enum(["Single", "Married", "Widowed", "Legally Separated", ""], {
     errorMap: () => ({ message: "Please select a civil status" })
   }),
   spouseName: z.string().optional(),
 
   // Parent Information
-  fatherFirstName: nonEmptyString,
-  fatherLastName: nonEmptyString,
-  motherFirstName: nonEmptyString,
-  motherLastName: nonEmptyString, 
+  fatherName: nonEmptyString,
+  motherMaidenName: nonEmptyString,
 
   // Special Needs / Assistance
   isIlliterate: z.boolean().default(false),
-  isPwd: z.boolean().default(false),
-  isIndigenousPerson: z.boolean().default(false),
-  indigenousTribe: optionalString,
-  disabilityType: optionalString,  assistorName: optionalString,
-  assistorRelationship: optionalString, 
-  assistorAddress: optionalString,
-  prefersGroundFloor: z.boolean().default(false),
-  isSenior: z.boolean().default(false), 
+  isSeniorCitizen: z.boolean().default(false),
+  tribe: optionalString,
+  typeOfDisability: optionalString,
+  assistanceNeeded: optionalString,
+  assistorName: optionalString,
+  voteOnGroundFloor: z.boolean().default(false),
 
   // Application Type and Biometrics
   applicationType: z.enum([
     'register',
     'transfer',
     'reactivation',
-    'change-correction',
-    'inclusion-reinstatement',
+    'transfer_with_reactivation',
+    'correction_of_entry',
+    'reinstatement',
     ''
   ], {
     errorMap: () => ({ message: "Please select an application type" })
   }).refine(val => val !== '', {
     message: "Please select an application type"
   }),
-
-  transferType: z.enum(['transfer-record', 'transfer-reactivation']).optional(),
-  inclusionType: z.enum(['inclusion', 'reinstatement', '']).optional(),  
+  
   biometricsFile: optionalString, 
 
-  transferLocationType: z.enum(['same-city', 'different-city']).optional(),
-  transfer_reactivation_civilStatus: z.enum(['single', 'married', 'widowed', 'legally-separated']).optional(),
   // ID Verification (Required for Registration)
-  idFrontPhoto: z.instanceof(File).optional().refine(
+  governmentIdUrl: z.instanceof(File).optional().refine(
     (file) => !file || file.size <= 5 * 1024 * 1024,
     "File size must be less than 5MB"
   ),
-  idBackPhoto: z.instanceof(File).optional().refine(
-    (file) => !file || file.size <= 5 * 1024 * 1024,
-    "File size must be less than 5MB"
-  ),
-  selfieWithId: z.instanceof(File).optional().refine(
+  idSelfieUrl: z.instanceof(File).optional().refine(
     (file) => !file || file.size <= 5 * 1024 * 1024,
     "File size must be less than 5MB"
   ),
   // Conditional Fields for Transfer
-  transferHouseNoStreet: z.string().optional(),
-  transferBarangay: z.string().optional(),
-  transferCityMunicipality: z.string().optional(),
-  transferProvince: z.string().optional(),
-  transferZipCode: z.string().optional(),
+  previousPrecinctNumber: z.string().optional(),
+  previousBarangay: z.string().optional(),
+  previousCityMunicipality: z.string().optional(),
+  previousProvince: z.string().optional(),
 
   // Part 2: Oath
   oathAccepted: z.boolean().refine((val) => val === true, {
@@ -202,70 +176,103 @@ export const applicationFormSchema = z.object({
     'Mother\'s Maiden Name',
     'Other'
   ]).optional(),
-  presentData: z.string().optional(),
-  newData: z.string().optional(),
+  currentValue: z.string().optional(),
+  requestedValue: z.string().optional(),
+
+  // Registration Intention (only for register application type)
+  registrationIntention: z.enum(['Regular', 'Katipunan ng Kabataan']).optional(),
+
+  // Regular Oath Fields
+  regularRegistrationType: z.enum(['registration', 'transfer']).optional(),
+  regularVoterStatus: z.enum(['not_registered', 'registered_elsewhere']).optional(),
+  regularOathAccepted: z.boolean().optional(),
 
 }).superRefine((data, ctx) => {
-  if (data.citizenshipType === 'naturalized' || data.citizenshipType === 'reacquired') {
-    if (!data.naturalizationDate) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Required for naturalized/reacquired status", path: ["naturalizationDate"] });
-    if (!data.naturalizationCertNo) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Required for naturalized/reacquired status", path: ["naturalizationCertNo"] });
+  // Registration intention is required for register application type
+  if (data.applicationType === 'register' && !data.registrationIntention) {
+    ctx.addIssue({ 
+      code: z.ZodIssueCode.custom, 
+      message: "Registration intention is required for new registrations", 
+      path: ["registrationIntention"] 
+    });
   }
-  if (data.applicationType === 'change-correction') {
+  
+  // Regular oath validation
+  if (data.registrationIntention === 'Regular' && (data.applicationType === 'register' || data.applicationType === 'transfer')) {
+    if (!data.regularOathAccepted) {
+      ctx.addIssue({ 
+        code: z.ZodIssueCode.custom, 
+        message: "You must accept the oath to proceed", 
+        path: ["regularOathAccepted"] 
+      });
+    }
+    if (!data.regularRegistrationType) {
+      ctx.addIssue({ 
+        code: z.ZodIssueCode.custom, 
+        message: "Please select registration or transfer", 
+        path: ["regularRegistrationType"] 
+      });
+    }
+    if (!data.regularVoterStatus) {
+      ctx.addIssue({ 
+        code: z.ZodIssueCode.custom, 
+        message: "Please select your voter status", 
+        path: ["regularVoterStatus"] 
+      });
+    }
+  }
+  
+  // Katipunan oath validation
+  if (data.registrationIntention === 'Katipunan ng Kabataan' && (data.applicationType === 'register' || data.applicationType === 'transfer')) {
+    if (!data.oathAccepted) {
+      ctx.addIssue({ 
+        code: z.ZodIssueCode.custom, 
+        message: "You must accept the oath to proceed", 
+        path: ["oathAccepted"] 
+      });
+    }
+  }
+  
+  if (data.citizenshipType === 'Naturalized' || data.citizenshipType === 'Reacquired') {
+    if (!data.dateOfNaturalization) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Required for naturalized/reacquired status", path: ["dateOfNaturalization"] });
+    if (!data.certificateNumber) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Required for naturalized/reacquired status", path: ["certificateNumber"] });
+  }
+  if (data.applicationType === 'correction_of_entry') {
     if (!data.correctionField) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Please select a field to correct.", path: ["correctionField"] });
     }
-    if (!data.presentData) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Present data is required.", path: ["presentData"] });
+    if (!data.currentValue) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Present data is required.", path: ["currentValue"] });
     }
-    if (!data.newData) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "New data is required.", path: ["newData"] });
+    if (!data.requestedValue) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "New data is required.", path: ["requestedValue"] });
     }
-  } if (data.isIndigenousPerson && !data.indigenousTribe) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Tribe name is required.", path: ["indigenousTribe"] });
   }
-  if (data.assistorName && !data.assistorRelationship) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Assistor relationship is required if assistor name is provided", path: ["assistorRelationship"]});
-  }
-  if (data.civilStatus === 'married' && !data.spouseName) {
+  if (data.civilStatus === 'Married' && !data.spouseName) {
      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Spouse name is required if married", path: ["spouseName"] });
   }
-  if (data.isPwd && !data.disabilityType) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Required for PWD", path: ["disabilityType"] });
-  }
   if (data.applicationType === 'register') {
-    if (!data.idFrontPhoto) {
+    if (!data.governmentIdUrl) {
       ctx.addIssue({ 
         code: z.ZodIssueCode.custom, 
-        message: "Front photo of ID is required for registration", 
-        path: ["idFrontPhoto"] 
+        message: "Government ID photo is required for registration", 
+        path: ["governmentIdUrl"] 
       });
     }
-    if (!data.idBackPhoto) {
-      ctx.addIssue({ 
-        code: z.ZodIssueCode.custom, 
-        message: "Back photo of ID is required for registration", 
-        path: ["idBackPhoto"] 
-      });
-    }
-    if (!data.selfieWithId) {
+    if (!data.idSelfieUrl) {
       ctx.addIssue({ 
         code: z.ZodIssueCode.custom, 
         message: "Selfie with ID is required for registration", 
-        path: ["selfieWithId"] 
+        path: ["idSelfieUrl"] 
       });
     }
   }
-  if (data.applicationType === 'transfer') {
-    if (!data.transferHouseNoStreet) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous House No./Street required for transfer", path: ["transferHouseNoStreet"] });
-    if (!data.transferBarangay) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous Barangay required for transfer", path: ["transferBarangay"] });
-    if (!data.transferCityMunicipality) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous City/Municipality required for transfer", path: ["transferCityMunicipality"] });
-    if (!data.transferProvince) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous Province required for transfer", path: ["transferProvince"] });
-    if (!data.transferZipCode) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous Zip Code required for transfer", path: ["transferZipCode"] });
+  if (data.applicationType === 'transfer' || data.applicationType === 'transfer_with_reactivation') {
+    if (!data.previousPrecinctNumber) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous Precinct Number required for transfer", path: ["previousPrecinctNumber"] });
+    if (!data.previousBarangay) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous Barangay required for transfer", path: ["previousBarangay"] });
+    if (!data.previousCityMunicipality) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous City/Municipality required for transfer", path: ["previousCityMunicipality"] });
+    if (!data.previousProvince) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous Province required for transfer", path: ["previousProvince"] });
   }
 });
 
-export type ApplicationFormValues = {
-  registrationIntention?: 'regular' | 'katipunan' | undefined;
-  firstName: string;
-  lastName: string;
-}
+export type ApplicationFormValues = z.infer<typeof applicationFormSchema>;

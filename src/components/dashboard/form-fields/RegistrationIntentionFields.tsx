@@ -26,7 +26,7 @@ export const RegistrationIntentionFields: React.FC<RegistrationIntentionFieldsPr
             >
               <FormItem className="flex items-start space-x-3 space-y-0">
                 <FormControl>
-                  <RadioGroupItem value="regular" />
+                  <RadioGroupItem value="Regular" />
                 </FormControl>
                 <div className="space-y-1">
                   <FormLabel className="font-normal leading-tight">
@@ -38,7 +38,7 @@ export const RegistrationIntentionFields: React.FC<RegistrationIntentionFieldsPr
 
               <FormItem className="flex items-start space-x-3 space-y-0">
                 <FormControl>
-                  <RadioGroupItem value="katipunan" />
+                  <RadioGroupItem value="Katipunan ng Kabataan" />
                 </FormControl>
                 <div className="space-y-1">
                   <FormLabel className="font-normal leading-tight">
