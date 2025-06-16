@@ -135,7 +135,6 @@ export const applicationFormSchema = z.object({
   disabilityType: optionalString,
   assistorName: optionalString,
   assistorRelationship: optionalString, 
-  assistorAddress: optionalString,
   prefersGroundFloor: z.boolean().default(false), 
   isSenior: z.boolean().default(false), 
 
@@ -220,8 +219,8 @@ export const applicationFormSchema = z.object({
   } if (data.isIndigenousPerson && !data.indigenousTribe) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Tribe name is required.", path: ["indigenousTribe"] });
   }
-  if ((data.assistorName || data.assistorAddress) && !data.assistorRelationship) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Assistor relationship is required if assistor details are provided", path: ["assistorRelationship"]});
+  if (data.assistorName && !data.assistorRelationship) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Assistor relationship is required if assistor name is provided", path: ["assistorRelationship"]});
   }
   if (data.civilStatus === 'married' && !data.spouseName) {
      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Spouse name is required if married", path: ["spouseName"] });

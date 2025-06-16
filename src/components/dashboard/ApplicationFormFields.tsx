@@ -267,7 +267,7 @@ const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> =
       const specialNeeds: SpecialNeeds = {
         isIlliterate: data.isIlliterate, isPwd: data.isPwd, isIndigenousPerson: data.isIndigenousPerson,
         disabilityType: data.disabilityType,
-        assistorName: data.assistorName, assistorRelationship: data.assistorRelationship, assistorAddress: data.assistorAddress,
+        assistorName: data.assistorName, assistorRelationship: data.assistorRelationship,
         prefersGroundFloor: data.prefersGroundFloor, isSenior: data.isSenior,
       };
 
@@ -1561,23 +1561,7 @@ const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> =
                   )}
                 />
             )}
-            <FormField
-              control={form.control}
-              name="assistorAddress"
-              render={({
-                field,
-              }: {
-                field: import("react-hook-form").ControllerRenderProps<ApplicationFormValues, "assistorAddress">;
-              }) => (
-                <FormItem>
-                  <FormLabel>Assistor's Address (If any)</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Full address of assistor" {...field} value={field.value ?? ''} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
   </DisableableSection>
         ))}
 {formSection("ID Verification", "Required for new registrations. Upload clear photos of your valid ID and a selfie.", (
