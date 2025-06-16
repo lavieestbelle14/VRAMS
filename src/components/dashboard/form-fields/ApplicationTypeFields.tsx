@@ -26,9 +26,8 @@ export const ApplicationTypeFields: React.FC<ApplicationTypeFieldsProps> = ({
   isRegistered 
 }) => {
   const applicationType = form.watch('applicationType');
-  
-  return (
-    <>
+    return (
+    <div className="space-y-4">
       {!registrationIntention && (
         <div className="mb-4 p-4 bg-muted rounded-lg">
           <p className="text-sm text-muted-foreground">
@@ -408,11 +407,10 @@ export const ApplicationTypeFields: React.FC<ApplicationTypeFieldsProps> = ({
                   </div>
                 </FormItem>
               </RadioGroup>
-            </FormControl>
-            <FormMessage />
+            </FormControl>            <FormMessage />
           </FormItem>
         )}
       />
-    </>
+    </div>
   );
 };

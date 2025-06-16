@@ -14,3 +14,6 @@ export { IdVerificationFields } from './IdVerificationFields';
 export { ThumbprintsSignaturesFields } from './ThumbprintsSignaturesFields';
 export { RegularOathFields } from './RegularOathFields';
 export { KatipunanOathFields } from './KatipunanOathFields';
+export { ReactivationFields } from './ReactivationFields';
+export { TransferReactivationFields } from './TransferReactivationFields';
+export { InclusionReinstatementFields } from './InclusionReinstatementFields';

@@ -41,8 +41,9 @@ import {
   FormSection,
   IdVerificationFields,
   ThumbprintsSignaturesFields,
-  RegularOathFields,
-  KatipunanOathFields
+  ReactivationFields,
+  TransferReactivationFields,
+  InclusionReinstatementFields
 } from './form-fields';
 
 type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
@@ -86,8 +87,7 @@ export function ApplicationFormFields() {
       // Civil Details
       civilStatus: '', spouseName: '',
       fatherFirstName: '', fatherLastName: '', motherFirstName: '', motherLastName: '',
-      
-      // Special Needs
+        // Special Needs
       isIlliterate: false, isPwd: false, isIndigenousPerson: false, indigenousTribe: '', disabilityType: '',
       assistorName: '', assistorRelationship: '', assistorAddress: '',
       prefersGroundFloor: false, isSenior: false,
@@ -96,21 +96,14 @@ export function ApplicationFormFields() {
       applicationType: undefined,
       biometricsFile: 'For on-site capture', 
 
-      declarationAccepted: false,
-
-      // Conditional fields
+      declarationAccepted: false,      // Conditional fields
       transferHouseNoStreet: '', transferBarangay: '', transferCityMunicipality: '', transferProvince: '', transferZipCode: '',
-      transferNewHouseNo: '',
-      transferYears: undefined,
-      transferMonths: undefined,
+      transferType: undefined,
+      transferLocationType: undefined,
       correctionField: undefined,
       presentData: '',
-      newData: '',
-
-      // Part 2: Oath
+      newData: '',      // Part 2: Oath
       oathAccepted: false,
-      katipunanDataConsent: undefined,
-      katipunanOathAccepted: false,
     },
   });
 
@@ -202,8 +195,7 @@ export function ApplicationFormFields() {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(DRAFT_STORAGE_KEY);
       localStorage.removeItem(LAST_SUBMITTED_FINGERPRINT_KEY); // Also clear the fingerprint
-    }
-    form.reset({ // Reset to initial default values
+    }    form.reset({ // Reset to initial default values
       firstName: '', lastName: '', middleName: '',
       sex: '', dob: '', placeOfBirthCityMun: '', placeOfBirthProvince: '',
       citizenshipType: '', naturalizationDate: undefined, naturalizationCertNo: '', 
@@ -235,7 +227,7 @@ const civilStatus = form.watch('civilStatus');
 const isPwd = form.watch('isPwd');
 const citizenshipType = form.watch('citizenshipType');
 const assistorName = form.watch('assistorName');
-const showDeclarationFields = applicationType === 'transfer' || applicationType === 'transfer-reactivation';
+const showDeclarationFields = applicationType === 'transfer';
 const isRegistered = true; // TODO: Replace with actual registration status check
 
 // This will disable all personal information sections unless applicationType is 'register'
@@ -338,13 +330,10 @@ const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> =
               Ensure all details match your official documents.
             </p>
           </CardContent>
-        </Card>
-
-        {/* Registration Intention Section */}
+        </Card>        {/* Registration Intention Section */}
         <FormSection title="Registration Intention" description="">
-          <RegistrationIntentionFields control={form.control} />      
+          <RegistrationIntentionFields control={form.control} />
         </FormSection>
-      
         {/* Application Type Section */}
         <FormSection title="Application Type" description="">
           <ApplicationTypeFields 
@@ -353,25 +342,47 @@ const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> =
             registrationIntention={registrationIntention}
             isRegistered={isRegistered}
           />
-        </FormSection>{/* Personal Information Section */}
-        <FormSection 
+        </FormSection>
+
+        {/* Conditional sections based on application type */}
+        {applicationType === 'reactivation' && (
+          <FormSection title="Reason for Deactivation" description="">
+            <ReactivationFields control={form.control} />
+          </FormSection>
+        )}        {applicationType === 'transfer' && transferType === 'transfer-reactivation' && (
+          <FormSection title="Transfer with Reactivation Details" description="">
+            <TransferReactivationFields control={form.control} />
+          </FormSection>
+        )}
+
+        {applicationType === 'inclusion-reinstatement' && (
+          <FormSection title="Inclusion/Reinstatement Request" description="">
+            <InclusionReinstatementFields control={form.control} />
+          </FormSection>
+        )}
+
+        {/* Personal Information Section */}        <FormSection 
           title="Part 1: PERSONAL INFORMATION" 
           description="To be filled out by Applicant."
         >
           <DisableableSection isDisabled={shouldDisableSection}>
             <PersonalInfoFields control={form.control} />
           </DisableableSection>
-        </FormSection>        {/* Citizenship Section */}
-        <FormSection title="Citizenship" description="">
+        </FormSection>
+
+        {/* Citizenship Section */}        <FormSection title="Citizenship" description="">
           <DisableableSection isDisabled={shouldDisableSection}>
             <CitizenshipFields control={form.control} citizenshipType={citizenshipType} />
           </DisableableSection>
-        </FormSection>        {/* Address Section */}
+        </FormSection>
+
+        {/* Address Section */}
         <FormSection title="Residence/Address (Current)" description="">
           <DisableableSection isDisabled={shouldDisableSection}>
-            <AddressFields control={form.control} />
-          </DisableableSection>
-        </FormSection>        {/* Period of Residence Section */}
+            <AddressFields control={form.control} />          </DisableableSection>
+        </FormSection>
+
+        {/* Period of Residence Section */}
         <FormSection 
           title="Period of Residence (General)" 
           description="How long you've lived in your current area and in the Philippines."
@@ -379,18 +390,23 @@ const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> =
           <DisableableSection isDisabled={shouldDisableSection}>
             <ResidencyFields control={form.control} />
           </DisableableSection>
-        </FormSection>        {/* Profession Section */}
+        </FormSection>
+
+        {/* Profession Section */}
         <FormSection title="Profession / Occupation & TIN" description="">
           <DisableableSection isDisabled={shouldDisableSection}>
             <ProfessionFields control={form.control} />
           </DisableableSection>
         </FormSection>
-          {/* Civil Status Section */}
+
+        {/* Civil Status Section */}
         <FormSection title="Civil Status & Parents" description="">
           <DisableableSection isDisabled={shouldDisableSection}>
             <CivilStatusFields control={form.control} civilStatus={civilStatus} />
           </DisableableSection>
-        </FormSection>        {/* Special Needs Section */}
+        </FormSection>
+
+        {/* Special Needs Section */}
         <FormSection 
           title="Special Needs / Assistance (Optional)" 
           description="Information for voters with special needs."
@@ -418,9 +434,9 @@ const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> =
           description="To be captured on-site at COMELEC office"
         >
           <ThumbprintsSignaturesFields control={form.control} />
-        </FormSection>
-
-        {/* PART 2 - Dynamic Oath Sections */}
+        </FormSection>        {/* PART 2 - Dynamic Oath Sections */}
+        {/* Temporarily disabled due to schema field issues */}
+        {/*
         {(applicationType === 'register' || applicationType === 'transfer') && registrationIntention === 'regular' && (
           <FormSection title="PART 2    OATH, NOTICE and CONSENT (REGULAR )" description="">
             <RegularOathFields control={form.control} shouldDisableOath={shouldDisableOath} />
@@ -430,6 +446,45 @@ const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> =
         {(applicationType === 'register' || applicationType === 'transfer') && registrationIntention === 'katipunan' && (
           <FormSection title="Part 2: OATH, NOTICE and CONSENT (KATIPUNAN NG KABATAAN)" description="">
             <KatipunanOathFields control={form.control} shouldDisableOath={shouldDisableOath} />
+          </FormSection>
+        )}
+        */}
+
+        {/* Basic Oath Section (using schema field) */}
+        {(applicationType === 'register' || applicationType === 'transfer') && (
+          <FormSection title="PART 2: OATH AND CONSENT" description="">
+            <div className="space-y-4">
+              <div className="prose prose-sm max-w-none">
+                <p className="text-muted-foreground leading-relaxed mb-4">
+                  I do solemnly swear that the above statements regarding my person are true and correct; that I possess all the qualifications and none of the disqualifications of a voter; and that I have reviewed the entries encoded in the VRS and I confirm that the same are correct, accurate and consistent with the information I supplied in this application form.
+                </p>
+              </div>
+
+              <FormField
+                control={form.control}
+                name="oathAccepted"
+                render={({ field }) => (
+                  <FormItem className="flex items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        required={!shouldDisableOath}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-base font-semibold">
+                        I understand and agree to the oath stated above {!shouldDisableOath && '*'}
+                      </FormLabel>
+                      <FormDescription>
+                        By checking this box, I confirm that I have read, understood, and agree to the oath.
+                      </FormDescription>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </FormSection>
         )}
 

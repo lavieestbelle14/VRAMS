@@ -21,13 +21,13 @@ export function KatipunanOathFields({ control, shouldDisableOath }: KatipunanOat
         </p>
       </div>
 
-      <div className="flex items-start space-x-3 mt-4">
-        <FormField
+      <div className="flex items-start space-x-3 mt-4">        <FormField
           control={control}
           name="oathAccepted"
           render={({ field }) => (
             <FormItem className="flex items-start space-x-3 space-y-0">
-              <FormControl>                <Checkbox
+              <FormControl>
+                <Checkbox
                   checked={field.value}
                   onCheckedChange={field.onChange}
                   required={!shouldDisableOath}

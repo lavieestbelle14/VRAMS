@@ -1,5 +1,5 @@
 
-import type { ClassifyApplicantTypeOutput } from "@/ai/flows/classify-applicant-type";
+// import type { ClassifyApplicantTypeOutput } from "@/ai/flows/classify-applicant-type";
 
 export interface PersonalInfo {
   firstName: string;
@@ -65,7 +65,7 @@ export interface Application {
   civilDetails: CivilDetails;
   specialNeeds?: SpecialNeeds;
   
-  applicationType: 'register' | 'transfer' | ''; // UPDATED
+  applicationType: 'register' | 'transfer' | 'reactivation' | 'change-correction' | 'inclusion-reinstatement' | ''; // UPDATED
   biometricsFile?: string; // Simulated file name or path or "Captured"
 
   // Conditional based on applicationType
@@ -76,19 +76,18 @@ export interface Application {
   // reactivationEvidence?: string; 
   // presentData?: string; 
   // newCorrectedData?: string; 
-
   status: 'pending' | 'approved' | 'rejected' | 'reviewing';
   submissionDate: string; // ISO string date
   approvalDate?: string; // ISO string date
   voterId?: string;
   precinct?: string;
-  classification?: ClassifyApplicantTypeOutput;
+  // classification?: ClassifyApplicantTypeOutput;
   remarks?: string;
 }
 
 // Combines all form fields into one type for react-hook-form, matching schema
 export type ApplicationFormData = PersonalInfo & AddressDetails & CivilDetails & SpecialNeeds & {
-  applicationType: 'register' | 'transfer' | ''; // UPDATED
+  applicationType: 'register' | 'transfer' | 'reactivation' | 'change-correction' | 'inclusion-reinstatement' | ''; // UPDATED
   biometricsFile?: string;
 
   // Transfer specific fields (previous address)

@@ -86,6 +86,7 @@ export const applicationFormSchema = z.object({
   registrationIntention: z.enum(['regular', 'katipunan']).optional(),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
+  middleName: z.string().optional(),
 
   sex: z.enum(["male", "female", ""], {
     errorMap: () => ({ message: "Please select a sex" })
@@ -93,12 +94,15 @@ export const applicationFormSchema = z.object({
   dob: z.string(),
   placeOfBirthCityMun: z.string(),
   placeOfBirthProvince: z.string(),
-
   citizenshipType: z.enum(["byBirth", "naturalized", "reacquired", ""], {
     errorMap: () => ({ message: "Please select a citizenship type" })
   }),
   naturalizationDate: z.string().optional(),
   naturalizationCertNo: z.string().optional(),
+
+  contactNumber: z.string().optional(),
+  email: z.string().optional(),
+
   // Residence/Address (Current)
   houseNoStreet: nonEmptyString,
   barangay: nonEmptyString,
@@ -132,10 +136,10 @@ export const applicationFormSchema = z.object({
   isPwd: z.boolean().default(false),
   isIndigenousPerson: z.boolean().default(false),
   indigenousTribe: optionalString,
-  disabilityType: optionalString,
-  assistorName: optionalString,
+  disabilityType: optionalString,  assistorName: optionalString,
   assistorRelationship: optionalString, 
-  prefersGroundFloor: z.boolean().default(false), 
+  assistorAddress: optionalString,
+  prefersGroundFloor: z.boolean().default(false),
   isSenior: z.boolean().default(false), 
 
   // Application Type and Biometrics
