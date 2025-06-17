@@ -106,6 +106,7 @@ export interface ApplicationFormSchema {
   regularRegistrationType?: 'registration' | 'transfer';
   regularVoterStatus?: 'not_registered' | 'registered_elsewhere';
   regularOathAccepted?: boolean;
+  adultRegistrationConsent?: boolean; // <-- Added for Katipunan consent
 }
 
 
@@ -252,7 +253,7 @@ export const applicationFormSchema = z.object({
   regularRegistrationType: z.enum(['registration', 'transfer']).optional(),
   regularVoterStatus: z.enum(['not_registered', 'registered_elsewhere']).optional(),
   regularOathAccepted: z.boolean().optional(),
-
+  adultRegistrationConsent: z.boolean().optional(), // <-- Added for Katipunan consent
 }).superRefine((data, ctx) => {
   if (data.applicationType === 'register' && !data.registrationIntention) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Registration intention is required for new registrations", path: ["registrationIntention"] });
@@ -267,6 +268,10 @@ export const applicationFormSchema = z.object({
   if (data.registrationIntention === 'Katipunan ng Kabataan' && (data.applicationType === 'register' || data.applicationType === 'transfer')) {
     // Katipunan uses the main 'oathAccepted' field
     if (!data.oathAccepted) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "You must accept the Katipunan oath to proceed", path: ["oathAccepted"] });
+    // Require explicit consent selection for adultRegistrationConsent
+    if (typeof data.adultRegistrationConsent !== "boolean") {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Please indicate your consent for further processing at age 18.", path: ["adultRegistrationConsent"] });
+    }
   }
   
   if (data.citizenshipType === 'Naturalized' || data.citizenshipType === 'Reacquired') {

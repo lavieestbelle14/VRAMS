@@ -106,6 +106,7 @@ export function ApplicationFormFields() {
       regularVoterStatus: undefined,
       regularOathAccepted: false,
       transferType: undefined, // Added to defaultValues
+      adultRegistrationConsent: undefined, // <-- Added for Katipunan consent
     },
   });
 
@@ -224,6 +225,7 @@ export function ApplicationFormFields() {
       regularRegistrationType: undefined,
       regularVoterStatus: undefined,
       regularOathAccepted: false,
+      adultRegistrationConsent: undefined, // <-- Added for Katipunan consent
     });
     toast({ title: "Draft Cleared", description: "The application form has been reset." });
   };
@@ -349,7 +351,7 @@ export function ApplicationFormFields() {
         )}
 
         {/* --- Fields for INCLUSION/REINSTATEMENT application type --- */}
-        {applicationType === 'reinstatement' && (
+        {(applicationType === 'reinstatement') && (
           <FormSection title="Application for Inclusion/Reinstatement" description="Request to include or reinstate your name/record in the precinct book of voters.">
             <InclusionReinstatementFields control={form.control} />
           </FormSection>

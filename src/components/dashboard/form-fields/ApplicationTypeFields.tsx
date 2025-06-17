@@ -164,7 +164,7 @@ export const ApplicationTypeFields: React.FC<ApplicationTypeFieldsProps> = ({
                   <div className="flex items-center space-x-3">
                     <FormControl>
                       <RadioGroupItem 
-                        value="change-correction" 
+                        value="correction_of_entry" 
                         disabled={!registrationIntention || !isRegistered}
                       />
                     </FormControl>
@@ -184,7 +184,7 @@ export const ApplicationTypeFields: React.FC<ApplicationTypeFieldsProps> = ({
                   <div className="flex items-center space-x-3">
                     <FormControl>
                       <RadioGroupItem 
-                        value="inclusion-reinstatement" 
+                        value="reinstatement" 
                         disabled={!registrationIntention || !isRegistered}
                       />
                     </FormControl>
