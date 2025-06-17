@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS reinstatement_record CASCADE;
 DROP TABLE IF EXISTS correction_record CASCADE;
 DROP TABLE IF EXISTS reactivation_record CASCADE;
 DROP TABLE IF EXISTS transfer_record CASCADE;
-DROP TABLE IF EXISTS kk_registration_record CASCADE;
+DROP TABLE IF EXISTS registration_record CASCADE;
 DROP TABLE IF EXISTS application CASCADE;
 
 -- Drop applicant-related tables
@@ -91,8 +91,8 @@ CREATE TABLE applicant_biometrics (
 -- FK as PK enforces one-to-one relationship  
 CREATE TABLE IF NOT EXISTS voter_record (
     applicant_id INTEGER PRIMARY KEY,
-    precinct_number VARCHAR(20) NOT NULL,
-    voter_id VARCHAR(50) NOT NULL,
+    precinct_number VARCHAR(10) NOT NULL,
+    voter_id VARCHAR(20) NOT NULL,
 
     CONSTRAINT fk_applicant_voter
         FOREIGN KEY (applicant_id)
@@ -104,7 +104,15 @@ CREATE TABLE IF NOT EXISTS voter_record (
 CREATE TABLE IF NOT EXISTS deactivation_record (
     id SERIAL PRIMARY KEY,
     applicant_id INTEGER NOT NULL,
-    reason TEXT NOT NULL,
+    reason TEXT NOT NULL CHECK (reason IN (
+        'Sentenced by final judgment to suffer imprisonment for not less than one (1) year',
+        'Convicted by final judgment of a crime involving disloyalty to the duly constituted government, etc;',
+        'Declared by competent authority to be insane or incompetent;',
+        'Failed to vote in two (2) successive preceding regular elections;',
+        'Loss of Filipino citizenship;',
+        'Exclusion by a court order; or',
+        'Failure to Validate'
+    )),    
     deactivation_date DATE NOT NULL,
     status TEXT NOT NULL CHECK (status IN ('Unresolved', 'Resolved')),
 
@@ -114,7 +122,7 @@ CREATE TABLE IF NOT EXISTS deactivation_record (
         ON DELETE CASCADE
 );
 
--- FIXED: FK as PK enforces one-to-one relationship
+-- FK as PK enforces one-to-one relationship
 CREATE TABLE IF NOT EXISTS applicant_special_sector (
     applicant_id INTEGER PRIMARY KEY,
 
@@ -138,16 +146,16 @@ CREATE TABLE IF NOT EXISTS applicant_special_sector (
   Tables related to the application entity:
 
   - application: main table storing application details and status
-  - registration_record: registration requirements (ids, and KK consent) (ONE-TO-ONE)
-  - transfer_record: stores old address details for transfer applications (ONE-TO-ONE)
-  - reactivation_record: reason for reactivation requests (ONE-TO-ONE)
-  - correction_record: requested corrections to applicant details  (ONE-TO-ONE)
-  - reinstatement_record: reinstatement details (ONE-TO-ONE)
-  - address_at_registration: address provided during application, only applicable at type registration and transfer
+  - registration_record: registration requirements (ids, and KK consent) 
+  - transfer_record: stores old address details for transfer applications 
+  - reactivation_record: reason for reactivation requests 
+  - correction_record: requested corrections to applicant details  
+  - reinstatement_record: reinstatement details 
+  - address_at_registration_or_transfer: address provided during application, only applicable at type registration, transfer, and transfer_with_reactivation
 */
 CREATE TABLE IF NOT EXISTS application (
     application_number SERIAL PRIMARY KEY,
-    public_facing_id TEXT GENERATED ALWAYS AS ('APP-' || LPAD(application_number::TEXT, 6, '0')) STORED,
+    public_facing_id VARCHAR(15) GENERATED ALWAYS AS ('APP-' || LPAD(application_number::TEXT, 6, '0')) STORED,
 
     applicant_id INTEGER NOT NULL,
 
@@ -170,15 +178,16 @@ CREATE TABLE IF NOT EXISTS application (
     CONSTRAINT fk_application_applicant
         FOREIGN KEY (applicant_id)
         REFERENCES applicant(applicant_id)
-        ON DELETE CASCADE,
+        ON DELETE CASCADE
 );
 
 -- FK as PK enforces one-to-one relationship
 CREATE TABLE IF NOT EXISTS registration_record (
     application_number INTEGER PRIMARY KEY,
-    registration_type CHECK (registration_type IN ('Katipunan ng Kabataan', 'Regular')),
+    registration_type TEXT CHECK (registration_type IN ('Katipunan ng Kabataan', 'Regular')),
     adult_registration_consent BOOLEAN NOT NULL,
-    government_id_url TEXT NOT NULL,
+    government_id_front_url TEXT NOT NULL,
+    government_id_back_url TEXT NOT NULL,
     id_selfie_url TEXT NOT NULL,
 
     CONSTRAINT fk_application_registration
@@ -190,10 +199,12 @@ CREATE TABLE IF NOT EXISTS registration_record (
 -- FK as PK enforces one-to-one relationship
 CREATE TABLE IF NOT EXISTS transfer_record (
     application_number INTEGER PRIMARY KEY,
-    previous_precinct_number VARCHAR(10) NOT NULL,
-    previous_barangay VARCHAR(50) NOT NULL,
-    previous_city_municipality VARCHAR(50) NOT NULL,
-    previous_province VARCHAR(50) NOT NULL,
+    previous_precinct_number VARCHAR(10),
+    previous_barangay VARCHAR(50),
+    previous_city_municipality VARCHAR(50),
+    previous_province VARCHAR(50),
+    previous_foreign_post VARCHAR(50),
+    previous_country VARCHAR(50),
 
     transfer_type TEXT NOT NULL CHECK (transfer_type IN (
         'Within the same City/Municipality/District.',
@@ -227,13 +238,12 @@ CREATE TABLE IF NOT EXISTS reactivation_record (
         ON DELETE CASCADE
 );
 
--- One correction request per application
+-- FK as PK enforces one-to-one relationship
 CREATE TABLE IF NOT EXISTS correction_record (
     application_number INTEGER PRIMARY KEY,
     target_field TEXT NOT NULL,
     requested_value TEXT NOT NULL,
     current_value TEXT NOT NULL,
-    correction_docs_url TEXT NOT NULL,
 
     CONSTRAINT fk_application_correction
         FOREIGN KEY (application_number)
@@ -248,8 +258,8 @@ CREATE TABLE IF NOT EXISTS correction_record (
             'Spouse name',
             'Date of Birth',
             'Place of Birth',
-            'Father\'s Name',
-            'Mother\'s Maiden Name',
+            'Father''s Name',        
+            'Mother''s Maiden Name',
             'Other'
         ))
 );
@@ -271,7 +281,7 @@ CREATE TABLE IF NOT EXISTS reinstatement_record (
 );
 
 -- FK as PK enforces one-to-one relationship 
-CREATE TABLE IF NOT EXISTS address_at_registration (
+CREATE TABLE IF NOT EXISTS address_at_registration_or_transfer (
     application_number INTEGER PRIMARY KEY,
     house_number VARCHAR(20) NOT NULL,
     street VARCHAR(100) NOT NULL,
@@ -295,7 +305,7 @@ CREATE TABLE IF NOT EXISTS address_at_registration (
   - officer_assignment: maps officers to applications (MANY-TO-MANY - SURROGATE KEY FOR EFFICIENT QUERY)
 */
 CREATE TABLE IF NOT EXISTS officer (
-    officer_id VARCHAR(10) PRIMARY KEY,
+    officer_id SERIAL PRIMARY KEY,
 
     first_name VARCHAR(50), 
     last_name VARCHAR(50), 
@@ -307,7 +317,7 @@ CREATE TABLE IF NOT EXISTS officer (
 -- Many-to-many relationship between officers and applications (JUNCTION table)
 CREATE TABLE officer_assignment (
     assignment_id SERIAL PRIMARY KEY,
-    officer_id VARCHAR(10) NOT NULL,
+    officer_id INTEGER NOT NULL,
     application_number INTEGER NOT NULL,
 
     CONSTRAINT fk_officer FOREIGN KEY (officer_id) REFERENCES officer(officer_id) ON DELETE CASCADE,

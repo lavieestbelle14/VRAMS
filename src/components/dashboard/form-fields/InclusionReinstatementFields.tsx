@@ -26,19 +26,26 @@ export function InclusionReinstatementFields({ control }: InclusionReinstatement
               <RadioGroup onValueChange={field.onChange} value={field.value ?? ''} className="space-y-3">
                 <FormItem className="flex items-center space-x-3 space-y-0">
                   <FormControl>
+                    <RadioGroupItem value="reinstatement-foreign-post" />
+                  </FormControl>
+                  <FormLabel className="font-normal">
+                    Reinstatement of records due to transfer from foreign post to same local City/Municipality/District.
+                  </FormLabel>
+                </FormItem>
+                <FormItem className="flex items-center space-x-3 space-y-0">
+                  <FormControl>
                     <RadioGroupItem value="inclusion" />
                   </FormControl>
                   <FormLabel className="font-normal">
-                    Inclusion of VRR in the precinct book of voters
+                    Inclusion of VRR in the precinct book of voters.
                   </FormLabel>
                 </FormItem>
-
                 <FormItem className="flex items-center space-x-3 space-y-0">
                   <FormControl>
                     <RadioGroupItem value="reinstatement" />
                   </FormControl>
                   <FormLabel className="font-normal">
-                    Reinstatement of the name of the registered voter which has been omitted in the list of voters
+                    Reinstatement of the name of the registered voter which has been omitted in the list of voters.
                   </FormLabel>
                 </FormItem>
               </RadioGroup>

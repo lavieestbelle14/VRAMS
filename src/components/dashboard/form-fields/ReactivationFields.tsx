@@ -14,8 +14,6 @@ interface ReactivationFieldsProps {
 export function ReactivationFields({ control }: ReactivationFieldsProps) {
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Reason for Deactivation</h3>
-      
       <FormField
         control={control}
         name={"reactivationReason" as any}

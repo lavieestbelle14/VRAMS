@@ -1,4 +1,3 @@
-
 'use client';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -30,24 +29,18 @@ import { z } from 'zod';
 import {
   DisableableSection,
   RegistrationIntentionFields,
-  PersonalInfoFields,
   ApplicationTypeFields,
-  CitizenshipFields,
-  AddressFields,
-  SpecialNeedsFields,
-  CivilStatusFields,
-  ResidencyFields,
-  ProfessionFields,
+  AddressResidencyFields, 
   FormSection,
   IdVerificationFields,
   ThumbprintsSignaturesFields,
   RegularOathFields,
   KatipunanOathFields,
   ReactivationFields,
-  TransferReactivationFields,
-  InclusionReinstatementFields,
   TransferFields,
-  ChangeCorrectionFields
+  ChangeCorrectionFields,
+  PersonalInformationFields, // ADDED
+  InclusionReinstatementFields,
 } from './form-fields';
 
 type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
@@ -76,21 +69,22 @@ export function ApplicationFormFields() {
     defaultValues: {
       // Personal Info
       firstName: '', lastName: '', middleName: '',
-      sex: '', dob: '', placeOfBirthMunicipality: '', placeOfBirthProvince: '',
-      citizenshipType: '', dateOfNaturalization: undefined, certificateNumber: '', 
+      sex: '', dob: '', placeOfBirthCityMun: '', placeOfBirthProvince: '', // Corrected placeOfBirth fields
+      citizenshipType: '', naturalizationDate: undefined, naturalizationCertNo: '', // Corrected naturalization fields
       contactNumber: '', email: '',
-      yearsOfResidenceMunicipality: undefined, monthsOfResidenceMunicipality: undefined, yearsInCountry: undefined,
+      residencyYearsCityMun: undefined, residencyMonthsCityMun: undefined, residencyYearsPhilippines: undefined, // Corrected residency fields
       professionOccupation: '',
+      // tin: '', // REMOVED
 
       // Address Details (Current)
-      houseNumber: '', street: '', barangay: '', cityMunicipality: '', province: '',
+      houseNoStreet: '', barangay: '', cityMunicipality: '', province: '', // Corrected address fields
 
       // Civil Details
       civilStatus: '', spouseName: '',
-      fatherName: '', motherMaidenName: '',
+      fatherFirstName: '', fatherLastName: '', motherFirstName: '', motherLastName: '', // Corrected parent fields
         // Special Needs
-      isIlliterate: false, isSeniorCitizen: false, tribe: '', typeOfDisability: '',
-      assistanceNeeded: '', assistorName: '', voteOnGroundFloor: false,
+      isIlliterate: false, isSenior: false, indigenousTribe: '', disabilityType: '', // Corrected special needs fields
+      assistanceNeeded: '', assistorName: '', assistorRelationship: '', prefersGroundFloor: false, isPwd: false, isIndigenousPerson: false,
 
       // Application
       applicationType: undefined,
@@ -100,15 +94,18 @@ export function ApplicationFormFields() {
       
       // Conditional fields
       previousPrecinctNumber: '', previousBarangay: '', previousCityMunicipality: '', previousProvince: '',
+      previousForeignPost: '', previousCountry: '',
+      transferDeclarantName: '', transferDeclarantBirthDate: '', // Added new fields
       correctionField: undefined,
-      currentValue: '',
-      requestedValue: '',
+      presentData: '', // Corrected correction fields
+      newData: '',
       
       // Oath fields
       oathAccepted: false,
       regularRegistrationType: undefined,
       regularVoterStatus: undefined,
       regularOathAccepted: false,
+      transferType: undefined, // Added to defaultValues
     },
   });
 
@@ -182,6 +179,9 @@ export function ApplicationFormFields() {
             if (draftValues.naturalizationDate && typeof draftValues.naturalizationDate === 'string') {
                draftValues.naturalizationDate = format(new Date(draftValues.naturalizationDate), "yyyy-MM-dd");
             }
+            if (draftValues.transferDeclarantBirthDate && typeof draftValues.transferDeclarantBirthDate === 'string') {
+              draftValues.transferDeclarantBirthDate = format(new Date(draftValues.transferDeclarantBirthDate), "yyyy-MM-dd");
+           }
             form.reset(draftValues);
             toast({ title: "Draft Loaded", description: "Your previous application draft has been loaded." });
           }
@@ -201,22 +201,25 @@ export function ApplicationFormFields() {
       localStorage.removeItem(LAST_SUBMITTED_FINGERPRINT_KEY); // Also clear the fingerprint
     }    form.reset({ // Reset to initial default values
       firstName: '', lastName: '', middleName: '', suffix: '',
-      sex: '', dob: '', placeOfBirthMunicipality: '', placeOfBirthProvince: '',
-      citizenshipType: '', dateOfNaturalization: undefined, certificateNumber: '', 
+      sex: '', dob: '', placeOfBirthCityMun: '', placeOfBirthProvince: '', // Corrected
+      citizenshipType: '', naturalizationDate: undefined, naturalizationCertNo: '', // Corrected
       contactNumber: '', email: '',
-      yearsOfResidenceMunicipality: undefined, monthsOfResidenceMunicipality: undefined, yearsInCountry: undefined,
+      residencyYearsCityMun: undefined, residencyMonthsCityMun: undefined, residencyYearsPhilippines: undefined, // Corrected
       professionOccupation: '',
-      houseNumber: '', street: '', barangay: '', cityMunicipality: '', province: '',
+      // tin: '', // REMOVED
+      houseNoStreet: '', barangay: '', cityMunicipality: '', province: '', // Corrected
       civilStatus: '', spouseName: '',
-      fatherName: '', motherMaidenName: '',
-      isIlliterate: false, isSeniorCitizen: false, tribe: '', typeOfDisability: '',
-      assistanceNeeded: '', assistorName: '', voteOnGroundFloor: false,
+      fatherFirstName: '', fatherLastName: '', motherFirstName: '', motherLastName: '', // Corrected
+      isIlliterate: false, isSenior: false, indigenousTribe: '', disabilityType: '', // Corrected
+      assistanceNeeded: '', assistorName: '', assistorRelationship: '', prefersGroundFloor: false, isPwd: false, isIndigenousPerson: false,
       applicationType: undefined,
       biometricsFile: 'For on-site capture', 
       previousPrecinctNumber: '', previousBarangay: '', previousCityMunicipality: '', previousProvince: '',
+      previousForeignPost: '', previousCountry: '',
+      transferDeclarantName: '', transferDeclarantBirthDate: '', // Added new fields
       correctionField: undefined,
-      currentValue: '',
-      requestedValue: '',
+      presentData: '', // Corrected
+      newData: '',
       oathAccepted: false,
       regularRegistrationType: undefined,
       regularVoterStatus: undefined,
@@ -226,22 +229,27 @@ export function ApplicationFormFields() {
   };
 
 
-const applicationType = form.watch('applicationType');
-const registrationIntention = form.watch('registrationIntention');
-const civilStatus = form.watch('civilStatus');
-const citizenshipType = form.watch('citizenshipType');
-const assistorName = form.watch('assistorName');
-const showDeclarationFields = applicationType === 'transfer';
-const isRegistered = true; // TODO: Replace with actual registration status check
+  const applicationType = form.watch('applicationType');
+  const registrationIntention = form.watch('registrationIntention');
+  const civilStatus = form.watch('civilStatus');
+  const citizenshipType = form.watch('citizenshipType');
+  const assistorName = form.watch('assistorName');
+  const isIndigenousPerson = form.watch('isIndigenousPerson');
+  const isPwd = form.watch('isPwd');
+  const transferType = form.watch('transferType'); // Watch transferType
 
-// This will disable all personal information sections unless applicationType is 'register'
-const shouldDisableSection = applicationType !== 'register';
+  const showDeclarationFields = applicationType === 'transfer';
+  const isRegistered = true; // TODO: Replace with actual registration status check
 
-// Keep the oath section disabled logic separate
-// Update this line in your component
-const shouldDisableOath = !(applicationType === 'register' || applicationType === 'transfer');
+  // This will disable all personal information sections unless applicationType is 'register'
+  // For other sections like Address, specific logic will be applied.
+  const shouldDisableSection = applicationType !== 'register';
 
-const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> = async (data) => {
+  // Keep the oath section disabled logic separate
+  // Update this line in your component
+  const shouldDisableOath = applicationType !== 'register';
+
+  const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> = async (data) => {
     try {
       // TODO: Update this to match the new schema field names
       console.log('Form data:', data);
@@ -294,160 +302,119 @@ const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> =
           </FormSection>
         )}
 
-        {/* Conditional sections based on application type */}
+        {/* --- Fields for TRANSFER application type --- */}
+        {applicationType === 'transfer' && (
+          <>
+            {/* 1. Transfer declaration and previous record details */}
+            <FormSection 
+              title="Application for Transfer of Registration Record" 
+              description={transferType === 'transfer-reactivation' 
+                ? "Provide details of your previous registration for transfer and reason for reactivation." 
+                : "Provide details of your previous registration for transfer."}
+            >
+              <TransferFields control={form.control} />
+            </FormSection>
+
+            {/* 2. New Residence Information (common for all transfers) */}
+            <FormSection 
+              title="New Residence Information for Transfer" 
+              description="Provide your new address details and residency period for the transfer."
+            >
+              <DisableableSection isDisabled={false}> {/* Always enabled for transfer */}
+                <AddressResidencyFields control={form.control} />
+              </DisableableSection>
+            </FormSection>
+
+            {/* 3. Reactivation Reason (only if transferType is 'transfer-reactivation') */}
+            {transferType === 'transfer-reactivation' && (
+              <FormSection title="Reason for Deactivation" description="Provide the reason your record was deactivated for reactivation.">
+                <ReactivationFields control={form.control} />
+              </FormSection>
+            )}
+          </>
+        )}
+
+        {/* --- Fields for REACTIVATION (standalone) application type --- */}
         {applicationType === 'reactivation' && (
-          <FormSection title="Reason for Deactivation" description="">
+          <FormSection title="Reason for Deactivation" description="Provide the reason your record was deactivated.">
             <ReactivationFields control={form.control} />
           </FormSection>
         )}
-
-        {applicationType === 'transfer' && (
-          <FormSection title="Transfer Details" description="">
-            <TransferFields control={form.control} />
-          </FormSection>
-        )}
-
-        {applicationType === 'correction_of_entry' && (
+        
+        {/* --- Fields for CORRECTION OF ENTRY application type --- */}
+        {(applicationType === 'correction_of_entry' || applicationType === 'change-correction') && (
           <FormSection title="Correction of Entries" description="">
             <ChangeCorrectionFields control={form.control} />
           </FormSection>
         )}
 
-        {/* Personal Information Section */}        <FormSection 
-          title="Part 1: PERSONAL INFORMATION" 
-          description="To be filled out by Applicant."
-        >
-          <DisableableSection isDisabled={shouldDisableSection}>
-            <PersonalInfoFields control={form.control} />
-          </DisableableSection>
-        </FormSection>
-
-        {/* Citizenship Section */}        <FormSection title="Citizenship" description="">
-          <DisableableSection isDisabled={shouldDisableSection}>
-            <CitizenshipFields control={form.control} citizenshipType={citizenshipType} />
-          </DisableableSection>
-        </FormSection>
-
-        {/* Address Section */}
-        <FormSection title="Residence/Address (Current)" description="">
-          <DisableableSection isDisabled={shouldDisableSection}>
-            <AddressFields control={form.control} />          </DisableableSection>
-        </FormSection>
-
-        {/* Period of Residence Section */}
-        <FormSection 
-          title="Period of Residence (General)" 
-          description="How long you've lived in your current area and in the Philippines."
-        >
-          <DisableableSection isDisabled={shouldDisableSection}>
-            <ResidencyFields control={form.control} />
-          </DisableableSection>
-        </FormSection>
-
-        {/* Profession Section */}
-        <FormSection title="Profession / Occupation & TIN" description="">
-          <DisableableSection isDisabled={shouldDisableSection}>
-            <ProfessionFields control={form.control} />
-          </DisableableSection>
-        </FormSection>
-
-        {/* Civil Status Section */}
-        <FormSection title="Civil Status & Parents" description="">
-          <DisableableSection isDisabled={shouldDisableSection}>
-            <CivilStatusFields control={form.control} civilStatus={civilStatus} />
-          </DisableableSection>
-        </FormSection>
-
-        {/* Special Needs Section */}
-        <FormSection 
-          title="Special Needs / Assistance (Optional)" 
-          description="Information for voters with special needs."
-        >
-          <DisableableSection isDisabled={shouldDisableSection}>
-            <SpecialNeedsFields 
-              control={form.control} 
-              assistorName={assistorName}
-            />
-          </DisableableSection>
-        </FormSection>
-        {/* ID Verification Section */}
-        <FormSection 
-          title="ID Verification" 
-          description="Required for new registrations. Upload clear photos of your valid ID and a selfie."
-        >
-          <DisableableSection isDisabled={applicationType !== 'register'}>            <IdVerificationFields control={form.control} />
-          </DisableableSection>
-        </FormSection>
-
-        {/* Thumbprints/Signatures Section */}
-        <FormSection          title="ROLLED THUMBPRINTS / SPECIMEN SIGNATURES" 
-          description="To be captured on-site at COMELEC office"
-        >
-          <ThumbprintsSignaturesFields control={form.control} />
-        </FormSection>        {/* PART 2 - Dynamic Oath Sections */}
-        {/* Temporarily disabled due to schema field issues */}
-        {/*
-        {(applicationType === 'register' || applicationType === 'transfer') && registrationIntention === 'regular' && (
-          <FormSection title="PART 2    OATH, NOTICE and CONSENT (REGULAR )" description="">
-            <RegularOathFields control={form.control} shouldDisableOath={shouldDisableOath} />
+        {/* --- Fields for INCLUSION/REINSTATEMENT application type --- */}
+        {(applicationType === 'inclusion-reinstatement' || applicationType === 'reinstatement') && (
+          <FormSection title="Application for Inclusion/Reinstatement" description="Request to include or reinstate your name/record in the precinct book of voters.">
+            <InclusionReinstatementFields control={form.control} />
           </FormSection>
         )}
 
-        {(applicationType === 'register' || applicationType === 'transfer') && registrationIntention === 'katipunan' && (
-          <FormSection title="Part 2: OATH, NOTICE and CONSENT (KATIPUNAN NG KABATAAN)" description="">
-            <KatipunanOathFields control={form.control} shouldDisableOath={shouldDisableOath} />
-          </FormSection>
+        {/* Personal Information, ID Verification, and Thumbprints/Signatures Sections - Only show for register application type */}
+        {applicationType === 'register' && (
+          <>
+            {/* Personal Information Section using the new consolidated component */}
+            <FormSection 
+              title="Part 1: PERSONAL INFORMATION" 
+              description="To be filled out by Applicant. Includes personal details, citizenship, profession, civil status, and special needs information."
+            >
+              <DisableableSection isDisabled={shouldDisableSection}>
+                <PersonalInformationFields 
+                  control={form.control}
+                  citizenshipType={citizenshipType}
+                  civilStatus={civilStatus}
+                  isIndigenousPerson={isIndigenousPerson}
+                  isPwd={isPwd}
+                  assistorName={assistorName}
+                />
+              </DisableableSection>
+            </FormSection>
+
+            {/* Address Section for Registration */}
+            <FormSection 
+              title="Residence, Address, and Period of Residence" 
+              description="Provide your current address details and how long you've lived in your current area and in the Philippines."
+            >
+              <DisableableSection isDisabled={shouldDisableSection}> {/* shouldDisableSection is false when applicationType is 'register' */}
+                <AddressResidencyFields control={form.control} />
+              </DisableableSection>
+            </FormSection>
+
+            {/* ID Verification Section */}
+            <FormSection 
+              title="ID Verification" 
+              description="Required for new registrations. Upload clear photos of your valid ID and a selfie."
+            >
+              <DisableableSection isDisabled={applicationType !== 'register'}>
+                <IdVerificationFields control={form.control} />
+              </DisableableSection>
+            </FormSection>
+
+            {/* Thumbprints/Signatures Section */}
+            <FormSection 
+              title="ROLLED THUMBPRINTS / SPECIMEN SIGNATURES" 
+              description="To be captured on-site at COMELEC office"
+            >
+              <ThumbprintsSignaturesFields control={form.control} />
+            </FormSection>
+          </>
         )}
-        */}
 
         {/* PART 2 - Dynamic Oath Sections based on Registration Intention */}
-        {(applicationType === 'register' || applicationType === 'transfer') && registrationIntention === 'Regular' && (
+        {applicationType === 'register' && registrationIntention === 'Regular' && (
           <FormSection title="PART 2: OATH, NOTICE and CONSENT (REGULAR)" description="">
             <RegularOathFields control={form.control} shouldDisableOath={shouldDisableOath} />
           </FormSection>
         )}
 
-        {(applicationType === 'register' || applicationType === 'transfer') && registrationIntention === 'Katipunan ng Kabataan' && (
+        {applicationType === 'register' && registrationIntention === 'Katipunan ng Kabataan' && (
           <FormSection title="Part 2: OATH, NOTICE and CONSENT (KATIPUNAN NG KABATAAN)" description="">
             <KatipunanOathFields control={form.control} shouldDisableOath={shouldDisableOath} />
-          </FormSection>
-        )}
-
-        {/* Basic Oath Section (fallback when no registration intention is selected) */}
-        {(applicationType === 'register' || applicationType === 'transfer') && !registrationIntention && (
-          <FormSection title="PART 2: OATH AND CONSENT" description="">
-            <div className="space-y-4">
-              <div className="prose prose-sm max-w-none">
-                <p className="text-muted-foreground leading-relaxed mb-4">
-                  I do solemnly swear that the above statements regarding my person are true and correct; that I possess all the qualifications and none of the disqualifications of a voter; and that I have reviewed the entries encoded in the VRS and I confirm that the same are correct, accurate and consistent with the information I supplied in this application form.
-                </p>
-              </div>
-
-              <FormField
-                control={form.control}
-                name="oathAccepted"
-                render={({ field }) => (
-                  <FormItem className="flex items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        required={!shouldDisableOath}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel className="text-base font-semibold">
-                        I understand and agree to the oath stated above {!shouldDisableOath && '*'}
-                      </FormLabel>
-                      <FormDescription>
-                        By checking this box, I confirm that I have read, understood, and agree to the oath.
-                      </FormDescription>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
           </FormSection>
         )}
 

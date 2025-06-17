@@ -95,9 +95,6 @@ export const ApplicationTypeFields: React.FC<ApplicationTypeFieldsProps> = ({
                     )}>
                       Application for Registration
                     </FormLabel>
-                    <span className="text-xs text-muted-foreground ml-2">
-                      (Accomplish Personal Information at the Voter Registration Application Form part)
-                    </span>
                   </div>
                 </FormItem>
 
