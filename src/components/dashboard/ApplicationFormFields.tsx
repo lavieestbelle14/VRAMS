@@ -38,9 +38,9 @@ import {
   KatipunanOathFields,
   ReactivationFields,
   TransferFields,
-  ChangeCorrectionFields,
-  PersonalInformationFields, // ADDED
+  PersonalInformationFields, 
   InclusionReinstatementFields,
+  CorrectionOfEntryFields, // <-- updated import name
 } from './form-fields';
 
 type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
@@ -342,14 +342,14 @@ export function ApplicationFormFields() {
         )}
         
         {/* --- Fields for CORRECTION OF ENTRY application type --- */}
-        {(applicationType === 'correction_of_entry' || applicationType === 'change-correction') && (
+        {applicationType === 'correction_of_entry' && (
           <FormSection title="Correction of Entries" description="">
-            <ChangeCorrectionFields control={form.control} />
+            <CorrectionOfEntryFields control={form.control} />
           </FormSection>
         )}
 
         {/* --- Fields for INCLUSION/REINSTATEMENT application type --- */}
-        {(applicationType === 'inclusion-reinstatement' || applicationType === 'reinstatement') && (
+        {applicationType === 'reinstatement' && (
           <FormSection title="Application for Inclusion/Reinstatement" description="Request to include or reinstate your name/record in the precinct book of voters.">
             <InclusionReinstatementFields control={form.control} />
           </FormSection>

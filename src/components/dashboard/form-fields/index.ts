@@ -10,5 +10,5 @@ export { KatipunanOathFields } from './KatipunanOathFields';
 export { ReactivationFields } from './ReactivationFields';
 export { InclusionReinstatementFields } from './InclusionReinstatementFields';
 export { TransferFields } from './TransferFields';
-export { ChangeCorrectionFields } from './ChangeCorrectionFields';
+export { CorrectionOfEntryFields } from './CorrectionOfEntryFields';
 export { PersonalInformationFields } from './PersonalInformationFields';
