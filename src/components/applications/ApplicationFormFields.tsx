@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { applicationFormSchema } from '@/schemas/applicationSchema';
-import type { Application, PersonalInfo, AddressDetails, CivilDetails, SpecialNeeds } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label'; 
@@ -64,8 +63,8 @@ export function ApplicationFormFields() {
   const { toast } = useToast();
   const router = useRouter();
 
-  const form = useForm<ApplicationFormValues, any, ApplicationFormValues>({
-    resolver: zodResolver<ApplicationFormValues>(applicationFormSchema),
+  const form = useForm<ApplicationFormValues>({
+    resolver: zodResolver(applicationFormSchema),
     defaultValues: {
       // Personal Info
       firstName: '', lastName: '', middleName: '',
@@ -87,7 +86,7 @@ export function ApplicationFormFields() {
       assistanceNeeded: '', assistorName: '', assistorRelationship: '', prefersGroundFloor: false, isPwd: false, isIndigenousPerson: false,
 
       // Application
-      applicationType: undefined,
+      applicationType: '', // Use '' instead of undefined for enums
       biometricsFile: 'For on-site capture', 
 
       declarationAccepted: false,
@@ -105,8 +104,8 @@ export function ApplicationFormFields() {
       regularRegistrationType: undefined,
       regularVoterStatus: undefined,
       regularOathAccepted: false,
-      transferType: undefined, // Added to defaultValues
-      adultRegistrationConsent: undefined, // <-- Added for Katipunan consent
+      transferType: undefined,
+      adultRegistrationConsent: undefined,
     },
   });
 
@@ -207,13 +206,12 @@ export function ApplicationFormFields() {
       contactNumber: '', email: '',
       residencyYearsCityMun: undefined, residencyMonthsCityMun: undefined, residencyYearsPhilippines: undefined, // Corrected
       professionOccupation: '',
-      // tin: '', // REMOVED
       houseNoStreet: '', barangay: '', cityMunicipality: '', province: '', // Corrected
       civilStatus: '', spouseName: '',
       fatherFirstName: '', fatherLastName: '', motherFirstName: '', motherLastName: '', // Corrected
       isIlliterate: false, isSenior: false, indigenousTribe: '', disabilityType: '', // Corrected
       assistanceNeeded: '', assistorName: '', assistorRelationship: '', prefersGroundFloor: false, isPwd: false, isIndigenousPerson: false,
-      applicationType: undefined,
+      applicationType: '', // Use '' instead of undefined for enums
       biometricsFile: 'For on-site capture', 
       previousPrecinctNumber: '', previousBarangay: '', previousCityMunicipality: '', previousProvince: '',
       previousForeignPost: '', previousCountry: '',

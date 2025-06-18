@@ -1,15 +1,13 @@
-
-
 export interface PersonalInfo {
   firstName: string;
   lastName: string;
   middleName?: string;
-  sex: 'male' | 'female' | '';
+  sex: 'M' | 'F' | '';
   dob: string; // ISO string date yyyy-mm-dd
   placeOfBirthCityMun: string;
   placeOfBirthProvince: string;
   
-  citizenshipType: 'byBirth' | 'naturalized' | 'reacquired' | '';
+  citizenshipType: 'By Birth' | 'Naturalized' | 'Reacquired' | '';
   naturalizationDate?: string; // Date string yyyy-mm-dd
   naturalizationCertNo?: string;
 
@@ -35,7 +33,7 @@ export interface AddressDetails { // Represents current residence
 }
 
 export interface CivilDetails {
-  civilStatus: 'single' | 'married' | '';
+  civilStatus: 'Single' | 'Married' | 'Widowed' | 'Legally Separated' | '';
   spouseName?: string; // Required if married
   fatherFirstName: string;
   fatherLastName: string;
@@ -64,7 +62,7 @@ export interface Application {
   civilDetails: CivilDetails;
   specialNeeds?: SpecialNeeds;
   
-  applicationType: 'register' | 'transfer' | 'reactivation' | 'change-correction' | 'inclusion-reinstatement' | ''; // UPDATED
+  applicationType: 'register' | 'transfer' | 'reactivation' | 'transfer_with_reactivation' | 'correction_of_entry' | 'reinstatement' | ''; // UPDATED
   biometricsFile?: string; // Simulated file name or path or "Captured"
 
   // Conditional based on applicationType
@@ -86,7 +84,7 @@ export interface Application {
 
 // Combines all form fields into one type for react-hook-form, matching schema
 export type ApplicationFormData = PersonalInfo & AddressDetails & CivilDetails & SpecialNeeds & {
-  applicationType: 'register' | 'transfer' | 'reactivation' | 'change-correction' | 'inclusion-reinstatement' | ''; // UPDATED
+  applicationType: 'register' | 'transfer' | 'reactivation' | 'transfer_with_reactivation' | 'correction_of_entry' | 'reinstatement' | '';
   biometricsFile?: string;
 
   // Transfer specific fields (previous address)
@@ -96,9 +94,35 @@ export type ApplicationFormData = PersonalInfo & AddressDetails & CivilDetails &
   transferProvince?: string;
   transferZipCode?: string;
 
-  // Removed reactivation, change/correction, inclusion fields
-  // reactivationReasons?: string[];
-  // reactivationEvidence?: string;
-  // presentData?: string;
-  // newCorrectedData?: string;
+  // Additional fields for schema compatibility
+  registrationIntention?: 'Regular' | 'Katipunan ng Kabataan';
+  regularOathAccepted?: boolean;
+  regularRegistrationType?: 'registration' | 'transfer';
+  regularVoterStatus?: 'not_registered' | 'registered_elsewhere';
+  oathAccepted?: boolean;
+  declarationAccepted?: boolean;
+  adultRegistrationConsent?: boolean;
+
+  // ID Verification
+  idFrontPhoto?: File;
+  idBackPhoto?: File;
+  selfieWithId?: File;
+
+  // Transfer/Reactivate/Correction/Inclusion fields
+  previousPrecinctNumber?: string;
+  previousBarangay?: string;
+  previousCityMunicipality?: string;
+  previousProvince?: string;
+  previousForeignPost?: string;
+  previousCountry?: string;
+  transferDeclarantName?: string;
+  transferDeclarantBirthDate?: string;
+  transferType?: string;
+  reactivationReason?: string;
+  correctionField?: string;
+  presentData?: string;
+  newData?: string;
+  inclusionType?: 'inclusion' | 'reinstatement';
+  inclusionPrecinctNo?: string;
 };
+

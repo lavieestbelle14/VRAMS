@@ -123,7 +123,12 @@ export default function PublicProfilePage() {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="user@example.com" {...field} readOnly className="bg-muted/50 cursor-not-allowed" />
+                <Input
+                  placeholder="user@example.com"
+                  readOnly
+                  className="bg-muted opacity-60 cursor-not-allowed"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

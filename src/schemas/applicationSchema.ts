@@ -1,154 +1,44 @@
-import { z } from 'zod';
-
-const nonEmptyString = z.string().min(1, { message: "This field is required" });
-const optionalString = z.string().optional();
-const optionalNumber = z.number().optional();
-
-// Note: This interface needs to be manually kept in sync with the Zod schema below.
-export interface ApplicationFormSchema {
-  // Personal Information
-  firstName: string;
-  lastName: string;
-  middleName?: string;
-  suffix?: string;
-  sex: 'M' | 'F' | '';
-  dob: string; // Should be ISO date string e.g., YYYY-MM-DD
-  placeOfBirthCityMun: string; // Maps to place_of_birth_municipality in DB
-  placeOfBirthProvince: string;
-  citizenshipType: 'By Birth' | 'Naturalized' | 'Reacquired' | '';
-  naturalizationDate?: string; // Should be ISO date string
-  naturalizationCertNo?: string; // Maps to certificate_number in DB
-
-  contactNumber?: string;
-  email?: string; // Maps to email_address in DB
-
-  // Address (Current - from AddressFields.tsx)
-  houseNoStreet: string; // Maps to house_number and street in DB (server-side parsing needed)
-  barangay: string;
-  cityMunicipality: string;
-  province: string;
-  yearsOfResidency?: number; // Contextual for current address, not directly in DB's address_at_registration
-  monthsOfResidency?: number; // Contextual for current address, not directly in DB's address_at_registration
-
-  // Residency (General - from ResidencyFields.tsx)
-  residencyYearsCityMun?: number; // Maps to years_of_residence_municipality in DB
-  residencyMonthsCityMun?: number; // Maps to months_of_residence_municipality in DB
-  residencyYearsPhilippines?: number; // Maps to years_in_country in DB
-
-  professionOccupation?: string;
-
-  // Civil Status & Parents (from CivilStatusFields.tsx)
-  civilStatus: 'Single' | 'Married' | 'Widowed' | 'Legally Separated' | '';
-  spouseName?: string;
-  fatherFirstName: string; // Part of father_name in DB
-  fatherLastName: string;  // Part of father_name in DB
-  motherFirstName: string; // Part of mother_maiden_name in DB
-  motherLastName: string;  // Part of mother_maiden_name in DB (Maiden last name)
-
-  // Special Needs / Assistance (from SpecialNeedsFields.tsx)
-  isIlliterate: boolean;
-  isSenior: boolean; // Maps to is_senior_citizen in DB
-  isPwd?: boolean; // UI state, implies typeOfDisability if true
-  isIndigenousPerson?: boolean; // UI state, implies tribe if true
-  prefersGroundFloor?: boolean; // Maps to vote_on_ground_floor in DB
-  indigenousTribe?: string; // Maps to tribe in DB
-  disabilityType?: string; // Maps to type_of_disability in DB
-  assistanceNeeded?: string; // Maps to assistance_needed in DB
-  assistorName?: string;
-  assistorRelationship?: string; // Not in DB applicant_special_sector
-
-  // Application Type and Biometrics
-  applicationType: 'register' | 'transfer' | 'reactivation' | 'transfer_with_reactivation' | 'correction_of_entry' | 'reinstatement' | '';
-  biometricsFile?: string; // Placeholder
-
-  // ID Verification (from IdVerificationFields.tsx)
-  idFrontPhoto?: File; // Maps to government_id_front_url in DB
-  idBackPhoto?: File; // Maps to government_id_back_url in DB
-  selfieWithId?: File; // Maps to id_selfie_url in DB
-
-  // Conditional Fields for Transfer (from TransferFields.tsx, TransferReactivationFields.tsx)
-  // These are for the *previous* registration record
-  previousPrecinctNumber?: string;
-  previousBarangay?: string;
-  previousCityMunicipality?: string;
-  previousProvince?: string;
-  previousForeignPost?: string; // New field
-  previousCountry?: string; // New field
-  transferDeclarantName?: string; // New field for transfer declaration
-  transferDeclarantBirthDate?: string; // New field for transfer declaration (ISO date string)
-  // These are for the *new* residence in a transfer - REMOVED, will use general address fields
-  // transferNewHouseNo?: string; 
-  // transferNewBarangay?: string;
-  // transferNewCity?: string; 
-  // transferNewProvince?: string;
-  // transferYears?: number; 
-  // transferMonths?: number; 
-  transferType?: 'same-city' | 'different-city' | 'foreign-post' | 'transfer-within' | 'transfer-from' | 'transfer-foreign-post' | 'transfer-reactivation' | 'transfer-record'; // UI values, map to DB transfer_record.transfer_type
-
-  // Reactivation (from ReactivationFields.tsx, TransferReactivationFields.tsx)
-  reactivationReason?: 'sentenced' | 'convicted' | 'declared-insane' | 'failed-to-vote' | 'loss-citizenship' | 'exclusion' | 'failure-validate'; // UI values, map to DB reactivation_record.reason_for_deactivation
-  // transferReactivationReason can use the same 'reactivationReason' field.
-
-  // Correction of Entries (from ChangeCorrectionFields.tsx)
-  correctionField?: 'Name' | 'Contact Number' | 'Email Address' | 'Spouse name' | 'Date of Birth' | 'Place of Birth' | "Father's Name" | "Mother's Maiden Name" | 'Other'; // UI values, map to DB correction_record.target_field
-  presentData?: string; // Maps to current_value in DB
-  newData?: string; // Maps to requested_value in DB
-
-  // Inclusion/Reinstatement (from InclusionReinstatementFields.tsx)
-  inclusionType?: 'inclusion' | 'reinstatement'; // UI values, map to DB reinstatement_record.reinstatement_type
-  inclusionPrecinctNo?: string; // Contextual for UI
-
-  // Oath and Declarations
-  oathAccepted: boolean;
-  declarationAccepted: boolean;
-  registrationIntention?: 'Regular' | 'Katipunan ng Kabataan';
-  regularRegistrationType?: 'registration' | 'transfer';
-  regularVoterStatus?: 'not_registered' | 'registered_elsewhere';
-  regularOathAccepted?: boolean;
-  adultRegistrationConsent?: boolean; // <-- Added for Katipunan consent
-}
-
+import { z } from "zod";
 
 export const applicationFormSchema = z.object({
-  // Personal Information
-  firstName: nonEmptyString,
-  lastName: nonEmptyString,
-  middleName: optionalString,
-  suffix: optionalString,
+  firstName: z.string().min(1, "Required"),
+  lastName: z.string().min(1, "Required"),
+  middleName: z.string().optional(),
+  suffix: z.string().optional(),
 
   sex: z.enum(["M", "F", ""], { errorMap: () => ({ message: "Please select a sex" }) }),
   dob: z.string().min(1, "Date of birth is required"), // Validate as date string
-  placeOfBirthCityMun: nonEmptyString,
-  placeOfBirthProvince: nonEmptyString,
+  placeOfBirthCityMun: z.string().min(1, "Required"),
+  placeOfBirthProvince: z.string().min(1, "Required"),
   citizenshipType: z.enum(["By Birth", "Naturalized", "Reacquired", ""], { errorMap: () => ({ message: "Please select a citizenship type" }) }),
-  naturalizationDate: optionalString, // Validate as date string if present
-  naturalizationCertNo: optionalString,
+  naturalizationDate: z.string().optional(), // Validate as date string if present
+  naturalizationCertNo: z.string().optional(),
 
-  contactNumber: optionalString,
+  contactNumber: z.string().optional(),
   email: z.string().email({ message: "Invalid email address" }).optional(),
 
   // Address (Current - from AddressFields.tsx)
-  houseNoStreet: nonEmptyString,
-  barangay: nonEmptyString,
-  cityMunicipality: nonEmptyString,
-  province: nonEmptyString,
-  yearsOfResidency: optionalNumber,
-  monthsOfResidency: optionalNumber,
+  houseNoStreet: z.string().min(1, "Required"),
+  barangay: z.string().min(1, "Required"),
+  cityMunicipality: z.string().min(1, "Required"),
+  province: z.string().min(1, "Required"),
+  yearsOfResidency: z.number().optional(),
+  monthsOfResidency: z.number().optional(),
 
   // Residency (General - from ResidencyFields.tsx)
-  residencyYearsCityMun: optionalNumber,
-  residencyMonthsCityMun: optionalNumber,
-  residencyYearsPhilippines: optionalNumber,
+  residencyYearsCityMun: z.number().optional(),
+  residencyMonthsCityMun: z.number().optional(),
+  residencyYearsPhilippines: z.number().optional(),
 
-  professionOccupation: optionalString,
+  professionOccupation: z.string().optional(),
 
   // Civil Status & Parents (from CivilStatusFields.tsx)
   civilStatus: z.enum(["Single", "Married", "Widowed", "Legally Separated", ""], { errorMap: () => ({ message: "Please select a civil status" }) }),
-  spouseName: optionalString,
-  fatherFirstName: nonEmptyString,
-  fatherLastName: nonEmptyString,
-  motherFirstName: nonEmptyString,
-  motherLastName: nonEmptyString, // Maiden Last Name
+  spouseName: z.string().optional(),
+  fatherFirstName: z.string().min(1, "Required"),
+  fatherLastName: z.string().min(1, "Required"),
+  motherFirstName: z.string().min(1, "Required"),
+  motherLastName: z.string().min(1, "Required"), // Maiden Last Name
 
   // Special Needs / Assistance (from SpecialNeedsFields.tsx)
   isIlliterate: z.boolean().default(false),
@@ -156,11 +46,11 @@ export const applicationFormSchema = z.object({
   isPwd: z.boolean().default(false),
   isIndigenousPerson: z.boolean().default(false),
   prefersGroundFloor: z.boolean().default(false),
-  indigenousTribe: optionalString,
-  disabilityType: optionalString,
-  assistanceNeeded: optionalString, // Not in DB schema, but in UI
-  assistorName: optionalString,
-  assistorRelationship: optionalString, // Not in DB schema, but in UI
+  indigenousTribe: z.string().optional(),
+  disabilityType: z.string().optional(),
+  assistanceNeeded: z.string().optional(), // Not in DB schema, but in UI
+  assistorName: z.string().optional(),
+  assistorRelationship: z.string().optional(), // Not in DB schema, but in UI
 
   // Application Type and Biometrics
   applicationType: z.enum([
@@ -177,7 +67,7 @@ export const applicationFormSchema = z.object({
     message: "Please select an application type"
   }),
   
-  biometricsFile: optionalString, // Placeholder
+  biometricsFile: z.string().optional(), // Placeholder
 
   // ID Verification (from IdVerificationFields.tsx)
   idFrontPhoto: z.instanceof(File).optional().refine(
@@ -191,14 +81,14 @@ export const applicationFormSchema = z.object({
   ),
   
   // Conditional Fields for Transfer (Original registration details)
-  previousPrecinctNumber: optionalString,
-  previousBarangay: optionalString,
-  previousCityMunicipality: optionalString,
-  previousProvince: optionalString,
-  previousForeignPost: optionalString, // New field
-  previousCountry: optionalString, // New field
-  transferDeclarantName: optionalString, // New field
-  transferDeclarantBirthDate: optionalString, // New field, validate as date string if present
+  previousPrecinctNumber: z.string().optional(),
+  previousBarangay: z.string().optional(),
+  previousCityMunicipality: z.string().optional(),
+  previousProvince: z.string().optional(),
+  previousForeignPost: z.string().optional(), // New field
+  previousCountry: z.string().optional(), // New field
+  transferDeclarantName: z.string().optional(), // New field
+  transferDeclarantBirthDate: z.string().optional(), // New field, validate as date string if present
 
   // New residence for Transfer (from TransferFields.tsx, TransferReactivationFields.tsx)
   // These fields will populate address_at_registration_or_transfer for transfer applications
@@ -232,13 +122,13 @@ export const applicationFormSchema = z.object({
     'Date of Birth', 'Place of Birth', "Father's Name", 
     "Mother's Maiden Name", 'Other'
   ]).optional(),
-  presentData: optionalString, // Maps to current_value in DB
-  newData: optionalString, // Maps to requested_value in DB
+  presentData: z.string().optional(), // Maps to current_value in DB
+  newData: z.string().optional(), // Maps to requested_value in DB
 
   // Inclusion/Reinstatement (from InclusionReinstatementFields.tsx)
   // DB: reinstatement_record.reinstatement_type has specific text values.
   inclusionType: z.enum(['inclusion', 'reinstatement']).optional(),
-  inclusionPrecinctNo: optionalString, // Contextual for UI
+  inclusionPrecinctNo: z.string().optional(), // Contextual for UI
 
   // Oath and Declarations
   oathAccepted: z.boolean().refine((val) => val === true, {
@@ -370,4 +260,5 @@ export const applicationFormSchema = z.object({
 
 });
 
+// ✅ Use Zod's inference for the type
 export type ApplicationFormValues = z.infer<typeof applicationFormSchema>;

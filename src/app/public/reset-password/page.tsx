@@ -1,4 +1,3 @@
-
 'use client';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -14,7 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { KeyRound, ArrowLeft, Loader2 } from 'lucide-react';
 
 const resetPasswordSchema = z.object({
-  newPassword: z.string().min(6, { message: 'Password must be at least 6 characters' }),
+  newPassword: z.string().min(8, { message: 'Password must be at least 8 characters' }),
   confirmNewPassword: z.string(),
 }).refine(data => data.newPassword === data.confirmNewPassword, {
   message: "Passwords don't match",
