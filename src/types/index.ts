@@ -1,5 +1,4 @@
 
-// import type { ClassifyApplicantTypeOutput } from "@/ai/flows/classify-applicant-type";
 
 export interface PersonalInfo {
   firstName: string;

@@ -1,8 +1,7 @@
-
 'use client';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ApplicationFormFields } from '@/components/dashboard/ApplicationFormFields'; // Re-using this form for public
+import { ApplicationFormFields } from '@/components/applications/ApplicationFormFields'; // Updated import path
 import { ArrowLeft, FilePlus2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
