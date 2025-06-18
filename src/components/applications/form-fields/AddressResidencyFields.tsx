@@ -74,19 +74,6 @@ export const AddressResidencyFields: React.FC<AddressResidencyFieldsProps> = ({ 
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <FormField 
         control={control} 
-        name="zipCode" 
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Zip Code</FormLabel>
-            <FormControl>
-              <Input placeholder="1218" {...field} value={field.value ?? ''} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )} 
-      />
-      <FormField 
-        control={control} 
         name="yearsOfResidency" 
         render={({ field }) => (
           <FormItem>

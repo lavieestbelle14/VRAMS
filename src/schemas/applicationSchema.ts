@@ -27,7 +27,6 @@ export interface ApplicationFormSchema {
   barangay: string;
   cityMunicipality: string;
   province: string;
-  zipCode?: string; // Not in DB schema
   yearsOfResidency?: number; // Contextual for current address, not directly in DB's address_at_registration
   monthsOfResidency?: number; // Contextual for current address, not directly in DB's address_at_registration
 
@@ -133,7 +132,6 @@ export const applicationFormSchema = z.object({
   barangay: nonEmptyString,
   cityMunicipality: nonEmptyString,
   province: nonEmptyString,
-  zipCode: optionalString,
   yearsOfResidency: optionalNumber,
   monthsOfResidency: optionalNumber,
 
