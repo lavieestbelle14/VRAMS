@@ -421,66 +421,69 @@ export function ApplicationFormFields() {
         )}
 
         {/* Declaration Section */}
-<div className="space-y-4">
-  <FormField
-    control={form.control}
-    name="declarationAccepted"
-    render={({ field }) => (
-      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow">
-        <FormControl>
-          <Checkbox
-            checked={field.value}
-            onCheckedChange={(checked) => {
-              if (checked) {
-                setDeclarationDialogOpen(true);
-              } else {
-                field.onChange(false);
-              }
-            }}
-          />
-        </FormControl>
-        <div className="space-y-1 leading-none">
-          <FormLabel>
-            I agree to the above declaration and affirm the truthfulness of all information provided.
-          </FormLabel>
-          <FormMessage />
-        </div>
-      </FormItem>
-    )}
-  />
-</div>
+        {applicationType && (
+          <div className="space-y-4">
+            <FormField
+              control={form.control}
+              name="declarationAccepted"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setDeclarationDialogOpen(true);
+                        } else {
+                          field.onChange(false);
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      I agree to the above declaration and affirm the truthfulness of all information provided.
+                    </FormLabel>
+                    <FormMessage />
+                  </div>
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
 
-<Dialog open={isDeclarationDialogOpen} onOpenChange={setDeclarationDialogOpen}>
-  <DialogContent hideCloseButton className="sm:max-w-[525px]">
-    <DialogHeader>
-      <DialogTitle>Declaration</DialogTitle>
-    </DialogHeader>
-    <div className="space-y-4 text-sm text-muted-foreground">
-      <p>
-        I hereby declare, under penalty of law, that all information provided in this online application form is true, complete, and accurate to the best of my knowledge and belief. I understand that any false or misleading statement may lead to the rejection of my application and/or legal consequences, including but not limited to those under the Revised Penal Code and other relevant laws.
-      </p>
-      <p>
-        I understand and agree to the processing of my personal data for the purpose of this application, in accordance with the Data Privacy Act of 2012 and the Commission on Elections (COMELEC) Data Privacy Policy. I have read and understood the terms and conditions outlined in this application.
-      </p>
-      <p>
-        Upon successful submission, your application will be reviewed by COMELEC personnel. You will be notified regarding the status of your application through the contact information you provided.
-      </p>
-    </div>
-    <DialogFooter>
-      <Button
-        onClick={() => {
-          form.setValue("declarationAccepted", true, { shouldValidate: true });
-          setDeclarationDialogOpen(false);
-        }}
-        disabled={isConfirmButtonDisabled}
-      >
-        {isConfirmButtonDisabled ? `Please read the declaration (${countdown})` : "I understand and agree"}
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+        <Dialog open={isDeclarationDialogOpen} onOpenChange={setDeclarationDialogOpen}>
+          <DialogContent hideCloseButton className="sm:max-w-[525px]">
+            <DialogHeader>
+              <DialogTitle>Declaration</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 text-sm text-muted-foreground">
+              <p>
+                I hereby declare, under penalty of law, that all information provided in this online application form is true, complete, and accurate to the best of my knowledge and belief. I understand that any false or misleading statement may lead to the rejection of my application and/or legal consequences, including but not limited to those under the Revised Penal Code and other relevant laws.
+              </p>
+              <p>
+                I understand and agree to the processing of my personal data for the purpose of this application, in accordance with the Data Privacy Act of 2012 and the Commission on Elections (COMELEC) Data Privacy Policy. I have read and understood the terms and conditions outlined in this application.
+              </p>
+              <p>
+                Upon successful submission, your application will be reviewed by COMELEC personnel. You will be notified regarding the status of your application through the contact information you provided.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button
+                onClick={() => {
+                  form.setValue("declarationAccepted", true, { shouldValidate: true });
+                  setDeclarationDialogOpen(false);
+                }}
+                disabled={isConfirmButtonDisabled}
+              >
+                {isConfirmButtonDisabled ? `Please read the declaration (${countdown})` : "I understand and agree"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-        <div className="flex justify-end space-x-2 pt-6">
+        {applicationType && (
+          <div className="flex justify-end space-x-2 pt-6">
             <Button type="button" onClick={handleClearDraft} className="btn-outline">
               <Trash2 className="mr-2 h-4 w-4" /> Clear Draft & Reset
             </Button>
@@ -493,7 +496,8 @@ export function ApplicationFormFields() {
               ) : <Save className="mr-2 h-4 w-4" /> }
               Submit Application
             </Button>
-        </div>
+          </div>
+        )}
       </form>
     </Form>
   );

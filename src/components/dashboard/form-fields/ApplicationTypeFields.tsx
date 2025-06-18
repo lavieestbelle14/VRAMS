@@ -48,16 +48,9 @@ export const ApplicationTypeFields: React.FC<ApplicationTypeFieldsProps> = ({
       form.setValue('transferType', undefined);
     }
   };
-    return (
+
+  return (
     <div className="space-y-4">
-      {!registrationIntention && (
-        <div className="mb-4 p-4 bg-muted rounded-lg">
-          <p className="text-sm text-muted-foreground">
-            Please select a Registration Intention above before choosing an Application Type
-          </p>
-        </div>
-      )}
-      
       <FormField
         control={control}
         name="applicationType"
@@ -78,21 +71,14 @@ export const ApplicationTypeFields: React.FC<ApplicationTypeFieldsProps> = ({
                 onValueChange={handleApplicationTypeChange} 
                 value={getDisplayValue()} 
                 className="flex flex-col space-y-2"
-                disabled={!registrationIntention}
               >
                 {/* Registration */}
                 <FormItem className="space-y-1">
                   <div className="flex items-center space-x-3">
                     <FormControl>
-                      <RadioGroupItem 
-                        value="register" 
-                        disabled={!registrationIntention || !isRegistered}
-                      />
+                      <RadioGroupItem value="register" />
                     </FormControl>
-                    <FormLabel className={cn(
-                      "font-normal", 
-                      (!registrationIntention || !isRegistered) && "text-muted-foreground"
-                    )}>
+                    <FormLabel className="font-normal">
                       Application for Registration
                     </FormLabel>
                   </div>
@@ -104,12 +90,12 @@ export const ApplicationTypeFields: React.FC<ApplicationTypeFieldsProps> = ({
                     <FormControl>
                       <RadioGroupItem 
                         value="transfer" 
-                        disabled={!registrationIntention || !isRegistered}
+                        disabled={!isRegistered}
                       />
                     </FormControl>
                     <FormLabel className={cn(
                       "font-normal", 
-                      (!registrationIntention || !isRegistered) && "text-muted-foreground"
+                      !isRegistered && "text-muted-foreground"
                     )}>
                       Application for Transfer of Registration Record
                     </FormLabel>
@@ -119,18 +105,18 @@ export const ApplicationTypeFields: React.FC<ApplicationTypeFieldsProps> = ({
                   </div>
                 </FormItem>
 
-                {/* Other application types can be added here in similar fashion */}
+                {/* Reactivation */}
                 <FormItem className="space-y-2">
                   <div className="flex items-center space-x-3">
                     <FormControl>
                       <RadioGroupItem 
                         value="reactivation" 
-                        disabled={!registrationIntention || !isRegistered}
+                        disabled={!isRegistered}
                       />
                     </FormControl>
                     <FormLabel className={cn(
                       "font-normal", 
-                      (!registrationIntention || !isRegistered) && "text-muted-foreground"
+                      !isRegistered && "text-muted-foreground"
                     )}>
                       Application for Reactivation of Registration Record
                     </FormLabel>
@@ -140,17 +126,18 @@ export const ApplicationTypeFields: React.FC<ApplicationTypeFieldsProps> = ({
                   </div>
                 </FormItem>
 
+                {/* Transfer with Reactivation */}
                 <FormItem className="space-y-2">
                   <div className="flex items-center space-x-3">
                     <FormControl>
                       <RadioGroupItem 
                         value="transfer-reactivation" 
-                        disabled={!registrationIntention || !isRegistered}
+                        disabled={!isRegistered}
                       />
                     </FormControl>
                     <FormLabel className={cn(
                       "font-normal", 
-                      (!registrationIntention || !isRegistered) && "text-muted-foreground"
+                      !isRegistered && "text-muted-foreground"
                     )}>
                       Application for Transfer with Reactivation
                     </FormLabel>
@@ -160,17 +147,18 @@ export const ApplicationTypeFields: React.FC<ApplicationTypeFieldsProps> = ({
                   </div>
                 </FormItem>
 
+                {/* Change of Name/Correction of Entries */}
                 <FormItem className="space-y-2">
                   <div className="flex items-center space-x-3">
                     <FormControl>
                       <RadioGroupItem 
                         value="correction_of_entry" 
-                        disabled={!registrationIntention || !isRegistered}
+                        disabled={!isRegistered}
                       />
                     </FormControl>
                     <FormLabel className={cn(
                       "font-normal", 
-                      (!registrationIntention || !isRegistered) && "text-muted-foreground"
+                      !isRegistered && "text-muted-foreground"
                     )}>
                       Application for Change of Name/Correction of Entries
                     </FormLabel>
@@ -180,17 +168,18 @@ export const ApplicationTypeFields: React.FC<ApplicationTypeFieldsProps> = ({
                   </div>
                 </FormItem>
 
+                {/* Inclusion/Reinstatement */}
                 <FormItem className="space-y-2">
                   <div className="flex items-center space-x-3">
                     <FormControl>
                       <RadioGroupItem 
                         value="reinstatement" 
-                        disabled={!registrationIntention || !isRegistered}
+                        disabled={!isRegistered}
                       />
                     </FormControl>
                     <FormLabel className={cn(
                       "font-normal", 
-                      (!registrationIntention || !isRegistered) && "text-muted-foreground"
+                      !isRegistered && "text-muted-foreground"
                     )}>
                       Application for Inclusion/Reinstatement
                     </FormLabel>
@@ -208,3 +197,4 @@ export const ApplicationTypeFields: React.FC<ApplicationTypeFieldsProps> = ({
     </div>
   );
 };
+        
