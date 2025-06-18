@@ -23,6 +23,7 @@ import { useRouter } from 'next/navigation';
 import { saveApplication } from '@/lib/applicationStore';
 import { format } from "date-fns";
 import { z } from 'zod';
+import { useFormDraft } from '@/hooks/useFormDraft';
 
 // Import all form field components
 import {
@@ -109,6 +110,15 @@ export function ApplicationFormFields() {
     },
   });
 
+  // Use the custom draft hook
+  const { clearDraft } = useFormDraft<ApplicationFormValues>({
+    form,
+    draftKey: DRAFT_STORAGE_KEY,
+    fingerprintKey: LAST_SUBMITTED_FINGERPRINT_KEY,
+    generateFingerprint,
+    toast,
+  });
+
   const declarationAccepted = form.watch('declarationAccepted');
 
   const [isDeclarationDialogOpen, setDeclarationDialogOpen] = useState(false);
@@ -136,98 +146,34 @@ export function ApplicationFormFields() {
   // Add inside the ApplicationFormFields component, after form is declared
   // (Removed duplicate shouldDisableSection declaration)
 
-  // Auto-save draft to localStorage
-  useEffect(() => {
-    interface DraftValues {
-      [key: string]: unknown;
-    }
-
-    interface WatchCallback {
-      (values: DraftValues, info?: unknown): void;
-    }
-
-    const subscription: { unsubscribe: () => void } = form.watch((values: DraftValues) => {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(values));
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [form]);
-
-  // Load draft from localStorage on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedDraftString = localStorage.getItem(DRAFT_STORAGE_KEY);
-      const lastSubmittedFingerprint = localStorage.getItem(LAST_SUBMITTED_FINGERPRINT_KEY);
-
-      if (savedDraftString) {
-        try {
-          const draftValues = JSON.parse(savedDraftString);
-          const draftFingerprint = generateFingerprint(draftValues);
-
-          if (lastSubmittedFingerprint && draftFingerprint === lastSubmittedFingerprint) {
-            // This draft matches the last successfully submitted form, so clear it.
-            localStorage.removeItem(DRAFT_STORAGE_KEY);
-            localStorage.removeItem(LAST_SUBMITTED_FINGERPRINT_KEY);
-            form.reset(); // Reset to initial default empty values
-            toast({ title: "Form Cleared", description: "Previously submitted application draft has been cleared." });
-          } else {
-            // Load the draft as it's different or no submission fingerprint exists
-            if (draftValues.dob && typeof draftValues.dob === 'string') {
-               draftValues.dob = format(new Date(draftValues.dob), "yyyy-MM-dd");
-            }
-            if (draftValues.naturalizationDate && typeof draftValues.naturalizationDate === 'string') {
-               draftValues.naturalizationDate = format(new Date(draftValues.naturalizationDate), "yyyy-MM-dd");
-            }
-            if (draftValues.transferDeclarantBirthDate && typeof draftValues.transferDeclarantBirthDate === 'string') {
-              draftValues.transferDeclarantBirthDate = format(new Date(draftValues.transferDeclarantBirthDate), "yyyy-MM-dd");
-           }
-            form.reset(draftValues);
-            toast({ title: "Draft Loaded", description: "Your previous application draft has been loaded." });
-          }
-        } catch (error) {
-          console.error("Failed to parse draft:", error);
-          localStorage.removeItem(DRAFT_STORAGE_KEY); // Clear corrupted draft
-          localStorage.removeItem(LAST_SUBMITTED_FINGERPRINT_KEY); // Also clear fingerprint if draft was corrupt
-        }
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.reset]); // form.reset is stable
-
   const handleClearDraft = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(DRAFT_STORAGE_KEY);
-      localStorage.removeItem(LAST_SUBMITTED_FINGERPRINT_KEY); // Also clear the fingerprint
-    }    form.reset({ // Reset to initial default values
+    clearDraft({
       firstName: '', lastName: '', middleName: '', suffix: '',
-      sex: '', dob: '', placeOfBirthCityMun: '', placeOfBirthProvince: '', // Corrected
-      citizenshipType: '', naturalizationDate: undefined, naturalizationCertNo: '', // Corrected
+      sex: '', dob: '', placeOfBirthCityMun: '', placeOfBirthProvince: '',
+      citizenshipType: '', naturalizationDate: undefined, naturalizationCertNo: '',
       contactNumber: '', email: '',
-      residencyYearsCityMun: undefined, residencyMonthsCityMun: undefined, residencyYearsPhilippines: undefined, // Corrected
+      residencyYearsCityMun: undefined, residencyMonthsCityMun: undefined, residencyYearsPhilippines: undefined,
       professionOccupation: '',
-      houseNoStreet: '', barangay: '', cityMunicipality: '', province: '', // Corrected
+      houseNoStreet: '', barangay: '', cityMunicipality: '', province: '',
       civilStatus: '', spouseName: '',
-      fatherFirstName: '', fatherLastName: '', motherFirstName: '', motherLastName: '', // Corrected
-      isIlliterate: false, isSenior: false, indigenousTribe: '', disabilityType: '', // Corrected
+      fatherFirstName: '', fatherLastName: '', motherFirstName: '', motherLastName: '',
+      isIlliterate: false, isSenior: false, indigenousTribe: '', disabilityType: '',
       assistanceNeeded: '', assistorName: '', assistorRelationship: '', prefersGroundFloor: false, isPwd: false, isIndigenousPerson: false,
-      applicationType: '', // Use '' instead of undefined for enums
-      biometricsFile: 'For on-site capture', 
+      applicationType: '',
+      biometricsFile: 'For on-site capture',
       previousPrecinctNumber: '', previousBarangay: '', previousCityMunicipality: '', previousProvince: '',
       previousForeignPost: '', previousCountry: '',
-      transferDeclarantName: '', transferDeclarantBirthDate: '', // Added new fields
+      transferDeclarantName: '', transferDeclarantBirthDate: '',
       correctionField: undefined,
-      presentData: '', // Corrected
+      presentData: '',
       newData: '',
       oathAccepted: false,
       regularRegistrationType: undefined,
       regularVoterStatus: undefined,
       regularOathAccepted: false,
-      adultRegistrationConsent: undefined, // <-- Added for Katipunan consent
+      adultRegistrationConsent: undefined,
     });
-    toast({ title: "Draft Cleared", description: "The application form has been reset." });
   };
-
 
   const applicationType = form.watch('applicationType');
   const registrationIntention = form.watch('registrationIntention');
@@ -446,6 +392,60 @@ export function ApplicationFormFields() {
                   </div>
                 </FormItem>
               )}
+            />
+          </div>
+        )}
+
+        <Dialog open={isDeclarationDialogOpen} onOpenChange={setDeclarationDialogOpen}>
+          <DialogContent hideCloseButton className="sm:max-w-[525px]">
+            <DialogHeader>
+              <DialogTitle>Declaration</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 text-sm text-muted-foreground">
+              <p>
+                I hereby declare, under penalty of law, that all information provided in this online application form is true, complete, and accurate to the best of my knowledge and belief. I understand that any false or misleading statement may lead to the rejection of my application and/or legal consequences, including but not limited to those under the Revised Penal Code and other relevant laws.
+              </p>
+              <p>
+                I understand and agree to the processing of my personal data for the purpose of this application, in accordance with the Data Privacy Act of 2012 and the Commission on Elections (COMELEC) Data Privacy Policy. I have read and understood the terms and conditions outlined in this application.
+              </p>
+              <p>
+                Upon successful submission, your application will be reviewed by COMELEC personnel. You will be notified regarding the status of your application through the contact information you provided.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button
+                onClick={() => {
+                  form.setValue("declarationAccepted", true, { shouldValidate: true });
+                  setDeclarationDialogOpen(false);
+                }}
+                disabled={isConfirmButtonDisabled}
+              >
+                {isConfirmButtonDisabled ? `Please read the declaration (${countdown})` : "I understand and agree"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {applicationType && (
+          <div className="flex justify-end space-x-2 pt-6">
+            <Button type="button" onClick={handleClearDraft} className="btn-outline">
+              <Trash2 className="mr-2 h-4 w-4" /> Clear Draft & Reset
+            </Button>
+            <Button type="submit" disabled={form.formState.isSubmitting || !declarationAccepted}>
+              {form.formState.isSubmitting ? (
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : <Save className="mr-2 h-4 w-4" /> }
+              Submit Application
+            </Button>
+          </div>
+        )}
+      </form>
+    </Form>
+  );
+}
             />
           </div>
         )}
