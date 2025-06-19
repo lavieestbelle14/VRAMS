@@ -7,6 +7,8 @@ import { SignUpForm } from '@/components/auth/SignUpForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
+import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 function AuthPageContent() {
   const router = useRouter();
@@ -24,6 +26,14 @@ function AuthPageContent() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+      <Button
+        variant="ghost"
+        className="absolute top-4 left-4 flex items-center gap-2 text-muted-foreground hover:text-primary"
+        onClick={() => router.push('/')}
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Go to Homepage
+      </Button>
       <div className="mb-8 text-center">
         <div className="flex items-center justify-center mb-4">
           <Image

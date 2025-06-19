@@ -128,6 +128,7 @@ export default function VRAMSLandingPage() {
                 variant="outline"
                 className="border-white text-white bg-blue-900"
                 onClick={() => router.push('/auth?tab=login')}
+                
               >
                 Login
               </Button>
