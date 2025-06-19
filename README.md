@@ -8,7 +8,7 @@
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
   [![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.x-38BDF8.svg?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 
-  *Register smart. Apply easy. Vote ready — with VRAMS.*
+  *Register smart. Apply easy. Vote ready — with eRehistroPh.*
 
 </div>
 
