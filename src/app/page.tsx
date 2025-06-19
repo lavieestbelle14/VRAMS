@@ -1,15 +1,32 @@
 "use client";
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { FilePlus2, ShieldCheck, Zap, Globe, ArrowRight, CheckCircle, Calendar, User, FileText, MapPin, Users, Clock } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { FilePlus2, ShieldCheck, Zap, Globe, ArrowRight, CheckCircle, Calendar, User, FileText, MapPin, Users, Clock, Phone, Mail, MapPin as Location } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { motion } from "framer-motion";
+import Link from 'next/link';
 
 export default function VRAMSLandingPage() {
   const router = useRouter();
   const logoSrc = "/vrams_logo.png";
 
+  const handleGetHelp = () => {
+    router.push('/help/registration'); // Route to registration help page
+  };
+
+  const handleAccountHelp = () => {
+    router.push('/help/account'); // Route to account help page
+  };
+
+  const handleReportIssue = () => {
+    router.push('/help/technical'); // Route to technical support page
+  };
+
+  const handleHowItWorks = () => {
+    scrollToSection('how-it-works');
+  };
+  
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -141,21 +158,21 @@ export default function VRAMSLandingPage() {
                 <p className="text-sm font-medium">🇵🇭 Modernizing Philippine Election</p>
               </div>
               <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-                <span className="text-yellow-300">VRAMS</span>: Your Gateway to Democracy
+                <span className="text-yellow-300">eRehistroPh</span>: Your Gateway to Democracy
               </h1>
               <p className="text-base md:text-lg font-light mb-10 max-w-2xl leading-relaxed">
-                The Voter Registration and Application Management System (VRAMS) aims to strengthen democratic participation by providing every Filipino citizen with secure, efficient digital voter registration services. Our platform modernizes electoral processes, eliminates traditional barriers to registration, and ensures the integrity of voter data while building the technological foundation necessary to support transparent, accessible elections that advance our nation's democratic progress.
+                eRehistroPh aims to strengthen democratic participation by providing every Filipino citizen with secure, efficient digital voter registration services. Our platform modernizes electoral processes, eliminates traditional barriers to registration, and ensures the integrity of voter data while building the technological foundation necessary to support transparent, accessible elections that advance our nation's democratic progress.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Button 
                   className="bg-yellow-400 hover:bg-yellow-300 text-blue-900 px-8 py-6 text-lg font-bold shadow-lg hover:shadow-xl transition-all"
                   onClick={() => router.push('/auth?tab=sign-up')}
                 >
-                  REGISTER WITH VRAMS
+                  REGISTER WITH eRehistroPh
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
                 <Button variant="outline" className="border-white text-blue-900 hover:bg-white/10 px-8 py-6 text-lg font-bold">
-                  HOW VRAMS WORKS
+                  HOW eRehistroPh WORKS
                 </Button>
               </div>
               <div className="mt-8 flex items-center gap-4 text-sm">
@@ -299,7 +316,7 @@ export default function VRAMSLandingPage() {
       <section className="py-16 bg-gradient-to-b from-white to-blue-50">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-4 text-blue-900">
-            WHY REGISTER WITH VRAMS?
+            WHY REGISTER WITH eRehistroPh?
           </h2>
           <p className="text-gray-600 text-center max-w-2xl mx-auto mb-16">
             Experience the future of democratic participation with our secure platform.
@@ -352,6 +369,178 @@ export default function VRAMSLandingPage() {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <section id="faqs" className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-16 text-blue-900">
+            <span className="border-b-4 border-yellow-400 pb-2">FREQUENTLY ASKED QUESTIONS</span>
+          </h2>
+          
+          <div className="max-w-4xl mx-auto space-y-6">
+            {[
+              {
+                question: "Who can register using eRehistroPh?",
+                answer: "Any Filipino citizen who is at least 18 years old (or 15-17 years old for SK elections) and has been a resident of their current address for at least one year can register."
+              },
+              {
+                question: "What documents do I need to prepare?",
+                answer: "You'll need a valid government-issued ID, proof of residence (utility bill, barangay certificate, etc.), and a recent 1x1 photo."
+              },
+              {
+                question: "How long does the registration process take?",
+                answer: "The online application can be completed in just 2-3 minutes. Verification and processing typically take 3-5 business days."
+              },
+              {
+                question: "Can I check my registration status?",
+                answer: "Yes, you can track your application status through your eRehistroPh account dashboard after submitting your registration."
+              }
+            ].map((faq, index) => (
+              <div key={index} className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-colors">
+                <h3 className="font-bold text-lg text-blue-900 mb-3">{faq.question}</h3>
+                <p className="text-gray-600">{faq.answer}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Help Center Section */}
+      <section id="help-center" className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-16 text-blue-900">
+            <span className="border-b-4 border-yellow-400 pb-2">HELP CENTER</span>
+          </h2>
+          
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              <div className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow">
+                <div className="bg-blue-100 text-blue-900 p-3 rounded-full w-fit mb-4">
+                  <FileText className="h-6 w-6" />
+                </div>
+                <h3 className="text-xl font-bold text-blue-900 mb-3">Registration Issues</h3>
+                <p className="text-gray-600 mb-4">Having trouble with your voter registration? Find solutions to common registration problems.</p>
+                <Button 
+                  variant="outline" 
+                  className="text-blue-900 border-blue-900"
+                  onClick={handleGetHelp}
+                >
+                  Get Help
+                </Button>
+              </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow">
+              <div className="bg-blue-100 text-blue-900 p-3 rounded-full w-fit mb-4">
+                <User className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-bold text-blue-900 mb-3">Account Support</h3>
+              <p className="text-gray-600 mb-4">Need help with your eRehistroPh account? Login issues, password reset, and account management.</p>
+              <Button 
+                variant="outline" 
+                className="text-blue-900 border-blue-900"
+                onClick={handleAccountHelp}
+              >
+                Account Help
+              </Button>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow">
+              <div className="bg-blue-100 text-blue-900 p-3 rounded-full w-fit mb-4">
+                <Globe className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-bold text-blue-900 mb-3">Technical Issues</h3>
+              <p className="text-gray-600 mb-4">Experiencing technical difficulties? Report bugs, browser compatibility issues, and system errors.</p>
+              <Button 
+                variant="outline" 
+                className="text-blue-900 border-blue-900"
+                onClick={handleReportIssue}
+              >
+                Report Issue
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* User Guide Section */}
+      <section id="user-guide" className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-16 text-blue-900">
+            <span className="border-b-4 border-yellow-400 pb-2">USER GUIDE</span>
+          </h2>
+          
+          <div className="max-w-4xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-8 mb-12">
+              <div className="bg-blue-50 rounded-xl p-8">
+                <h3 className="text-2xl font-bold text-blue-900 mb-6">Step-by-Step Registration</h3>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="bg-blue-900 text-white rounded-full h-6 w-6 flex items-center justify-center text-sm font-bold flex-shrink-0 mt-1">1</div>
+                    <div>
+                      <h4 className="font-semibold text-blue-900">Create Account</h4>
+                      <p className="text-gray-600 text-sm">Sign up with your email and create a secure password</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="bg-blue-900 text-white rounded-full h-6 w-6 flex items-center justify-center text-sm font-bold flex-shrink-0 mt-1">2</div>
+                    <div>
+                      <h4 className="font-semibold text-blue-900">Fill Application</h4>
+                      <p className="text-gray-600 text-sm">Complete the voter registration form with accurate information</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="bg-blue-900 text-white rounded-full h-6 w-6 flex items-center justify-center text-sm font-bold flex-shrink-0 mt-1">3</div>
+                    <div>
+                      <h4 className="font-semibold text-blue-900">Upload Documents</h4>
+                      <p className="text-gray-600 text-sm">Submit required documents for verification</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="bg-blue-900 text-white rounded-full h-6 w-6 flex items-center justify-center text-sm font-bold flex-shrink-0 mt-1">4</div>
+                    <div>
+                      <h4 className="font-semibold text-blue-900">Track Progress</h4>
+                      <p className="text-gray-600 text-sm">Monitor your application status and receive updates</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 rounded-xl p-8">
+                <h3 className="text-2xl font-bold text-blue-900 mb-6">Tips for Success</h3>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
+                    <div>
+                      <h4 className="font-semibold text-blue-900">Prepare Documents First</h4>
+                      <p className="text-gray-600 text-sm">Have all required documents ready before starting</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
+                    <div>
+                      <h4 className="font-semibold text-blue-900">Double-Check Information</h4>
+                      <p className="text-gray-600 text-sm">Ensure all details are accurate to avoid delays</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
+                    <div>
+                      <h4 className="font-semibold text-blue-900">Use Clear Photos</h4>
+                      <p className="text-gray-600 text-sm">Upload high-quality, clear images of documents</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
+                    <div>
+                      <h4 className="font-semibold text-blue-900">Save Your Progress</h4>
+                      <p className="text-gray-600 text-sm">Your application is automatically saved as you progress</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-blue-800 to-blue-700 text-white">
         <div className="container mx-auto px-4 text-center">
@@ -376,45 +565,102 @@ export default function VRAMSLandingPage() {
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <img src={logoSrc} alt="VRAMS Logo" className="h-10 w-10" />
-                <span className="text-xl font-bold">VRAMS</span>
+                <span className="text-xl font-bold">eRehistroPh</span>
               </div>
               <p className="text-blue-200">
-                Modernizing Philippine voter registration with secure, accessible technology.
+                Empowering Filipino democracy through innovative digital voter registration solutions.
               </p>
             </div>
             
             <div>
               <h3 className="font-bold text-lg mb-4">Quick Links</h3>
               <ul className="space-y-2 text-blue-200">
-                <li><a href="#" className="hover:text-white transition-colors">Home</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Registration</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Requirements</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">FAQs</a></li>
+                <li>
+                  <button 
+                    onClick={() => scrollToSection('home')}
+                    className="hover:text-white transition-colors cursor-pointer text-left"
+                  >
+                    Home
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => router.push('/auth?tab=sign-up')}
+                    className="hover:text-white transition-colors cursor-pointer text-left"
+                  >
+                    Registration
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => scrollToSection('requirements')}
+                    className="hover:text-white transition-colors cursor-pointer text-left"
+                  >
+                    Requirements
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => scrollToSection('faqs')}
+                    className="hover:text-white transition-colors cursor-pointer text-left"
+                  >
+                    FAQs
+                  </button>
+                </li>
               </ul>
             </div>
             
             <div>
-              <h3 className="font-bold text-lg mb-4">Resources</h3>
+              <h3 className="font-bold text-lg mb-4">Support</h3>
               <ul className="space-y-2 text-blue-200">
-                <li><a href="#" className="hover:text-white transition-colors">Download Forms</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Voting Centers</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Election Calendar</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact COMELEC</a></li>
+                <li>
+                  <button 
+                    onClick={() => scrollToSection('help-center')}
+                    className="hover:text-white transition-colors cursor-pointer text-left"
+                  >
+                    Help Center
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => scrollToSection('user-guide')}
+                    className="hover:text-white transition-colors cursor-pointer text-left"
+                  >
+                    User Guide
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => scrollToSection('help-center')}
+                    className="hover:text-white transition-colors cursor-pointer text-left"
+                  >
+                    Technical Support
+                  </button>
+                </li>  
               </ul>
             </div>
-            
+
             <div>
               <h3 className="font-bold text-lg mb-4">Contact</h3>
-              <address className="not-italic text-blue-200 space-y-2">
-                <p>COMELEC Main Office</p>
-                <p>info@vrams.gov.ph</p>
-                <p>(02) 1234-5678</p>
-              </address>
+              <div className="text-blue-200 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  <span>support@erehistroph.gov.ph</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4" />
+                  <span>(02) 8525-9400</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Location className="h-4 w-4 mt-0.5" />
+                  <span>COMELEC Main Office<br />Intramuros, Manila</span>
+                </div>
+              </div>
             </div>
           </div>
           
           <div className="border-t border-blue-800 mt-12 pt-8 text-center text-blue-300">
-            <p>© {new Date().getFullYear()} Voter Registration and Application Management System. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} eRehistroPh - Voter Registration and Application Management System. All rights reserved.</p>
           </div>
         </div>
       </footer>

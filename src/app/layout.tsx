@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'VRAMS Portal',
+  title: 'eRehistroPh Portal',
   description: 'Voter Registration and Application Management System',
 };
 

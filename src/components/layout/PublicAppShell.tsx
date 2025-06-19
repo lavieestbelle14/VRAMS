@@ -92,7 +92,7 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
               height={32}
               data-ai-hint="VRAMS official seal"
             />
-            <span className="text-xl font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">VRAMS</span>
+            <span className="text-xl font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">eRehistroPh</span>
           </Link>
         </SidebarHeader>
         <SidebarContent>

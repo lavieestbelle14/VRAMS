@@ -60,7 +60,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               height={32}
               data-ai-hint="VRAMS official seal"
             />
-            <span className="text-xl font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">VRAMS</span>
+            <span className="text-xl font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">eRehistroPh</span>
           </Link>
         </SidebarHeader>
         <SidebarContent>
@@ -90,7 +90,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-2">
              <SidebarTrigger />
              <h1 className="text-lg font-semibold hidden sm:block">
-              {navItems.find(item => pathname.startsWith(item.href))?.label || 'VRAMS Portal'}
+              {navItems.find(item => pathname.startsWith(item.href))?.label || 'eRehistroPh Portal'}
             </h1>
           </div>
           <DropdownMenu>
