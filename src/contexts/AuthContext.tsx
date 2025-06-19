@@ -55,6 +55,41 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const pathname = usePathname();
   const { toast } = useToast();
 
+  // New function to handle URL hash after email confirmation
+  const handleEmailConfirmation = useCallback(async () => {
+    // Only run this in the browser
+    if (typeof window === 'undefined') return;
+    
+    // Check if we have a hash in the URL (typically after email confirmation)
+    if (window.location.hash && window.location.hash.includes('access_token')) {
+      try {
+        // Supabase automatically parses the hash, but we need to trigger a session check
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session) {
+          // Show success toast
+          toast({ 
+            title: 'Email Verified!', 
+            description: 'Your email has been verified successfully.',
+          });
+          
+          // Clean up the URL by removing the hash
+          window.history.replaceState({}, document.title, window.location.pathname);
+          
+          // If user confirmed their email but hasn't completed profile setup
+          // handle that here (if needed)
+        }
+      } catch (error) {
+        console.error('Error handling email confirmation:', error);
+        toast({ 
+          title: 'Verification Error', 
+          description: 'There was an error verifying your email.',
+          variant: 'destructive' 
+        });
+      }
+    }
+  }, [toast]);
+
   const handleSession = useCallback(async (session: Session | null) => {
     const supabaseUser = session?.user;
     if (supabaseUser) {
@@ -90,7 +125,13 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
     getInitialSession();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      // When user signs in (including after email verification), clean up the URL
+      if (event === 'SIGNED_IN') {
+        // Remove tokens from URL by replacing the current state with just the pathname
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+      
       handleSession(session);
     });
 
@@ -268,3 +309,4 @@ export function useAuth() {
   }
   return context;
 }
+
