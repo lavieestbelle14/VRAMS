@@ -153,16 +153,20 @@ export default function VRAMSLandingPage() {
                 eRehistroPh aims to strengthen democratic participation by providing every Filipino citizen with secure, efficient digital voter registration services. Our platform modernizes electoral processes, eliminates traditional barriers to registration, and ensures the integrity of voter data while building the technological foundation necessary to support transparent, accessible elections that advance our nation's democratic progress.
               </p>
               <div className="flex flex-wrap gap-4">
-                <Button 
-                  className="bg-yellow-400 hover:bg-yellow-300 text-blue-900 px-8 py-6 text-lg font-bold shadow-lg hover:shadow-xl transition-all"
-                  onClick={() => router.push('/auth?tab=sign-up')}
-                >
-                  REGISTER WITH eRehistroPh
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-                <Button variant="outline" className="border-white text-blue-900 hover:bg-white/10 px-8 py-6 text-lg font-bold">
-                  HOW eRehistroPh WORKS
-                </Button>
+              <Button 
+                className="bg-yellow-400 hover:bg-yellow-300 text-blue-900 px-8 py-6 text-lg font-bold shadow-lg hover:shadow-xl transition-all"
+                onClick={() => router.push('/auth?tab=sign-up')}
+              >
+                First Time Voter? Start Here
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+              <Button 
+                variant="outline" 
+                className="border-white text-blue-900 hover:bg-white/10 px-8 py-6 text-lg font-bold"
+                onClick={() => scrollToSection('features')}
+              >
+                About eRehistroPh
+              </Button>
               </div>
               <div className="mt-8 flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
@@ -302,7 +306,7 @@ export default function VRAMSLandingPage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-16 bg-gradient-to-b from-white to-blue-50">
+      <section id="features" className="py-16 bg-gradient-to-b from-white to-blue-50">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-4 text-blue-900">
             WHY REGISTER WITH eRehistroPh?
