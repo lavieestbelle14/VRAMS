@@ -16,7 +16,6 @@ import { Separator } from '@/components/ui/separator';
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Save, Trash2, CalendarIcon } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -24,6 +23,7 @@ import { saveApplication } from '@/lib/applicationStore';
 import { format } from "date-fns";
 import { z } from 'zod';
 import { useFormDraft } from '@/hooks/useFormDraft';
+import { DeclarationDialog } from './form-fields/DeclarationDialog';
 
 // Import all form field components
 import {
@@ -40,7 +40,7 @@ import {
   TransferFields,
   PersonalInformationFields, 
   InclusionReinstatementFields,
-  CorrectionOfEntryFields, // <-- updated import name
+  CorrectionOfEntryFields,
 } from './form-fields';
 
 type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
@@ -74,7 +74,6 @@ export function ApplicationFormFields() {
       contactNumber: '', email: '',
       residencyYearsCityMun: undefined, residencyMonthsCityMun: undefined, residencyYearsPhilippines: undefined, // Corrected residency fields
       professionOccupation: '',
-      // tin: '', // REMOVED
 
       // Address Details (Current)
       houseNoStreet: '', barangay: '', cityMunicipality: '', province: '', // Corrected address fields
@@ -122,29 +121,11 @@ export function ApplicationFormFields() {
   const declarationAccepted = form.watch('declarationAccepted');
 
   const [isDeclarationDialogOpen, setDeclarationDialogOpen] = useState(false);
-  const [isConfirmButtonDisabled, setConfirmButtonDisabled] = useState(true);
-  const [countdown, setCountdown] = useState(3);
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (isDeclarationDialogOpen) {
-      setConfirmButtonDisabled(true);
-      setCountdown(3);
-      timer = setInterval(() => {
-        setCountdown(prev => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            setConfirmButtonDisabled(false);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [isDeclarationDialogOpen]);
-  // Add inside the ApplicationFormFields component, after form is declared
-  // (Removed duplicate shouldDisableSection declaration)
+  
+  // Define the missing handleAcceptDeclaration function
+  const handleAcceptDeclaration = () => {
+    form.setValue("declarationAccepted", true, { shouldValidate: true });
+  };
 
   const handleClearDraft = () => {
     clearDraft({
@@ -396,35 +377,11 @@ export function ApplicationFormFields() {
           </div>
         )}
 
-        <Dialog open={isDeclarationDialogOpen} onOpenChange={setDeclarationDialogOpen}>
-          <DialogContent hideCloseButton className="sm:max-w-[525px]">
-            <DialogHeader>
-              <DialogTitle>Declaration</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 text-sm text-muted-foreground">
-              <p>
-                I hereby declare, under penalty of law, that all information provided in this online application form is true, complete, and accurate to the best of my knowledge and belief. I understand that any false or misleading statement may lead to the rejection of my application and/or legal consequences, including but not limited to those under the Revised Penal Code and other relevant laws.
-              </p>
-              <p>
-                I understand and agree to the processing of my personal data for the purpose of this application, in accordance with the Data Privacy Act of 2012 and the Commission on Elections (COMELEC) Data Privacy Policy. I have read and understood the terms and conditions outlined in this application.
-              </p>
-              <p>
-                Upon successful submission, your application will be reviewed by COMELEC personnel. You will be notified regarding the status of your application through the contact information you provided.
-              </p>
-            </div>
-            <DialogFooter>
-              <Button
-                onClick={() => {
-                  form.setValue("declarationAccepted", true, { shouldValidate: true });
-                  setDeclarationDialogOpen(false);
-                }}
-                disabled={isConfirmButtonDisabled}
-              >
-                {isConfirmButtonDisabled ? `Please read the declaration (${countdown})` : "I understand and agree"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <DeclarationDialog 
+          open={isDeclarationDialogOpen} 
+          onOpenChange={setDeclarationDialogOpen} 
+          onAccept={handleAcceptDeclaration} 
+        />
 
         {applicationType && (
           <div className="flex justify-end space-x-2 pt-6">
