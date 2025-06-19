@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { Application } from '@/types';
@@ -133,3 +132,4 @@ export function AcknowledgementReceipt({ application }: { application: Applicati
     </Card>
   );
 }
+

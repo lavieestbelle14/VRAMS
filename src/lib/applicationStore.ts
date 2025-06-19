@@ -1,4 +1,3 @@
-
 'use client';
 import type { Application } from '@/types';
 
@@ -10,8 +9,12 @@ function initializeStore(): Application[] {
   if (typeof window === 'undefined') return [];
   if (memoryStore !== null) return memoryStore;
 
-  const data = localStorage.getItem(APPLICATIONS_KEY);
-  memoryStore = data ? JSON.parse(data) : [];
+  try {
+    const data = localStorage.getItem(APPLICATIONS_KEY);
+    memoryStore = data ? JSON.parse(data) : [];
+  } catch (e) {
+    memoryStore = [];
+  }
   return memoryStore;
 }
 
@@ -84,9 +87,9 @@ export function seedInitialData() {
         id: 'APP-001',
         personalInfo: { 
           firstName: 'Juan', lastName: 'Dela Cruz', middleName: 'Protacio',
-          sex: 'male', dob: '1990-01-15', 
+          sex: 'M', dob: '1990-01-15', 
           placeOfBirthCityMun: 'Manila', placeOfBirthProvince: 'Metro Manila',
-          citizenshipType: 'byBirth', 
+          citizenshipType: 'By Birth', 
           contactNumber: '09171234567', email: 'juan.delacruz@example.com',
           residencyYearsCityMun: 5, residencyMonthsCityMun: 6, residencyYearsPhilippines: 30,
           professionOccupation: 'Engineer', tin: '123-456-789-000'
@@ -97,7 +100,7 @@ export function seedInitialData() {
           yearsOfResidency: 5, monthsOfResidency: 6
         },
         civilDetails: { 
-          civilStatus: 'single', 
+          civilStatus: 'Single', 
           fatherFirstName: 'Pedro', fatherLastName: 'Dela Cruz', 
           motherFirstName: 'Maria', motherLastName: 'Santos' 
         },
@@ -109,16 +112,15 @@ export function seedInitialData() {
         biometricsFile: "Captured on-site",
         status: 'pending',
         submissionDate: new Date(Date.now() - 86400000 * 5).toISOString(), 
-        classification: { applicantType: 'New Registration', confidence: 0.95, reason: 'All fields indicate a new applicant.'},
         remarks: 'Awaiting initial review.'
       },
       {
         id: 'APP-002',
         personalInfo: { 
           firstName: 'Maria', lastName: 'Clara', middleName: 'Santos',
-          sex: 'female', dob: '1985-05-20', 
+          sex: 'F', dob: '1985-05-20', 
           placeOfBirthCityMun: 'Cebu City', placeOfBirthProvince: 'Cebu',
-          citizenshipType: 'byBirth',
+          citizenshipType: 'By Birth',
           professionOccupation: 'Doctor'
         },
         addressDetails: { 
@@ -131,7 +133,7 @@ export function seedInitialData() {
             province: 'Cebu', zipCode: '6000' 
         },
         civilDetails: { 
-            civilStatus: 'married', spouseName: 'Jose Rizal', 
+            civilStatus: 'Married', spouseName: 'Jose Rizal', 
             fatherFirstName: 'Santiago', fatherLastName: 'Santos', 
             motherFirstName: 'Teodora', motherLastName: 'Alonso' 
         },
@@ -144,16 +146,15 @@ export function seedInitialData() {
         approvalDate: new Date(Date.now() - 86400000 * 2).toISOString(),
         voterId: 'VID-APP002-54321',
         precinct: 'Precinct 007B',
-        classification: { applicantType: 'Transfer of Registration', confidence: 0.98, reason: 'Application type is transfer and old address provided.'},
         remarks: 'All documents verified. Approved for transfer.'
       },
       {
         id: 'APP-004', 
         personalInfo: { 
           firstName: 'Gabriela', lastName: 'Silang', middleName: 'Cariño',
-          sex: 'female', dob: '1988-03-19', 
+          sex: 'F', dob: '1988-03-19', 
           placeOfBirthCityMun: 'Santa', placeOfBirthProvince: 'Ilocos Sur',
-          citizenshipType: 'byBirth',
+          citizenshipType: 'By Birth',
           professionOccupation: 'Teacher'
         },
         addressDetails: { 
@@ -162,7 +163,7 @@ export function seedInitialData() {
           yearsOfResidency: 3, monthsOfResidency: 2
         },
         civilDetails: { 
-          civilStatus: 'single', 
+          civilStatus: 'Single', 
           fatherFirstName: 'Tomas', fatherLastName: 'Cariño', 
           motherFirstName: 'Maria', motherLastName: 'Josefa' 
         },
@@ -174,7 +175,6 @@ export function seedInitialData() {
         biometricsFile: "Pending capture",
         status: 'reviewing', 
         submissionDate: new Date(Date.now() - 86400000 * 1).toISOString(), 
-        classification: { applicantType: 'New Registration', confidence: 0.92, reason: 'Standard new registration criteria met.'},
         remarks: 'Initial check done. Pending biometrics capture verification.'
       }
     ];
@@ -182,3 +182,4 @@ export function seedInitialData() {
     memoryStore = [...sampleApplications];
   }
 }
+

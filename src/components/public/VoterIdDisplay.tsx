@@ -20,7 +20,11 @@ export function VoterIdDisplay({ application }: VoterIdDisplayProps) {
   const formattedDob = pi.dob ? format(parseISO(pi.dob), 'MMMM dd, yyyy') : 'N/A';
   
   const getCitizenshipDisplay = () => {
-    if (pi.citizenshipType === 'byBirth' || pi.citizenshipType === 'reacquired' || pi.citizenshipType === 'naturalized') {
+    if (
+      pi.citizenshipType === 'By Birth' ||
+      pi.citizenshipType === 'Reacquired' ||
+      pi.citizenshipType === 'Naturalized'
+    ) {
       return 'Filipino';
     }
     return 'N/A';

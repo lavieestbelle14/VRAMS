@@ -1,159 +1,202 @@
-
 'use client';
+import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Separator } from '@/components/ui/separator';
-import { User, KeyRound, Save, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { User, Lock, Save, ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import VoterIdCard from "@/components/profile/VoterIDCard";
+import { AcknowledgementReceipt } from "@/components/public/AcknowledgementReceipt";
 
-const profileUpdateSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
+const profileSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters long"),
+  email: z.string().email(),
 });
-type ProfileUpdateFormValues = z.infer<typeof profileUpdateSchema>;
 
-const passwordUpdateSchema = z.object({
-  currentPassword: z.string().min(1, 'Current password is required'),
-  newPassword: z.string().min(6, 'New password must be at least 6 characters'),
+const passwordSchema = z.object({
+  newPassword: z.string().min(8, "Password must be at least 8 characters long"),
   confirmNewPassword: z.string(),
 }).refine(data => data.newPassword === data.confirmNewPassword, {
   message: "New passwords don't match",
-  path: ['confirmNewPassword'],
+  path: ["confirmNewPassword"],
 });
-type PasswordUpdateFormValues = z.infer<typeof passwordUpdateSchema>;
 
-export default function ProfilePage() {
-  const { user, updateUserProfile, updateUserPassword, isLoading: authIsLoading } = useAuth();
-  const [isProfileUpdating, setIsProfileUpdating] = useState(false);
-  const [isPasswordUpdating, setIsPasswordUpdating] = useState(false);
+type ProfileFormValues = z.infer<typeof profileSchema>;
+type PasswordFormValues = z.infer<typeof passwordSchema>;
 
-  const profileForm = useForm<ProfileUpdateFormValues>({
-    resolver: zodResolver(profileUpdateSchema),
-    defaultValues: {
-      firstName: user?.firstName || '',
-      lastName: user?.lastName || '',
-    },
-  });
+export default function PublicProfilePage() {
+  const { user, updateUserProfile, updateUserPassword, isLoading: authLoading } = useAuth();
+  const { toast } = useToast();
+  const router = useRouter();
 
-  const passwordForm = useForm<PasswordUpdateFormValues>({
-    resolver: zodResolver(passwordUpdateSchema),
-    defaultValues: {
-      currentPassword: '',
-      newPassword: '',
-      confirmNewPassword: '',
-    },
+  const profileForm = useForm<ProfileFormValues>({
+  resolver: zodResolver(profileSchema),
+  defaultValues: {
+    username: '',
+    email: '',
+  },
+});
+
+  const passwordForm = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: { newPassword: '', confirmNewPassword: '' },
   });
 
   useEffect(() => {
-    if (user) {
-      profileForm.reset({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-      });
-    }
-  }, [user, profileForm]);
-
-  async function onProfileSubmit(data: ProfileUpdateFormValues) {
-    setIsProfileUpdating(true);
-    await updateUserProfile(data);
-    setIsProfileUpdating(false);
+  if (user) {
+    profileForm.reset({
+      username: user.username || '',
+      email: user.email || '', // Use the email from user object instead of username
+    });
   }
+}, [user, profileForm]);
 
-  async function onPasswordSubmit(data: PasswordUpdateFormValues) {
-    setIsPasswordUpdating(true);
-    const success = await updateUserPassword(data.currentPassword, data.newPassword, data.confirmNewPassword);
+  const onProfileSubmit = async (data: ProfileFormValues) => {
+  const success = await updateUserProfile({ username: data.username });
+  if (success) {
+    toast({ title: "Profile Updated", description: "Your username has been saved." });
+  } else {
+    toast({ title: "Update Failed", description: "Could not update profile. Please try again.", variant: "destructive" });
+  }
+};
+
+  const onPasswordSubmit = async (data: PasswordFormValues) => {
+    const success = await updateUserPassword(data.newPassword);
     if (success) {
       passwordForm.reset();
     }
-    setIsPasswordUpdating(false);
+  };
+
+  if (authLoading) {
+    return <div className="flex h-full items-center justify-center"><p>Loading...</p></div>;
   }
 
-  if (authIsLoading || !user) {
-    return <div className="flex h-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <p className="text-muted-foreground mb-4">Please log in to view your profile.</p>
+        <Button onClick={() => router.push('/auth')}>Go to Login</Button>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-3xl font-bold tracking-tight">My Profile</h2>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center"><User className="mr-2" />Personal Information</CardTitle>
-          <CardDescription>View and update your personal details.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...profileForm}>
-            <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
-              <FormField
-                control={profileForm.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>First Name</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={profileForm.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Last Name</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <Input type="email" value={user.username} readOnly disabled className="bg-muted/50" />
-                <FormDescription>Email address cannot be changed.</FormDescription>
-              </FormItem>
-              <Button type="submit" disabled={isProfileUpdating}>
-                {isProfileUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                Update Profile
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-
-      <Separator />
+    <div className="space-y-8">
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold tracking-tight">My Profile</h2>
+        <Button variant="outline" onClick={() => router.push('/public/home')}>
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Home
+        </Button>
+      </div>
 
       <Card>
+  <CardHeader>
+    <CardTitle className="flex items-center">
+      <User className="mr-2 h-5 w-5 text-primary" /> User Information
+    </CardTitle>
+    <CardDescription>Update your username. Email is not editable here.</CardDescription>
+  </CardHeader>
+  <CardContent>
+    <Form {...profileForm}>
+      <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-6">
+        <FormField
+          control={profileForm.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Username</FormLabel>
+              <FormControl>
+                <Input placeholder="johndoe" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={profileForm.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="user@example.com"
+                  readOnly
+                  className="bg-muted opacity-60 cursor-not-allowed"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="submit" disabled={profileForm.formState.isSubmitting}>
+          {profileForm.formState.isSubmitting ? 
+          <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg> : 
+          <Save className="mr-2 h-4 w-4" />}
+          Save Profile Changes
+        </Button>
+      </form>
+    </Form>
+  </CardContent>
+</Card>
+
+<Card>
+  <CardHeader>
+    <CardTitle className="flex items-center">
+      Precinct & Voter Info
+    </CardTitle>
+    <CardDescription>
+      Your assigned precinct and voter ID (if any).
+    </CardDescription>
+  </CardHeader>
+  <CardContent>
+    <div className="grid grid-cols-2 gap-4 text-sm">
+      <div>
+        <span className="text-gray-500">Precinct Number:</span>
+        <p className="font-medium">
+          {user?.precinct || "1234A (mock)"}
+        </p>
+      </div>
+      <div>
+        <span className="text-gray-500">Voter ID Number:</span>
+        <p className="font-medium">
+          {user?.voterId || "VIN-00000001 (mock)"}
+        </p>
+      </div>
+    </div>
+  </CardContent>
+</Card>
+
+<VoterIdCard />
+
+
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center"><KeyRound className="mr-2" />Change Password</CardTitle>
+          <CardTitle className="flex items-center"><Lock className="mr-2 h-5 w-5 text-primary" /> Change Password</CardTitle>
           <CardDescription>Update your account password.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...passwordForm}>
-            <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
-              <FormField
-                control={passwordForm.control}
-                name="currentPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Current Password</FormLabel>
-                    <FormControl><Input type="password" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-6">
               <FormField
                 control={passwordForm.control}
                 name="newPassword"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>New Password</FormLabel>
-                    <FormControl><Input type="password" {...field} /></FormControl>
+                    <FormControl>
+                      <Input type="password" placeholder="A strong new password" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -164,14 +207,15 @@ export default function ProfilePage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Confirm New Password</FormLabel>
-                    <FormControl><Input type="password" {...field} /></FormControl>
+                    <FormControl>
+                      <Input type="password" placeholder="Confirm the new password" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={isPasswordUpdating}>
-                {isPasswordUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                Change Password
+              <Button type="submit" disabled={passwordForm.formState.isSubmitting}>
+                <Save className="mr-2 h-4 w-4" /> Update Password
               </Button>
             </form>
           </Form>

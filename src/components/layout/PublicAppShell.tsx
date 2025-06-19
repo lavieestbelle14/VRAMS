@@ -1,5 +1,5 @@
-
 'use client';
+import React, { useState } from 'react';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
-import { Home, FileSearch, LogOut, UserCircle, FilePlus2, Settings, HelpCircle } from 'lucide-react';
+import { Home, FileSearch, LogOut, UserCircle, FilePlus2, Settings, HelpCircle, Search as SearchIcon } from 'lucide-react';
 import Image from 'next/image';
 
 interface NavItem {
@@ -36,23 +36,49 @@ const navItems: NavItem[] = [
   { href: '/public/faq', label: 'FAQ / Help', icon: HelpCircle, tooltip: 'Frequently Asked Questions' },
 ];
 
+// This mapping is still useful for page-specific titles if needed elsewhere,
+// but the icon won't be shown in the header bar.
+const pageTitleDetails: Record<string, { title: string; icon?: React.ElementType }> = {
+  '/public/home': { title: 'Home', icon: Home },
+  '/public/apply': { title: 'New Voter Application', icon: FilePlus2 },
+  '/public/track-status': { title: 'Track Application Status', icon: SearchIcon },
+  '/public/faq': { title: 'FAQ / Help Center', icon: HelpCircle },
+  '/public/profile': { title: 'My Profile', icon: Settings },
+  '/public/application-submitted': { title: 'Application Submitted', icon: FilePlus2 },
+  '/public/schedule-biometrics': { title: 'Schedule Biometrics', icon: FilePlus2 },
+};
+
+
 export function PublicAppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const logoSrc = "/vrams_logo.png"; 
 
+
+
   const getAvatarFallback = () => {
-    if (user?.firstName && user?.lastName) {
-      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
-    }
-    if (user?.firstName) {
-      return user.firstName.substring(0, 2).toUpperCase();
-    }
     if (user?.username) {
       return user.username.substring(0, 2).toUpperCase();
     }
     return <UserCircle size={20}/>;
   };
+
+  const getCurrentPageTitle = () => {
+    // Find a direct match or a startsWith match for dynamic routes like /application-submitted/[id]
+    const matchedPath = Object.keys(pageTitleDetails).find(
+      key => pathname === key || (key.includes('[') && pathname.startsWith(key.split('[')[0]))
+    );
+
+    if (matchedPath && pageTitleDetails[matchedPath]) {
+      return pageTitleDetails[matchedPath].title;
+    }
+    
+    // Fallback for nav items if no specific title detail found
+    const currentNavItem = navItems.find(item => pathname === item.href || (item.href !== '/public/home' && pathname.startsWith(item.href)));
+    return currentNavItem?.label || 'VRAMS Public Portal';
+  };
+
+  const pageTitle = getCurrentPageTitle();
 
   return (
     <SidebarProvider defaultOpen>
@@ -96,7 +122,8 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-2">
              <SidebarTrigger />
              <h1 className="text-lg font-semibold hidden sm:block">
-              {navItems.find(item => pathname.startsWith(item.href))?.label || 'VRAMS Public Portal'}
+              {/* Icon removed from here */}
+              {pageTitle}
             </h1>
           </div>
           <DropdownMenu>
@@ -111,7 +138,7 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{user?.firstName || user?.username || 'Public User'}</DropdownMenuLabel>
+              <DropdownMenuLabel>{user?.username || 'Public User'}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/public/profile" className="flex items-center w-full">
@@ -120,7 +147,7 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout}>
+              <DropdownMenuItem onSelect={() => logout()}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Logout</span>
               </DropdownMenuItem>

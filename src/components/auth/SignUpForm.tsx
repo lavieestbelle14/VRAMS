@@ -13,8 +13,7 @@ import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 import Link from 'next/link';
 
 const signUpSchema = z.object({
-  firstName: z.string().min(1, { message: 'First name is required' }),
-  lastName: z.string().min(1, { message: 'Last name is required' }),
+  username: z.string().min(2, { message: 'Username must be at least 2 characters' }),
   email: z.string().email({ message: 'Invalid email address' }),
   password: z.string()
     .min(8, { message: 'Password must be at least 8 characters long' })
@@ -34,56 +33,46 @@ export function SignUpForm() {
   const { signUp } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
-      firstName: '',
-      lastName: '',
+      username: '',
       email: '',
       password: '',
       confirmPassword: '',
     },
-    mode: 'onBlur', 
   });
 
   const currentPassword = form.watch('password');
 
-  function onSubmit(data: SignUpFormValues) {
-    signUp(data.firstName, data.lastName, data.email, data.password, data.confirmPassword);
+  async function onSubmit(values: SignUpFormValues) {
+    setIsSubmitting(true);
+    try {
+      // The new signUp function from AuthContext is async and handles its own errors/toasts
+      await signUp(values.username, values.email, values.password);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="firstName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>First Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Juan" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="lastName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Last Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Dela Cruz" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Username</FormLabel>
+              <FormControl>
+                <Input placeholder="juandelacruz" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="email"
@@ -158,8 +147,8 @@ export function SignUpForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? (
+        <Button type="submit" className="w-full" disabled={isSubmitting || !form.formState.isValid}>
+          {isSubmitting ? (
             <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -172,22 +161,19 @@ export function SignUpForm() {
         <p className="px-2 text-center text-xs text-muted-foreground sm:px-8">
           By signing up, you agree to our{' '}
           <Link
-            href="#"
-            className="underline underline-offset-4 hover:text-primary"
-            onClick={(e) => { e.preventDefault(); alert('This is a mock Terms of Service page. In a real app, this would link to a dedicated page.'); }}
-          >
-            Terms of Service
-          </Link>{' '}
-          and{' '}
-          <Link
-            href="#"
-            className="underline underline-offset-4 hover:text-primary"
-            onClick={(e) => { e.preventDefault(); alert('This is a mock Privacy Policy page. In a real app, this would link to a dedicated page.'); }}
-          >
-            Privacy Policy
-          </Link>
-          .
-        </p>
+  href="/public/terms-of-service"
+  className="underline underline-offset-4 hover:text-primary"
+>
+  Terms of Service
+</Link>{' '}
+and{' '}
+<Link
+  href="/public/privacy-policy"
+  className="underline underline-offset-4 hover:text-primary"
+>
+  Privacy Policy
+</Link>
+      </p>
       </form>
     </Form>
   );

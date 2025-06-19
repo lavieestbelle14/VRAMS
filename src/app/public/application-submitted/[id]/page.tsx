@@ -1,4 +1,3 @@
-
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -51,8 +50,9 @@ export default function ApplicationSubmittedPage() {
       'register': 'New Registration',
       'transfer': 'Transfer of Registration',
       'reactivation': 'Reactivation of Registration',
-      'changeCorrection': 'Change of Name/Correction of Entries',
-      'inclusionReinstatement': 'Inclusion of Records/Reinstatement of Name',
+      'transfer_with_reactivation': 'Transfer with Reactivation',
+      'correction_of_entry': 'Correction of Entries',
+      'reinstatement': 'Inclusion/Reinstatement',
       '': 'Unknown Type'
   };
 

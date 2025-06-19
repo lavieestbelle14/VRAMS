@@ -1,16 +1,30 @@
-
-import type { ClassifyApplicantTypeOutput } from "@/ai/flows/classify-applicant-type";
+import { ReactNode } from 'react';
 
 export interface PersonalInfo {
+  mobileNumber: ReactNode;
+  suffix: string;
+  phoneNumber: ReactNode;
+  fatherFirstName: ReactNode;
+  fatherLastName: ReactNode;
+  motherFirstName: ReactNode;
+  motherLastName: ReactNode;
+  spouseName: any;
+  isPwd: any;
+  isSenior: any;
+  isIndigenousPerson: any;
+  indigenousTribe: any;
+  isIlliterate: any;
+  birthDate: ReactNode;
+  civilStatus: ReactNode;
   firstName: string;
   lastName: string;
   middleName?: string;
-  sex: 'male' | 'female' | '';
+  sex: 'M' | 'F' | '';
   dob: string; // ISO string date yyyy-mm-dd
-  placeOfBirthCityMun: string;
+  
   placeOfBirthProvince: string;
   
-  citizenshipType: 'byBirth' | 'naturalized' | 'reacquired' | '';
+  citizenshipType: 'By Birth' | 'Naturalized' | 'Reacquired' | '';
   naturalizationDate?: string; // Date string yyyy-mm-dd
   naturalizationCertNo?: string;
 
@@ -36,7 +50,7 @@ export interface AddressDetails { // Represents current residence
 }
 
 export interface CivilDetails {
-  civilStatus: 'single' | 'married' | '';
+  civilStatus: 'Single' | 'Married' | 'Widowed' | 'Legally Separated' | '';
   spouseName?: string; // Required if married
   fatherFirstName: string;
   fatherLastName: string;
@@ -59,13 +73,15 @@ export interface SpecialNeeds {
 }
 
 export interface Application {
+  addressInfo: any;
+  documents: boolean;
   id: string;
   personalInfo: PersonalInfo;
   addressDetails: AddressDetails; // Current address
   civilDetails: CivilDetails;
   specialNeeds?: SpecialNeeds;
   
-  applicationType: 'register' | 'transfer' | ''; // UPDATED
+  applicationType: 'register' | 'transfer' | 'reactivation' | 'transfer_with_reactivation' | 'correction_of_entry' | 'reinstatement' | ''; // UPDATED
   biometricsFile?: string; // Simulated file name or path or "Captured"
 
   // Conditional based on applicationType
@@ -76,19 +92,18 @@ export interface Application {
   // reactivationEvidence?: string; 
   // presentData?: string; 
   // newCorrectedData?: string; 
-
   status: 'pending' | 'approved' | 'rejected' | 'reviewing';
   submissionDate: string; // ISO string date
   approvalDate?: string; // ISO string date
   voterId?: string;
   precinct?: string;
-  classification?: ClassifyApplicantTypeOutput;
+  // classification?: ClassifyApplicantTypeOutput;
   remarks?: string;
 }
 
 // Combines all form fields into one type for react-hook-form, matching schema
 export type ApplicationFormData = PersonalInfo & AddressDetails & CivilDetails & SpecialNeeds & {
-  applicationType: 'register' | 'transfer' | ''; // UPDATED
+  applicationType: 'register' | 'transfer' | 'reactivation' | 'transfer_with_reactivation' | 'correction_of_entry' | 'reinstatement' | '';
   biometricsFile?: string;
 
   // Transfer specific fields (previous address)
@@ -98,9 +113,35 @@ export type ApplicationFormData = PersonalInfo & AddressDetails & CivilDetails &
   transferProvince?: string;
   transferZipCode?: string;
 
-  // Removed reactivation, change/correction, inclusion fields
-  // reactivationReasons?: string[];
-  // reactivationEvidence?: string;
-  // presentData?: string;
-  // newCorrectedData?: string;
+  // Additional fields for schema compatibility
+  registrationIntention?: 'Regular' | 'Katipunan ng Kabataan';
+  regularOathAccepted?: boolean;
+  regularRegistrationType?: 'registration' | 'transfer';
+  regularVoterStatus?: 'not_registered' | 'registered_elsewhere';
+  oathAccepted?: boolean;
+  declarationAccepted?: boolean;
+  adultRegistrationConsent?: boolean;
+
+  // ID Verification
+  idFrontPhoto?: File;
+  idBackPhoto?: File;
+  selfieWithId?: File;
+
+  // Transfer/Reactivate/Correction/Inclusion fields
+  previousPrecinctNumber?: string;
+  previousBarangay?: string;
+  previousCityMunicipality?: string;
+  previousProvince?: string;
+  previousForeignPost?: string;
+  previousCountry?: string;
+  transferDeclarantName?: string;
+  transferDeclarantBirthDate?: string;
+  transferType?: string;
+  reactivationReason?: string;
+  correctionField?: string;
+  presentData?: string;
+  newData?: string;
+  inclusionType?: 'inclusion' | 'reinstatement';
+  inclusionPrecinctNo?: string;
 };
+

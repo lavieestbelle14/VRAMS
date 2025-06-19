@@ -1,299 +1,267 @@
-
 'use client';
-import type { ReactNode } from 'react';
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+
+import type { ReactNode, FC } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase/client';
+import type { User, Session } from '@supabase/supabase-js';
+
+// ---- TYPE DEFINITIONS ---- //
 
 type UserRole = 'officer' | 'public';
 
 interface AuthenticatedUser {
-  username: string; // This will store the email
+  id: string; // Supabase auth user ID
+  email: string;
+  voterId?: string;
+  precinct?: string;
+  username: string;
   role: UserRole;
-  firstName?: string;
-  lastName?: string;
-}
-
-interface StoredUser extends AuthenticatedUser {
-  passwordHash: string; // For a mock system, this will be plain text. In real app, a hash.
 }
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (email: string, passwordAttempt: string, intendedRole: UserRole) => void;
-  signUp: (firstName: string, lastName: string, email: string, passwordAttempt: string, confirmPasswordAttempt: string) => void;
-  logout: () => void;
+  login: (email: string, passwordAttempt: string) => Promise<void>;
+  signUp: (username: string, email: string, passwordAttempt: string) => Promise<void>;
+  logout: () => Promise<void>;
   isLoading: boolean;
   user: AuthenticatedUser | null;
-  resetPassword: (email: string, token: string, newPass: string, confirmPass: string) => Promise<boolean>;
-  updateUserProfile: (updates: { firstName?: string; lastName?: string }) => Promise<boolean>;
-  updateUserPassword: (currentPass: string, newPass: string, confirmPass: string) => Promise<boolean>;
+  updateUserProfile: (updates: { username?: string }) => Promise<boolean>;
+  updateUserPassword: (newPass: string) => Promise<boolean>;
+  sendPasswordResetEmail: (email: string) => Promise<boolean>;
 }
+
+// ---- CONTEXT CREATION ---- //
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const USERS_DB_KEY = 'vrams_users_db';
-const CURRENT_USER_KEY = 'vrams_current_user';
+const publicUserAuthenticatedPaths = [
+  '/public/home',
+  '/public/apply',
+  '/public/track-status',
+  '/public/application-submitted',
+  '/public/profile',
+  '/public/faq',
+  '/public/schedule-biometrics'
+];
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+// ---- AUTH PROVIDER COMPONENT ---- //
+
+export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
 
-  const getMockUsersDB = (): StoredUser[] => {
-    if (typeof window === 'undefined') return [];
-    const db = localStorage.getItem(USERS_DB_KEY);
-    return db ? JSON.parse(db) : [];
-  };
+  const handleSession = useCallback(async (session: Session | null) => {
+    const supabaseUser = session?.user;
+    if (supabaseUser) {
+      const { data: profile, error } = await supabase
+        .from('profile')
+        .select('role, username')
+        .eq('auth_id', supabaseUser.id)
+        .single();
 
-  const saveMockUsersDB = (users: StoredUser[]) => {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem(USERS_DB_KEY, JSON.stringify(users));
-  };
-
-  const seedInitialUsers = useCallback(() => {
-    let users = getMockUsersDB();
-    if (!users.some(u => u.username.toLowerCase() === 'officer@comelec.gov.ph')) {
-      users.push({
-        username: 'officer@comelec.gov.ph',
-        passwordHash: 'password123',
-        role: 'officer',
-        firstName: 'Officer', // UPDATED from 'Election'
-        lastName: 'User' // Changed "Officer" to "User" for lastName to avoid "Officer Officer"
-      });
-      saveMockUsersDB(users);
-    }
-  }, []);
-
-
-  const checkAuthStatus = useCallback(() => {
-    setIsLoading(true);
-    seedInitialUsers();
-    const storedUser = localStorage.getItem(CURRENT_USER_KEY);
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser) as AuthenticatedUser;
-      setUser(parsedUser);
-      setIsAuthenticated(true);
+      if (error || !profile) {
+        console.error('Error fetching profile or profile not found:', error);
+        // Don't sign out here, just clear local state
+        setUser(null);
+      } else {
+        setUser({
+          id: supabaseUser.id,
+          email: supabaseUser.email!,
+          role: profile.role as UserRole,
+          username: profile.username,
+        });
+      }
     } else {
       setUser(null);
-      setIsAuthenticated(false);
     }
     setIsLoading(false);
-  }, [seedInitialUsers]);
+  }, [toast]);
 
   useEffect(() => {
-    checkAuthStatus();
-  }, [checkAuthStatus]);
+    const getInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      handleSession(session);
+    };
 
- useEffect(() => {
+    getInitialSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      handleSession(session);
+    });
+
+    // Proactively sync on tab focus
+    const handleFocus = () => getInitialSession();
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      authListener.subscription.unsubscribe();
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [handleSession]);
+
+  useEffect(() => {
     if (isLoading) return;
 
+    const isAuthenticated = !!user;
+    
+    if (pathname === '/' || pathname.startsWith('/public/terms-of-service') || pathname.startsWith('/public/privacy-policy')) {
+      return;
+    }
+
     const isOfficerPath = pathname.startsWith('/dashboard');
-    const isPublicAuthenticatedPath = ['/public/home', '/public/apply', '/public/track-status', '/public/application-submitted', '/public/profile'].some(p => pathname.startsWith(p));
-    const isPublicUnauthenticatedPath = ['/public/forgot-password', '/public/reset-password'].some(p => pathname.startsWith(p));
-    const isAuthPage = pathname === '/';
+    const isPathRequiringPublicUserAuth = publicUserAuthenticatedPaths.some(p => pathname.startsWith(p));
+    const isAuthPage = pathname === '/auth';
+    const isPasswordResetPage = pathname.startsWith('/public/forgot-password') || pathname.startsWith('/public/reset-password');
 
-
-    if (isAuthenticated && user) {
+    if (isAuthenticated) {
       if (user.role === 'officer') {
-        if (!isOfficerPath && !isAuthPage) { 
-             router.push('/dashboard');
-        } else if (isAuthPage && isOfficerPath) { 
-            // this case means they are at / but trying to access dashboard, allow existing officer paths
-        } else if (isAuthPage) { 
-            router.push('/dashboard');
-        }
-
+        if (!isOfficerPath) router.push('/dashboard');
       } else if (user.role === 'public') {
-         if (isOfficerPath) {
-            router.push('/public/home');
-         } else if (isAuthPage) {
-            router.push('/public/home');
-         }
+        if (isOfficerPath || isAuthPage) router.push('/public/home');
       }
     } else {
-      // User is NOT authenticated
-      if ((isOfficerPath || isPublicAuthenticatedPath)) { 
-        router.push('/');
+      if (!isAuthPage && !isPasswordResetPage && (isOfficerPath || isPathRequiringPublicUserAuth)) {
+        router.push('/auth');
       }
-      // If on isAuthPage, or public unauthenticated paths, do nothing.
     }
-  }, [isAuthenticated, isLoading, user, pathname, router]);
+  }, [user, isLoading, pathname, router]);
 
+  const login = useCallback(async (email: string, passwordAttempt: string) => {
+    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+      email,
+      password: passwordAttempt,
+    });
 
-  const login = (email: string, passwordAttempt: string, intendedRole: UserRole) => {
-    const users = getMockUsersDB();
-    const foundUser = users.find(u => u.username.toLowerCase() === email.toLowerCase());
-
-    if (foundUser && foundUser.passwordHash === passwordAttempt) {
-      if (foundUser.role !== intendedRole) {
-        toast({ title: 'Login Failed', description: `Please use the ${intendedRole === 'officer' ? 'Officer' : 'Public User'} login tab.`, variant: 'destructive' });
-        return;
-      }
-      const authenticatedUser: AuthenticatedUser = {
-        username: foundUser.username,
-        role: foundUser.role,
-        firstName: foundUser.firstName,
-        lastName: foundUser.lastName
-      };
-      setUser(authenticatedUser);
-      setIsAuthenticated(true);
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(authenticatedUser));
-      toast({ title: 'Login Successful', description: `Welcome, ${authenticatedUser.firstName || authenticatedUser.username}!` });
-    } else {
-      toast({ title: 'Login Failed', description: 'Invalid email or password.', variant: 'destructive' });
-    }
-  };
-
-  const signUp = (firstName: string, lastName: string, email: string, passwordAttempt: string, confirmPasswordAttempt: string) => {
-    if (passwordAttempt !== confirmPasswordAttempt) {
-      toast({ title: 'Sign Up Failed', description: 'Passwords do not match.', variant: 'destructive' });
+    if (loginError || !loginData.user) {
+      toast({ title: 'Login Failed', description: loginError?.message || 'Invalid credentials.', variant: 'destructive' });
       return;
     }
-    if (passwordAttempt.length < 6) {
-       toast({ title: 'Sign Up Failed', description: 'Password must be at least 6 characters.', variant: 'destructive' });
-       return;
-    }
+    
+    const { data: profile, error: profileError } = await supabase
+      .from('profile')
+      .select('role, username')
+      .eq('auth_id', loginData.user.id)
+      .single();
 
-    const users = getMockUsersDB();
-    if (users.some(u => u.username.toLowerCase() === email.toLowerCase())) {
-      toast({ title: 'Sign Up Failed', description: 'Email already registered.', variant: 'destructive' });
+    if (profileError || !profile) {
+      toast({ title: 'Login Failed', description: 'Could not retrieve user profile.', variant: 'destructive' });
+      await supabase.auth.signOut();
       return;
     }
 
-    const newUser: StoredUser = {
-      firstName,
-      lastName,
-      username: email,
-      passwordHash: passwordAttempt,
-      role: 'public'
-    };
-    users.push(newUser);
-    saveMockUsersDB(users);
 
-    toast({ title: 'Sign Up Successful!', description: 'You can now log in.' });
-    const authenticatedUser: AuthenticatedUser = {
-      username: newUser.username,
-      role: newUser.role,
-      firstName: newUser.firstName,
-      lastName: newUser.lastName
-    };
-    setUser(authenticatedUser);
-    setIsAuthenticated(true);
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(authenticatedUser));
-  };
 
-  const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem(CURRENT_USER_KEY);
-    router.push('/');
-  };
+    toast({ title: 'Login Successful', description: `Welcome, ${profile.username}!` });
+  }, [toast]);
 
-  const resetPassword = async (email: string, token: string, newPass: string, confirmPass: string): Promise<boolean> => {
-    if (newPass !== confirmPass) {
-      toast({ title: "Password Reset Failed", description: "New passwords do not match.", variant: "destructive" });
+  const signUp = useCallback(async (username: string, email: string, passwordAttempt: string) => {
+    const { data: existingUsers, error: checkError } = await supabase
+      .from('profile')
+      .select('email')
+      .eq('email', email);
+
+    if (checkError) {
+      toast({ title: 'Error', description: 'An error occurred while checking existing accounts.', variant: 'destructive' });
+      return;
+    }
+
+    if (existingUsers && existingUsers.length > 0) {
+      toast({ 
+        title: 'Account Exists', 
+        description: 'An account with this email already exists. Please log in instead.', 
+        variant: 'destructive' 
+      });
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password: passwordAttempt,
+      options: {
+        data: {
+          username: username,
+        },
+      },
+    });
+
+    if (error) {
+      toast({ title: 'Sign Up Failed', description: error.message, variant: 'destructive' });
+      return;
+    }
+
+    if (data.user) {
+      toast({ title: 'Sign Up Successful', description: 'Your account has been created. Please check your email to confirm your account.' });
+    }
+  }, [toast]);
+
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
+    router.push('/auth');
+  }, [router]);
+
+  const sendPasswordResetEmail = useCallback(async (email: string): Promise<boolean> => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/public/reset-password`,
+    });
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
       return false;
     }
-    if (newPass.length < 6) {
-      toast({ title: "Password Reset Failed", description: "New password must be at least 6 characters.", variant: "destructive" });
-      return false;
-    }
-    // In a real app, token would be validated. Here, we just check if email exists.
-    // And the token is just a formality for the mock.
-    if (!token.startsWith("RESET-")) {
-        toast({ title: "Password Reset Failed", description: "Invalid reset token format.", variant: "destructive" });
-        return false;
-    }
-
-    let users = getMockUsersDB();
-    const userIndex = users.findIndex(u => u.username.toLowerCase() === email.toLowerCase() && u.role === 'public');
-
-    if (userIndex === -1) {
-      toast({ title: "Password Reset Failed", description: "Public user email not found.", variant: "destructive" });
-      return false;
-    }
-
-    users[userIndex].passwordHash = newPass;
-    saveMockUsersDB(users);
-    toast({ title: "Password Reset Successful", description: "You can now log in with your new password." });
+    toast({ title: 'Success', description: 'Password reset link sent. Please check your email.' });
     return true;
-  };
+  }, [toast]);
 
-  const updateUserProfile = async (updates: { firstName?: string; lastName?: string }): Promise<boolean> => {
-    if (!user || !isAuthenticated || user.role !== 'public') {
-      toast({ title: "Update Failed", description: "You must be logged in as a public user.", variant: "destructive" });
+  const updateUserPassword = useCallback(async (newPass: string): Promise<boolean> => {
+    const { error } = await supabase.auth.updateUser({ password: newPass });
+    if (error) {
+      toast({ title: 'Update Failed', description: error.message, variant: 'destructive' });
       return false;
     }
-    let users = getMockUsersDB();
-    const userIndex = users.findIndex(u => u.username.toLowerCase() === user.username.toLowerCase());
-
-    if (userIndex === -1) {
-      toast({ title: "Update Failed", description: "User not found.", variant: "destructive" });
-      return false;
-    }
-
-    const updatedUserDetails = { ...users[userIndex], ...updates };
-    users[userIndex] = updatedUserDetails;
-    saveMockUsersDB(users);
-
-    const updatedAuthUser = { ...user, ...updates };
-    setUser(updatedAuthUser);
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedAuthUser));
-
-    toast({ title: "Profile Updated", description: "Your profile information has been updated." });
+    toast({ title: 'Password Updated', description: 'Your password has been successfully updated.' });
     return true;
-  };
+  }, [toast]);
 
-  const updateUserPassword = async (currentPass: string, newPass: string, confirmPass: string): Promise<boolean> => {
-     if (!user || !isAuthenticated || user.role !== 'public') {
-      toast({ title: "Password Change Failed", description: "You must be logged in as a public user.", variant: "destructive" });
-      return false;
-    }
-    if (newPass !== confirmPass) {
-      toast({ title: "Password Change Failed", description: "New passwords do not match.", variant: "destructive" });
-      return false;
-    }
-    if (newPass.length < 6) {
-      toast({ title: "Password Change Failed", description: "New password must be at least 6 characters.", variant: "destructive" });
-      return false;
-    }
+  const updateUserProfile = useCallback(async (updates: { username?: string }): Promise<boolean> => {
+    if (!user) return false;
 
-    let users = getMockUsersDB();
-    const userIndex = users.findIndex(u => u.username.toLowerCase() === user.username.toLowerCase());
+    const { error } = await supabase
+      .from('profile')
+      .update({ username: updates.username })
+      .eq('auth_id', user.id);
 
-    if (userIndex === -1) {
-      toast({ title: "Password Change Failed", description: "User not found.", variant: "destructive" });
+    if (error) {
+      toast({ title: 'Error', description: 'Failed to update profile.', variant: 'destructive' });
       return false;
     }
-    if (users[userIndex].passwordHash !== currentPass) {
-      toast({ title: "Password Change Failed", description: "Incorrect current password.", variant: "destructive" });
-      return false;
-    }
-
-    users[userIndex].passwordHash = newPass;
-    saveMockUsersDB(users);
-    toast({ title: "Password Changed Successfully", description: "Your password has been updated." });
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    handleSession(session);
+    
+    toast({ title: 'Success', description: 'Your profile has been updated.' });
     return true;
-  };
+  }, [user, handleSession, toast]);
 
+  const value = useMemo(() => ({
+    isAuthenticated: !!user,
+    user,
+    isLoading,
+    login,
+    signUp,
+    logout,
+    updateUserProfile,
+    updateUserPassword,
+    sendPasswordResetEmail,
+  }), [user, isLoading, login, signUp, logout, updateUserProfile, updateUserPassword, sendPasswordResetEmail]);
 
-  if (isLoading) {
-    return <div className="flex h-screen items-center justify-center"><svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-  </svg></div>;
-  }
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
 
-  return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, signUp, logout, isLoading, resetPassword, updateUserProfile, updateUserPassword }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
+// ---- HOOK EXPORT ---- //
 
 export function useAuth() {
   const context = useContext(AuthContext);
