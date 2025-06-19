@@ -132,4 +132,4 @@ export function AcknowledgementReceipt({ application }: { application: Applicati
     </Card>
   );
 }
-}
+
