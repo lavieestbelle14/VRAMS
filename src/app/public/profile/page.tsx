@@ -11,6 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { User, Lock, Save, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import VoterIdCard from "@/components/profile/VoterIDCard";
+import { AcknowledgementReceipt } from "@/components/public/AcknowledgementReceipt";
 
 const profileSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters long"),
@@ -147,6 +149,36 @@ export default function PublicProfilePage() {
     </Form>
   </CardContent>
 </Card>
+
+<Card>
+  <CardHeader>
+    <CardTitle className="flex items-center">
+      Precinct & Voter Info
+    </CardTitle>
+    <CardDescription>
+      Your assigned precinct and voter ID (if any).
+    </CardDescription>
+  </CardHeader>
+  <CardContent>
+    <div className="grid grid-cols-2 gap-4 text-sm">
+      <div>
+        <span className="text-gray-500">Precinct Number:</span>
+        <p className="font-medium">
+          {user?.precinct || "1234A (mock)"}
+        </p>
+      </div>
+      <div>
+        <span className="text-gray-500">Voter ID Number:</span>
+        <p className="font-medium">
+          {user?.voterId || "VIN-00000001 (mock)"}
+        </p>
+      </div>
+    </div>
+  </CardContent>
+</Card>
+
+<VoterIdCard />
+
 
       <Card>
         <CardHeader>
