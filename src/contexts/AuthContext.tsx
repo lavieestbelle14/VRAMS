@@ -58,22 +58,22 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const handleSession = useCallback(async (session: Session | null) => {
     const supabaseUser = session?.user;
     if (supabaseUser) {
-      const { data: profile, error } = await supabase
-        .from('profile')
+      const { data: appUser, error } = await supabase
+        .from('app_user')
         .select('role, username')
         .eq('auth_id', supabaseUser.id)
         .single();
 
-      if (error || !profile) {
-        console.error('Error fetching profile or profile not found:', error);
+      if (error || !appUser) {
+        console.error('Error fetching user or user not found:', error);
         // Don't sign out here, just clear local state
         setUser(null);
       } else {
         setUser({
           id: supabaseUser.id,
           email: supabaseUser.email!,
-          role: profile.role as UserRole,
-          username: profile.username,
+          role: appUser.role as UserRole,
+          username: appUser.username,
         });
       }
     } else {
@@ -142,26 +142,24 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       return;
     }
     
-    const { data: profile, error: profileError } = await supabase
-      .from('profile')
+    const { data: appUser, error: userError } = await supabase
+      .from('app_user')
       .select('role, username')
       .eq('auth_id', loginData.user.id)
       .single();
 
-    if (profileError || !profile) {
+    if (userError || !appUser) {
       toast({ title: 'Login Failed', description: 'Could not retrieve user profile.', variant: 'destructive' });
       await supabase.auth.signOut();
       return;
     }
 
-
-
-    toast({ title: 'Login Successful', description: `Welcome, ${profile.username}!` });
+    toast({ title: 'Login Successful', description: `Welcome, ${appUser.username}!` });
   }, [toast]);
 
   const signUp = useCallback(async (username: string, email: string, passwordAttempt: string) => {
     const { data: existingUsers, error: checkError } = await supabase
-      .from('profile')
+      .from('app_user')
       .select('email')
       .eq('email', email);
 
@@ -230,7 +228,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     if (!user) return false;
 
     const { error } = await supabase
-      .from('profile')
+      .from('app_user')
       .update({ username: updates.username })
       .eq('auth_id', user.id);
 
