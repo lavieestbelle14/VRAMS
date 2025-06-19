@@ -28,7 +28,7 @@ interface AuthContextType {
   isLoading: boolean;
   user: AuthenticatedUser | null;
   updateUserProfile: (updates: { username?: string }) => Promise<boolean>;
-  updateUserPassword: (newPass: string) => Promise<boolean>;
+  updateUserPassword: (oldPass: string, newPass: string) => Promise<boolean>;
   sendPasswordResetEmail: (email: string) => Promise<boolean>;
 }
 
@@ -108,15 +108,19 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     if (isLoading) return;
 
     const isAuthenticated = !!user;
-    
-    if (pathname === '/' || pathname.startsWith('/public/terms-of-service') || pathname.startsWith('/public/privacy-policy')) {
+    const isPasswordResetPage = pathname.startsWith('/public/forgot-password') || pathname.startsWith('/public/reset-password');
+    const isAuthPage = pathname === '/auth';
+    const isOfficerPath = pathname.startsWith('/dashboard');
+    const isPathRequiringPublicUserAuth = publicUserAuthenticatedPaths.some(p => pathname.startsWith(p));
+
+    // Allow unauthenticated access to forgot/reset password pages
+    if (isPasswordResetPage) {
       return;
     }
 
-    const isOfficerPath = pathname.startsWith('/dashboard');
-    const isPathRequiringPublicUserAuth = publicUserAuthenticatedPaths.some(p => pathname.startsWith(p));
-    const isAuthPage = pathname === '/auth';
-    const isPasswordResetPage = pathname.startsWith('/public/forgot-password') || pathname.startsWith('/public/reset-password');
+    if (pathname === '/' || pathname.startsWith('/public/terms-of-service') || pathname.startsWith('/public/privacy-policy')) {
+      return;
+    }
 
     if (isAuthenticated) {
       if (user.role === 'officer') {
@@ -216,7 +220,20 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     return true;
   }, [toast]);
 
-  const updateUserPassword = useCallback(async (newPass: string): Promise<boolean> => {
+  const updateUserPassword = useCallback(async (oldPass: string, newPass: string): Promise<boolean> => {
+    if (!user) return false;
+    // If oldPass is provided, require re-authentication (profile change)
+    if (oldPass) {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: oldPass,
+      });
+      if (signInError) {
+        toast({ title: 'Incorrect Old Password', description: signInError.message, variant: 'destructive' });
+        return false;
+      }
+    }
+    // Update password (for both reset and profile change)
     const { error } = await supabase.auth.updateUser({ password: newPass });
     if (error) {
       toast({ title: 'Update Failed', description: error.message, variant: 'destructive' });
@@ -224,7 +241,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     }
     toast({ title: 'Password Updated', description: 'Your password has been successfully updated.' });
     return true;
-  }, [toast]);
+  }, [toast, user]);
 
   const updateUserProfile = useCallback(async (updates: { username?: string }): Promise<boolean> => {
     if (!user) return false;
