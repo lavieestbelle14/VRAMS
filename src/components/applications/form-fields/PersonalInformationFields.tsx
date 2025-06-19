@@ -90,8 +90,8 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="M">Male</SelectItem>
+                  <SelectItem value="F">Female</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -211,16 +211,16 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="byBirth">By Birth</SelectItem>
-                  <SelectItem value="naturalized">Naturalized</SelectItem>
-                  <SelectItem value="reacquired">Reacquired</SelectItem>
+                  <SelectItem value="By Birth">By Birth</SelectItem>
+                  <SelectItem value="Naturalized">Naturalized</SelectItem>
+                  <SelectItem value="Reacquired">Reacquired</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
             </FormItem>
           )}
         />
-        {(citizenshipType === 'naturalized' || citizenshipType === 'reacquired') && (
+        {(citizenshipType === 'Naturalized' || citizenshipType === 'Reacquired') && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <FormField
               control={control}
@@ -310,15 +310,17 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="single">Single</SelectItem>
-                  <SelectItem value="married">Married</SelectItem>
+                  <SelectItem value="Single">Single</SelectItem>
+                  <SelectItem value="Married">Married</SelectItem>
+                  <SelectItem value="Widowed">Widowed</SelectItem>
+                  <SelectItem value="Legally Separated">Legally Separated</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
             </FormItem>
           )}
         />
-        {civilStatus === 'married' && (
+        {civilStatus === 'Married' && (
           <FormField
             control={control}
             name={"spouseName" as any}
