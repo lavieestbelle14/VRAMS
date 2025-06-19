@@ -21,32 +21,32 @@ const faqData: FAQItem[] = [
   // General Questions
   {
     id: 'gen1',
-    question: 'What is VRAMS?',
-    answer: 'VRAMS stands for Voter Registration and Application Management System. It is a web-based platform designed to modernize and streamline the voter registration process in the Philippines, making it faster, more accessible, and transparent for all Filipino citizens.',
+    question: 'What is eRehistroPh?',
+    answer: 'eRehistroPh stands for Voter Registration and Application Management System. It is a web-based platform designed to modernize and streamline the voter registration process in the Philippines, making it faster, more accessible, and transparent for all Filipino citizens.',
     category: 'General',
   },
   {
     id: 'gen2',
-    question: 'Who can use VRAMS?',
-    answer: 'Any Filipino citizen eligible to vote can use VRAMS to register for the first time, transfer their registration, or update their voter information.',
+    question: 'Who can use eRehistroPh?',
+    answer: 'Any Filipino citizen eligible to vote can use eRehistroPh to register for the first time, transfer their registration, or update their voter information.',
     category: 'General',
   },
   {
     id: 'gen3',
-    question: 'Is VRAMS secure?',
-    answer: 'Yes, VRAMS is designed with security in mind to protect your personal information. We use industry-standard security measures to ensure data privacy and integrity.',
+    question: 'Is eRehistroPh secure?',
+    answer: 'Yes, eRehistroPh is designed with security in mind to protect your personal information. We use industry-standard security measures to ensure data privacy and integrity.',
     category: 'General',
   },
 
   // Registration Process
   {
     id: 'reg1',
-    question: 'How do I register to vote using VRAMS?',
+    question: 'How do I register to vote using eRehistroPh?',
     answer: (
       <>
-        <p className="mb-2">To register using VRAMS, follow these steps:</p>
+        <p className="mb-2">To register using eRehistroPh, follow these steps:</p>
         <ol className="list-decimal list-inside space-y-1">
-          <li>Create an account on the VRAMS portal.</li>
+          <li>Create an account on the eRehistroPh portal.</li>
           <li>Log in to your account.</li>
           <li>Click on the "New Application" link.</li>
           <li>Fill out the online application form completely and accurately.</li>
@@ -62,13 +62,13 @@ const faqData: FAQItem[] = [
   {
     id: 'reg2',
     question: 'What documents do I need to prepare for registration?',
-    answer: 'While the initial online application on VRAMS may not require immediate document uploads, you will typically need to present valid identification during your biometrics capture. Common valid IDs include Philippine Passport, Driver’s License, SSS/GSIS ID, UMID, Postal ID, PRC ID, etc. Please check the official COMELEC website for a complete list of accepted IDs.',
+    answer: 'While the initial online application on eRehistroPh may not require immediate document uploads, you will typically need to present valid identification during your biometrics capture. Common valid IDs include Philippine Passport, Driver’s License, SSS/GSIS ID, UMID, Postal ID, PRC ID, etc. Please check the official COMELEC website for a complete list of accepted IDs.',
     category: 'Registration Process',
   },
   {
     id: 'reg3',
-    question: 'Can I transfer my voter registration using VRAMS?',
-    answer: 'Yes, VRAMS supports applications for transfer of registration records. You will need to provide your new address details and, if applicable, your previous address details.',
+    question: 'Can I transfer my voter registration using eRehistroPh?',
+    answer: 'Yes, eRehistroPh supports applications for transfer of registration records. You will need to provide your new address details and, if applicable, your previous address details.',
     category: 'Registration Process',
   },
   {
@@ -80,7 +80,7 @@ const faqData: FAQItem[] = [
   {
     id: 'reg5',
     question: 'I made a mistake in my application. Can I edit it after submission?',
-    answer: 'Once an application is submitted, you generally cannot edit it directly through VRAMS. If you notice an error, please contact your local COMELEC office or wait for their feedback. Minor corrections might be handled during your biometrics appointment.',
+    answer: 'Once an application is submitted, you generally cannot edit it directly through eRehistroPh. If you notice an error, please contact your local COMELEC office or wait for their feedback. Minor corrections might be handled during your biometrics appointment.',
     category: 'Registration Process',
   },
 
@@ -93,14 +93,14 @@ const faqData: FAQItem[] = [
   },
   {
     id: 'acc2',
-    question: 'I am having trouble accessing the VRAMS website. What should I do?',
-    answer: 'Please ensure you have a stable internet connection and are using a compatible web browser (e.g., latest versions of Chrome, Firefox, Safari, Edge). If the problem persists, try clearing your browser cache or contact VRAMS support through the provided channels.',
+    question: 'I am having trouble accessing the eRehistroPh website. What should I do?',
+    answer: 'Please ensure you have a stable internet connection and are using a compatible web browser (e.g., latest versions of Chrome, Firefox, Safari, Edge). If the problem persists, try clearing your browser cache or contact eRehistroPh support through the provided channels.',
     category: 'Account & Technical Support',
   },
   {
     id: 'acc3',
     question: 'How can I update my profile information (e.g., email, contact number)?',
-    answer: 'You can update your profile information such as your email and contact number by logging into your VRAMS account and navigating to the "My Profile" section.',
+    answer: 'You can update your profile information such as your email and contact number by logging into your eRehistroPh account and navigating to the "My Profile" section.',
     category: 'Account & Technical Support',
   },
   
@@ -108,7 +108,7 @@ const faqData: FAQItem[] = [
   {
     id: 'stat1',
     question: 'How can I track the status of my application?',
-    answer: 'Log in to your VRAMS account and navigate to the "Track Application Status" section. You will need your Application ID to view the current status.',
+    answer: 'Log in to your eRehistroPh account and navigate to the "Track Application Status" section. You will need your Application ID to view the current status.',
     category: 'Application Status & Tracking',
   },
   {
@@ -132,13 +132,13 @@ const faqData: FAQItem[] = [
   {
     id: 'stat3',
     question: 'How long does the voter registration process take?',
-    answer: 'The processing time can vary depending on the volume of applications and the COMELEC’s schedule. VRAMS aims to expedite the initial application, but the entire process, including biometrics, may take several weeks or months. Please regularly check your application status on VRAMS.',
+    answer: 'The processing time can vary depending on the volume of applications and the COMELEC’s schedule. eRehistroPh aims to expedite the initial application, but the entire process, including biometrics, may take several weeks or months. Please regularly check your application status on eRehistroPh.',
     category: 'Application Status & Tracking',
   },
   {
     id: 'stat4',
     question: 'What should I do if my application is rejected?',
-    answer: 'If your application is rejected, VRAMS will provide the reason(s) for rejection. You may need to submit a new application with corrected information or provide additional documentation as required by COMELEC.',
+    answer: 'If your application is rejected, eRehistroPh will provide the reason(s) for rejection. You may need to submit a new application with corrected information or provide additional documentation as required by COMELEC.',
     category: 'Application Status & Tracking',
   }
 ];
@@ -200,7 +200,7 @@ export default function FaqPage() {
         <CardHeader>
           <CardTitle>Frequently Asked Questions</CardTitle>
           <CardDescription>
-            Find answers to common questions about VRAMS and the voter registration process.
+            Find answers to common questions about eRehistroPh and the voter registration process.
           </CardDescription>
         </CardHeader>
         <CardContent>

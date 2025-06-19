@@ -34,7 +34,7 @@ function AuthPageContent() {
             data-ai-hint="VRAMS official seal"
           />
         </div>
-        <h1 className="text-4xl font-bold text-primary">VRAMS Portal</h1>
+        <h1 className="text-4xl font-bold text-primary">eRehistroPh Portal</h1>
         <p className="text-muted-foreground mt-2">Voter Registration and Application Management System</p>
       </div>
       <Card className="w-full max-w-md shadow-xl">

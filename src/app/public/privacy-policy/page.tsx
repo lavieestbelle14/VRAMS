@@ -32,7 +32,7 @@ export default function PrivacyPolicyPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground">
-            Your privacy is important to us. It is VRAMS's policy to respect your privacy regarding any information we may collect from you across our website.
+            Your privacy is important to us. It is eRehistroPh's policy to respect your privacy regarding any information we may collect from you across our website.
           </p>
           <h2 className="text-xl font-semibold">1. Information We Collect</h2>
           <p>
