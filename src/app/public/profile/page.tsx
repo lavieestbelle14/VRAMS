@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,6 +20,7 @@ const profileSchema = z.object({
 });
 
 const passwordSchema = z.object({
+  oldPassword: z.string().min(1, "Old password is required"),
   newPassword: z.string().min(8, "Password must be at least 8 characters long"),
   confirmNewPassword: z.string(),
 }).refine(data => data.newPassword === data.confirmNewPassword, {
@@ -45,8 +46,12 @@ export default function PublicProfilePage() {
 
   const passwordForm = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordSchema),
-    defaultValues: { newPassword: '', confirmNewPassword: '' },
+    defaultValues: { oldPassword: '', newPassword: '', confirmNewPassword: '' },
   });
+
+  const [showOld, setShowOld] = useState<boolean>(false);
+  const [showNew, setShowNew] = useState<boolean>(false);
+  const [showConfirm, setShowConfirm] = useState<boolean>(false);
 
   useEffect(() => {
   if (user) {
@@ -56,6 +61,12 @@ export default function PublicProfilePage() {
     });
   }
 }, [user, profileForm]);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/auth');
+    }
+  }, [authLoading, user, router]);
 
   const onProfileSubmit = async (data: ProfileFormValues) => {
   const success = await updateUserProfile({ username: data.username });
@@ -67,7 +78,7 @@ export default function PublicProfilePage() {
 };
 
   const onPasswordSubmit = async (data: PasswordFormValues) => {
-    const success = await updateUserPassword(data.newPassword);
+    const success = await updateUserPassword(data.oldPassword, data.newPassword);
     if (success) {
       passwordForm.reset();
     }
@@ -190,12 +201,31 @@ export default function PublicProfilePage() {
             <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-6">
               <FormField
                 control={passwordForm.control}
+                name="oldPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Old Password</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input type={showOld ? "text" : "password"} placeholder="Enter old password" {...field} />
+                        <button type="button" className="absolute right-2 top-2 text-xs" onClick={() => setShowOld(v => !v)}>{showOld ? 'Hide' : 'Show'}</button>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={passwordForm.control}
                 name="newPassword"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>New Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="A strong new password" {...field} />
+                      <div className="relative">
+                        <Input type={showNew ? "text" : "password"} placeholder="A strong new password" {...field} />
+                        <button type="button" className="absolute right-2 top-2 text-xs" onClick={() => setShowNew(v => !v)}>{showNew ? 'Hide' : 'Show'}</button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -208,7 +238,10 @@ export default function PublicProfilePage() {
                   <FormItem>
                     <FormLabel>Confirm New Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="Confirm the new password" {...field} />
+                      <div className="relative">
+                        <Input type={showConfirm ? "text" : "password"} placeholder="Confirm the new password" {...field} />
+                        <button type="button" className="absolute right-2 top-2 text-xs" onClick={() => setShowConfirm(v => !v)}>{showConfirm ? 'Hide' : 'Show'}</button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

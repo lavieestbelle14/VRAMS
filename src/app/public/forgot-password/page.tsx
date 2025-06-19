@@ -1,4 +1,3 @@
-
 'use client';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -35,6 +34,19 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+      <div className="mb-8 text-center">
+        <div className="flex items-center justify-center mb-4">
+          <img
+            src="/vrams_logo.png"
+            alt="VRAMS official seal"
+            width={64}
+            height={64}
+            style={{ display: 'inline-block' }}
+          />
+        </div>
+        <h1 className="text-4xl font-bold text-primary">VRAMS Portal</h1>
+        <p className="text-muted-foreground mt-2">Voter Registration and Application Management System</p>
+      </div>
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader>
           <CardTitle className="text-2xl text-center">Forgot Password</CardTitle>
@@ -74,7 +86,7 @@ export default function ForgotPasswordPage() {
             </Alert>
           )}
           <div className="text-sm text-center mt-4">
-            <Link href="/" className="font-medium text-primary hover:underline flex items-center justify-center">
+            <Link href="/auth" className="font-medium text-primary hover:underline flex items-center justify-center">
               <ArrowLeft className="mr-1 h-4 w-4" /> Back to Login
             </Link>
           </div>

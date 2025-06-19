@@ -1,29 +1,38 @@
-
 'use client';
 import type { ReactNode } from 'react';
 import { PublicAppShell } from '@/components/layout/PublicAppShell'; // Changed to PublicAppShell
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function PublicLayout({ children }: { children: ReactNode }) { // Renamed to PublicLayout
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     // We don't want to check anything until Supabase has checked the session.
     if (isLoading) {
       return;
     }
-
-    // If auth is loaded and the user is not authenticated or not the right role, redirect.
+    // Allow unauthenticated access to forgot/reset password pages
+    if (
+      pathname === '/public/forgot-password' ||
+      pathname === '/public/reset-password'
+    ) {
+      return;
+    }
     if (!isAuthenticated || user?.role !== 'public') {
       router.push('/');
     }
-  }, [isLoading, isAuthenticated, user, router]);
+  }, [isLoading, isAuthenticated, user, router, pathname]);
 
   // While loading, or if the user is not authenticated (and about to be redirected),
   // show a loading screen. This prevents rendering children with incorrect state.
+  const isPasswordResetPage = pathname === '/public/forgot-password' || pathname === '/public/reset-password';
+  if (isPasswordResetPage) {
+    return <>{children}</>;
+  }
   if (isLoading || !isAuthenticated || user?.role !== 'public') {
     return (
       <div className="flex h-screen items-center justify-center">
