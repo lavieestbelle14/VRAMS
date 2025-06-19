@@ -1,10 +1,27 @@
+import { ReactNode } from 'react';
+
 export interface PersonalInfo {
+  mobileNumber: ReactNode;
+  suffix: string;
+  phoneNumber: ReactNode;
+  fatherFirstName: ReactNode;
+  fatherLastName: ReactNode;
+  motherFirstName: ReactNode;
+  motherLastName: ReactNode;
+  spouseName: any;
+  isPwd: any;
+  isSenior: any;
+  isIndigenousPerson: any;
+  indigenousTribe: any;
+  isIlliterate: any;
+  birthDate: ReactNode;
+  civilStatus: ReactNode;
   firstName: string;
   lastName: string;
   middleName?: string;
   sex: 'M' | 'F' | '';
   dob: string; // ISO string date yyyy-mm-dd
-  placeOfBirthCityMun: string;
+  
   placeOfBirthProvince: string;
   
   citizenshipType: 'By Birth' | 'Naturalized' | 'Reacquired' | '';
@@ -56,6 +73,8 @@ export interface SpecialNeeds {
 }
 
 export interface Application {
+  addressInfo: any;
+  documents: boolean;
   id: string;
   personalInfo: PersonalInfo;
   addressDetails: AddressDetails; // Current address
