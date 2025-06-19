@@ -14,6 +14,8 @@ type UserRole = 'officer' | 'public';
 interface AuthenticatedUser {
   id: string; // Supabase auth user ID
   email: string;
+  voterId?: string;
+  precinct?: string;
   username: string;
   role: UserRole;
 }
