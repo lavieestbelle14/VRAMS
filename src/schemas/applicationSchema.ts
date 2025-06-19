@@ -48,9 +48,8 @@ export const applicationFormSchema = z.object({
   prefersGroundFloor: z.boolean().default(false),
   indigenousTribe: z.string().optional(),
   disabilityType: z.string().optional(),
-  assistanceNeeded: z.string().optional(), // Not in DB schema, but in UI
+  assistanceNeeded: z.string().optional(), 
   assistorName: z.string().optional(),
-  assistorRelationship: z.string().optional(), // Not in DB schema, but in UI
 
   // Application Type and Biometrics
   applicationType: z.enum([
@@ -253,9 +252,6 @@ export const applicationFormSchema = z.object({
   }
   if (data.isIndigenousPerson && !data.indigenousTribe) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Tribe Name is required if Indigenous Person is selected.", path: ["indigenousTribe"] });
-  }
-  if (data.assistorName && !data.assistorRelationship) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Assistor's Relationship is required if Assistor's Name is provided.", path: ["assistorRelationship"] });
   }
 
 });

@@ -84,7 +84,7 @@ export function ApplicationFormFields() {
       fatherFirstName: '', fatherLastName: '', motherFirstName: '', motherLastName: '', // Corrected parent fields
         // Special Needs
       isIlliterate: false, isSenior: false, indigenousTribe: '', disabilityType: '', // Corrected special needs fields
-      assistanceNeeded: '', assistorName: '', assistorRelationship: '', prefersGroundFloor: false, isPwd: false, isIndigenousPerson: false,
+      assistanceNeeded: '', assistorName: '', prefersGroundFloor: false, isPwd: false, isIndigenousPerson: false,
 
       // Application
       applicationType: '', // Use '' instead of undefined for enums
@@ -158,7 +158,7 @@ export function ApplicationFormFields() {
       civilStatus: '', spouseName: '',
       fatherFirstName: '', fatherLastName: '', motherFirstName: '', motherLastName: '',
       isIlliterate: false, isSenior: false, indigenousTribe: '', disabilityType: '',
-      assistanceNeeded: '', assistorName: '', assistorRelationship: '', prefersGroundFloor: false, isPwd: false, isIndigenousPerson: false,
+      assistanceNeeded: '', assistorName: '', prefersGroundFloor: false, isPwd: false, isIndigenousPerson: false,
       applicationType: '',
       biometricsFile: 'For on-site capture',
       previousPrecinctNumber: '', previousBarangay: '', previousCityMunicipality: '', previousProvince: '',

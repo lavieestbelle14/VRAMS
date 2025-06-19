@@ -504,21 +504,20 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
           )}
         />
 
-        {assistorName && (
-          <FormField
-            control={control}
-            name={"assistorRelationship" as any}
-            render={({ field }) => (
-              <FormItem className="mt-4">
-                <FormLabel>Assistor's Relationship</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g., Spouse, Child, Guardian" {...field} value={field.value ?? ''} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+        {/* Add the assistanceNeeded field below assistorName */}
+        <FormField
+          control={control}
+          name={"assistanceNeeded" as any}
+          render={({ field }) => (
+            <FormItem className="mt-4">
+              <FormLabel>Type of Assistance Needed</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g., visual, communication" {...field} value={field.value ?? ''} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
     </div>
   );
