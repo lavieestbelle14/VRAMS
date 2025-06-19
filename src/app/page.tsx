@@ -11,22 +11,10 @@ export default function VRAMSLandingPage() {
   const router = useRouter();
   const logoSrc = "/vrams_logo.png";
 
-  const handleGetHelp = () => {
-    router.push('/help/registration'); // Route to registration help page
-  };
-
-  const handleAccountHelp = () => {
-    router.push('/help/account'); // Route to account help page
-  };
-
-  const handleReportIssue = () => {
-    router.push('/help/technical'); // Route to technical support page
-  };
-
   const handleHowItWorks = () => {
     scrollToSection('how-it-works');
   };
-  
+
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -404,62 +392,6 @@ export default function VRAMSLandingPage() {
         </div>
       </section>
 
-      {/* Help Center Section */}
-      <section id="help-center" className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-16 text-blue-900">
-            <span className="border-b-4 border-yellow-400 pb-2">HELP CENTER</span>
-          </h2>
-          
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              <div className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow">
-                <div className="bg-blue-100 text-blue-900 p-3 rounded-full w-fit mb-4">
-                  <FileText className="h-6 w-6" />
-                </div>
-                <h3 className="text-xl font-bold text-blue-900 mb-3">Registration Issues</h3>
-                <p className="text-gray-600 mb-4">Having trouble with your voter registration? Find solutions to common registration problems.</p>
-                <Button 
-                  variant="outline" 
-                  className="text-blue-900 border-blue-900"
-                  onClick={handleGetHelp}
-                >
-                  Get Help
-                </Button>
-              </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow">
-              <div className="bg-blue-100 text-blue-900 p-3 rounded-full w-fit mb-4">
-                <User className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-bold text-blue-900 mb-3">Account Support</h3>
-              <p className="text-gray-600 mb-4">Need help with your eRehistroPh account? Login issues, password reset, and account management.</p>
-              <Button 
-                variant="outline" 
-                className="text-blue-900 border-blue-900"
-                onClick={handleAccountHelp}
-              >
-                Account Help
-              </Button>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow">
-              <div className="bg-blue-100 text-blue-900 p-3 rounded-full w-fit mb-4">
-                <Globe className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-bold text-blue-900 mb-3">Technical Issues</h3>
-              <p className="text-gray-600 mb-4">Experiencing technical difficulties? Report bugs, browser compatibility issues, and system errors.</p>
-              <Button 
-                variant="outline" 
-                className="text-blue-900 border-blue-900"
-                onClick={handleReportIssue}
-              >
-                Report Issue
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* User Guide Section */}
       <section id="user-guide" className="py-16 bg-white">
         <div className="container mx-auto px-4">
@@ -615,28 +547,12 @@ export default function VRAMSLandingPage() {
               <ul className="space-y-2 text-blue-200">
                 <li>
                   <button 
-                    onClick={() => scrollToSection('help-center')}
-                    className="hover:text-white transition-colors cursor-pointer text-left"
-                  >
-                    Help Center
-                  </button>
-                </li>
-                <li>
-                  <button 
                     onClick={() => scrollToSection('user-guide')}
                     className="hover:text-white transition-colors cursor-pointer text-left"
                   >
                     User Guide
                   </button>
                 </li>
-                <li>
-                  <button 
-                    onClick={() => scrollToSection('help-center')}
-                    className="hover:text-white transition-colors cursor-pointer text-left"
-                  >
-                    Technical Support
-                  </button>
-                </li>  
               </ul>
             </div>
 
