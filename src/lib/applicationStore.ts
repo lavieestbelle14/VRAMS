@@ -15,7 +15,7 @@ function initializeStore(): Application[] {
   } catch (e) {
     memoryStore = [];
   }
-  return memoryStore;
+  return memoryStore ?? [];
 }
 
 
