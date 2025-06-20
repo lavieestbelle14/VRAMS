@@ -28,12 +28,13 @@ import { useToast } from '@/hooks/use-toast';
 
 interface ApplicationDataTableProps {
   applications: Application[];
+  onReviewId?: (application: Application) => void;
 }
 
 type SortKey = 'applicantName' | 'submissionDate' | 'status';
 type SortDirection = 'asc' | 'desc';
 
-export function ApplicationDataTable({ applications: initialApplications }: ApplicationDataTableProps) {
+export function ApplicationDataTable({ applications: initialApplications, onReviewId }: ApplicationDataTableProps) {
   const [applications, setApplications] = useState<Application[]>(initialApplications);
   const [sortKey, setSortKey] = useState<SortKey>('submissionDate');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -42,6 +43,12 @@ export function ApplicationDataTable({ applications: initialApplications }: Appl
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({ from: undefined, to: undefined });
   const [searchTerm, setSearchTerm] = useState<string>('');
+
+    const handleDateRangeSelect = (
+    range: { from?: Date; to?: Date } | undefined
+  ) => {
+    setDateRange(range || { from: undefined, to: undefined });
+  };
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [applicationToDeleteId, setApplicationToDeleteId] = useState<string | null>(null);
@@ -254,14 +261,11 @@ export function ApplicationDataTable({ applications: initialApplications }: Appl
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                initialFocus
-                mode="range"
-                defaultMonth={dateRange.from}
-                selected={dateRange}
-                onSelect={setDateRange}
-                numberOfMonths={2}
-              />
+        <Calendar
+          mode="range"
+          selected={dateRange}
+          onSelect={handleDateRangeSelect} // Use the new handler here
+        />
             </PopoverContent>
           </Popover>
           <Button variant="outline" onClick={() => { setSearchTerm(''); setStatusFilter('all'); setTypeFilter('all'); setDateRange({}); }} className="w-full sm:w-auto">
@@ -281,13 +285,14 @@ export function ApplicationDataTable({ applications: initialApplications }: Appl
               <TableHead>Application Type</TableHead>
               <SortableHeader sortFieldKey="submissionDate">Submission Date</SortableHeader>
               <SortableHeader sortFieldKey="status">Status</SortableHeader>
+              <TableHead>ID Verification</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredAndSortedApplications.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   No applications match your filters.
                 </TableCell>
               </TableRow>
@@ -305,6 +310,21 @@ export function ApplicationDataTable({ applications: initialApplications }: Appl
                       {app.status}
                     </Badge>
                   </TableCell>
+                  <TableCell>
+                    {app.idDocumentUrl ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onReviewId && onReviewId(app)}
+                        className="flex items-center gap-1"
+                      >
+                        <Eye className="h-4 w-4" />
+                        Review ID
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">No ID Submitted</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -320,6 +340,11 @@ export function ApplicationDataTable({ applications: initialApplications }: Appl
                             <Eye className="mr-2 h-4 w-4" /> View Details
                           </Link>
                         </DropdownMenuItem>
+                        {app.idDocumentUrl && onReviewId && (
+                          <DropdownMenuItem onClick={() => onReviewId(app)}>
+                            <Eye className="mr-2 h-4 w-4" /> Review ID
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleDeleteApplication(app.id)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
                             <Trash2 className="mr-2 h-4 w-4" /> Delete
