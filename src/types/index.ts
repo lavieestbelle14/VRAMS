@@ -87,21 +87,13 @@ export interface Application {
   // Conditional based on applicationType
   oldAddressDetails?: AddressDetails; // For transfer applications (previous address)
   
-  // Removed reactivation, change/correction, inclusion fields
-  // reactivationReasons?: string[]; 
-  // reactivationEvidence?: string; 
-  // presentData?: string; 
-  // newCorrectedData?: string; 
   status: 'pending' | 'approved' | 'rejected' | 'reviewing';
   submissionDate: string; // ISO string date
   approvalDate?: string; // ISO string date
   voterId?: string;
   precinct?: string;
-  // classification?: ClassifyApplicantTypeOutput;
   remarks?: string;
 }
-
-// Combines all form fields into one type for react-hook-form, matching schema
 export type ApplicationFormData = PersonalInfo & AddressDetails & CivilDetails & SpecialNeeds & {
   applicationType: 'register' | 'transfer' | 'reactivation' | 'transfer_with_reactivation' | 'correction_of_entry' | 'reinstatement' | '';
   biometricsFile?: string;
