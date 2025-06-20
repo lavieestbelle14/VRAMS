@@ -90,117 +90,137 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     }
   }, [toast]);
 
-  const handleSession = useCallback(async (session: Session | null) => {
-    const supabaseUser = session?.user;
-    if (supabaseUser) {
-      const { data: appUser, error } = await supabase
+const handleSession = useCallback(async (session: Session | null) => {
+  const supabaseUser = session?.user;
+  if (supabaseUser) {
+    try {
+      // Add explicit logging to see what's happening
+      console.log('Processing session for user:', supabaseUser.id);
+      
+      // Try to fetch the user profile - DON'T use single() initially to avoid errors
+      const { data: appUsers, error: fetchError } = await supabase
         .from('app_user')
         .select('role, username')
-        .eq('auth_id', supabaseUser.id)
-        .single();
+        .eq('auth_id', supabaseUser.id);
 
-      if (error || !appUser) {
-        console.error('Error fetching user or user not found:', error);
-        // Don't sign out here, just clear local state
+      // Log what we got back
+      console.log('Fetch result:', { appUsers, fetchError });
+
+      // If there's an error in the fetch itself
+      if (fetchError) {
+        console.error('Database error fetching user:', fetchError.message, fetchError);
+        toast({ 
+          title: 'Database Error', 
+          description: 'Could not connect to the user database. Please try again later.',
+          variant: 'destructive' 
+        });
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if we found a user profile
+      if (!appUsers || appUsers.length === 0) {
+        console.error(`No user profile found for auth_id: ${supabaseUser.id}`);
+        
+        // Check if we can auto-create the profile
+        if (supabaseUser.email) {
+          console.log('Attempting to create user profile automatically');
+          
+          // Extract username from email or metadata
+          const username = supabaseUser.user_metadata?.username || 
+                          supabaseUser.email.split('@')[0];
+          
+          // Create a profile for this authenticated user
+          const { data: newProfile, error: insertError } = await supabase
+            .from('app_user')
+            .insert([
+              { 
+                auth_id: supabaseUser.id, 
+                email: supabaseUser.email,
+                username: username,
+                role: 'public', // Default role for auto-created users
+                created_at: new Date().toISOString()
+              }
+            ])
+            .select('role, username')
+            .single();
+          
+          console.log('Profile creation result:', { newProfile, insertError });
+          
+          if (insertError) {
+            console.error('Failed to create user profile:', insertError.message, insertError);
+            toast({ 
+              title: 'Profile Error', 
+              description: 'Could not create your user profile. Please contact support.',
+              variant: 'destructive' 
+            });
+            setUser(null);
+          } else if (newProfile) {
+            console.log('User profile created successfully:', newProfile);
+            // Set the user with the newly created profile
+            setUser({
+              id: supabaseUser.id,
+              email: supabaseUser.email,
+              role: newProfile.role as UserRole,
+              username: newProfile.username,
+            });
+            
+            toast({ 
+              title: 'Profile Created', 
+              description: 'Your profile has been set up.'
+            });
+          }
+        } else {
+          // Not enough information to create a profile
+          console.error('Cannot auto-create profile: missing email address');
+          toast({ 
+            title: 'Profile Error', 
+            description: 'Your account information is incomplete. Please contact support.',
+            variant: 'destructive' 
+          });
+          setUser(null);
+        }
+      } else if (appUsers.length > 1) {
+        // Handle multiple profiles (should not happen with proper DB constraints)
+        console.error(`Multiple profiles found for auth_id ${supabaseUser.id}`);
+        toast({ 
+          title: 'Profile Error', 
+          description: 'Multiple profiles were found for your account. Please contact support.',
+          variant: 'destructive' 
+        });
         setUser(null);
       } else {
-        setUser({
-          id: supabaseUser.id,
-          email: supabaseUser.email!,
-          role: appUser.role as UserRole,
-          username: appUser.username,
-        });
-      }
-    } else {
+        // Success case - exactly one user found
+        const appUser = appUsers[0];
+        console.log('User profile found:', appUser);
+        
+            const userData = {
+      id: supabaseUser.id,
+      email: supabaseUser.email!,
+      role: appUser.role as UserRole,
+      username: appUser.username,
+    };
+    
+    setUser(userData);
+    return userData; // Return the user data
+  }
+    } catch (unexpectedError) {
+      // Handle any other unexpected errors
+      console.error('Unexpected error in session handling:', unexpectedError);
+      toast({ 
+        title: 'System Error', 
+        description: 'An unexpected error occurred. Please try again later.',
+        variant: 'destructive' 
+      });
       setUser(null);
     }
-    setIsLoading(false);
-  }, [toast]);
-
-  useEffect(() => {
-    const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      handleSession(session);
-    };
-
-    getInitialSession();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      // When user signs in (including after email verification), clean up the URL
-      if (event === 'SIGNED_IN') {
-        // Remove tokens from URL by replacing the current state with just the pathname
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-      
-      handleSession(session);
-    });
-
-    // Proactively sync on tab focus
-    const handleFocus = () => getInitialSession();
-    window.addEventListener('focus', handleFocus);
-
-    return () => {
-      authListener.subscription.unsubscribe();
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, [handleSession]);
-
-  useEffect(() => {
-    if (isLoading) return;
-
-    const isAuthenticated = !!user;
-    const isPasswordResetPage = pathname.startsWith('/public/forgot-password') || pathname.startsWith('/public/reset-password');
-    const isAuthPage = pathname === '/auth';
-    const isOfficerPath = pathname.startsWith('/dashboard');
-    const isPathRequiringPublicUserAuth = publicUserAuthenticatedPaths.some(p => pathname.startsWith(p));
-
-    // Allow unauthenticated access to forgot/reset password pages
-    if (isPasswordResetPage) {
-      return;
-    }
-
-    if (pathname === '/' || pathname.startsWith('/public/terms-of-service') || pathname.startsWith('/public/privacy-policy')) {
-      return;
-    }
-
-    if (isAuthenticated) {
-      if (user.role === 'officer') {
-        if (!isOfficerPath) router.push('/dashboard');
-      } else if (user.role === 'public') {
-        if (isOfficerPath || isAuthPage) router.push('/public/home');
-      }
-    } else {
-      if (!isAuthPage && !isPasswordResetPage && (isOfficerPath || isPathRequiringPublicUserAuth)) {
-        router.push('/auth');
-      }
-    }
-  }, [user, isLoading, pathname, router]);
-
-  const login = useCallback(async (email: string, passwordAttempt: string) => {
-    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-      email,
-      password: passwordAttempt,
-    });
-
-    if (loginError || !loginData.user) {
-      toast({ title: 'Login Failed', description: loginError?.message || 'Invalid credentials.', variant: 'destructive' });
-      return;
-    }
-    
-    const { data: appUser, error: userError } = await supabase
-      .from('app_user')
-      .select('role, username')
-      .eq('auth_id', loginData.user.id)
-      .single();
-
-    if (userError || !appUser) {
-      toast({ title: 'Login Failed', description: 'Could not retrieve user profile.', variant: 'destructive' });
-      await supabase.auth.signOut();
-      return;
-    }
-
-    toast({ title: 'Login Successful', description: `Welcome, ${appUser.username}!` });
-  }, [toast]);
+  } else {
+    console.log('No active session or user');
+    setUser(null);
+  }
+  return null; // Return null in all other cases where we didn't return earlier
+}, [toast]);
 
   const signUp = useCallback(async (username: string, email: string, passwordAttempt: string) => {
     const { data: existingUsers, error: checkError } = await supabase
@@ -222,25 +242,52 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       return;
     }
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password: passwordAttempt,
-      options: {
-        data: {
-          username: username,
-        },
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password: passwordAttempt,
+    options: {
+      data: {
+        username: username,
       },
+      emailRedirectTo: `${window.location.origin}/auth`, // Ensure redirect is set correctly
+    },
+  });
+
+  if (error) {
+    toast({ title: 'Sign Up Failed', description: error.message, variant: 'destructive' });
+    return;
+  }
+
+  if (data.user) {
+    // Immediately create the user profile in the app_user table
+    try {
+      const { error: profileError } = await supabase
+        .from('app_user')
+        .insert([
+          { 
+            auth_id: data.user.id, 
+            email: email,
+            username: username,
+            role: 'public', // Default role
+            created_at: new Date().toISOString()
+          }
+        ]);
+
+      if (profileError) {
+        console.error('Error creating user profile:', profileError);
+        // We still show success because auth signup succeeded
+        // The profile will be auto-created when they verify email
+      }
+    } catch (err) {
+      console.error('Unexpected error creating profile:', err);
+    }
+    
+    toast({ 
+      title: 'Sign Up Successful', 
+      description: 'Your account has been created. Please check your email to confirm your account.' 
     });
-
-    if (error) {
-      toast({ title: 'Sign Up Failed', description: error.message, variant: 'destructive' });
-      return;
-    }
-
-    if (data.user) {
-      toast({ title: 'Sign Up Successful', description: 'Your account has been created. Please check your email to confirm your account.' });
-    }
-  }, [toast]);
+  }
+}, [toast]);
 
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
@@ -301,6 +348,63 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     toast({ title: 'Success', description: 'Your profile has been updated.' });
     return true;
   }, [user, handleSession, toast]);
+
+  // Add the login function
+const login = useCallback(async (email: string, passwordAttempt: string): Promise<void> => {
+  setIsLoading(true);
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password: passwordAttempt,
+  });
+
+  if (error) {
+    toast({ title: 'Login Failed', description: error.message, variant: 'destructive' });
+    setIsLoading(false);
+    return;
+  }
+
+  if (data.session) {
+    // Modify handleSession to return the user object
+    const userData = await handleSession(data.session);
+    toast({ title: 'Login Successful', description: 'You have been logged in.' });
+    
+    // Use the returned userData instead of the state variable
+    const redirectTo = userData?.role === 'officer' ? '/dashboard' : '/public/home';
+    
+    if (pathname === '/auth' || 
+        pathname === '/' || 
+        pathname === '/landing' || 
+        (userData?.role === 'public' && !publicUserAuthenticatedPaths.includes(pathname)) ||
+        (userData?.role === 'officer' && pathname.startsWith('/public/'))) {
+      router.push(redirectTo);
+    }
+  }
+  setIsLoading(false);
+}, [toast, handleSession, router, pathname]);
+
+useEffect(() => {
+  if (!isLoading) {
+    // If authenticated
+    if (user) {
+      // If officer is trying to access public pages
+      if (user.role === 'officer' && pathname.startsWith('/public/')) {
+        router.push('/dashboard');
+      }
+      // If public user is trying to access officer pages
+      else if (user.role === 'public' && pathname.startsWith('/dashboard')) {
+        router.push('/public/home');
+      }
+    } 
+    // If not authenticated and trying to access protected pages
+    else if (!user && 
+             pathname !== '/auth' && 
+             pathname !== '/' && 
+             pathname !== '/landing' &&
+             !pathname.includes('/reset-password')) {
+      router.push('/auth');
+    }
+  }
+}, [user, isLoading, pathname, router]);
 
   const value = useMemo(() => ({
     isAuthenticated: !!user,
