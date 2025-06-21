@@ -1,4 +1,3 @@
-
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -10,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, CheckCircle, Edit, FileText, User, MapPin, CalendarDays, Briefcase, Accessibility, Save, XCircle, MessageSquare, Building, Users, ShieldCheck, Trash2, Clock } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Edit, FileText, User, MapPin, CalendarDays, Briefcase, Accessibility, Save, XCircle, MessageSquare, Building, Users, ShieldCheck, Trash2, Clock, CreditCard, Camera } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   AlertDialog,
@@ -247,6 +246,58 @@ export default function ApplicationDetailsPage() {
                 </CardContent>
             </Card>
           )}
+
+          <Card className="lg:col-span-1">
+            <CardHeader><CardTitle className="flex items-center"><CreditCard className="mr-2 text-blue-500"/>Government ID</CardTitle></CardHeader>
+            <CardContent>
+              <DetailItem label="ID Type" value={application.governmentIdType || 'N/A'} />
+              <DetailItem label="ID Number" value={application.governmentIdNumber || 'N/A'} />
+              <DetailItem label="ID Verification Status" value={application.idVerificationStatus || 'Pending'} />
+              
+              {application.frontIdFile && (
+                <div className="mt-2">
+                  <Label className="text-sm font-semibold text-muted-foreground">Front ID Image</Label>
+                  <p className="text-sm text-blue-600 cursor-pointer hover:underline">View Front ID</p>
+                </div>
+              )}
+              
+              {application.backIdFile && (
+                <div className="mt-2">
+                  <Label className="text-sm font-semibold text-muted-foreground">Back ID Image</Label>
+                  <p className="text-sm text-blue-600 cursor-pointer hover:underline">View Back ID</p>
+                </div>
+              )}
+              
+              {!application.frontIdFile && !application.backIdFile && (
+                <div className="mt-2">
+                  <Label className="text-sm font-semibold text-muted-foreground text-orange-600">Documents Status</Label>
+                  <p className="text-sm text-orange-600">ID images not uploaded</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="lg:col-span-1">
+            <CardHeader><CardTitle className="flex items-center"><Camera className="mr-2 text-green-500"/>Selfie Verification</CardTitle></CardHeader>
+            <CardContent>
+              <DetailItem label="Selfie Status" value={application.selfieStatus || 'Pending'} />
+              <DetailItem label="Face Match Score" value={application.faceMatchScore ? `${application.faceMatchScore}%` : 'N/A'} />
+              <DetailItem label="Selfie Quality" value={application.selfieQuality || 'N/A'} />
+              {application.selfieFile && (
+                <div className="mt-2">
+                  <Label className="text-sm font-semibold text-muted-foreground">Selfie Photo</Label>
+                  <p className="text-sm text-green-600 cursor-pointer hover:underline">View Photo</p>
+                </div>
+              )}
+              {application.selfieVerificationDate && (
+                <DetailItem 
+                  label="Verification Date" 
+                  value={format(new Date(application.selfieVerificationDate), 'PPP p')} 
+                  icon={CalendarDays}
+                />
+              )}
+            </CardContent>
+          </Card>
           
           {biometricsSchedule && (application.status === 'approvedBiometricsScheduled' || application.status === 'approved') && (
              <Card className="lg:col-span-2">
