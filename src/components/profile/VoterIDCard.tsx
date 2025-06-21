@@ -1,77 +1,83 @@
 import React from "react";
+import Image from "next/image";
 
 export default function VoterIdCard() {
   return (
     <div
-      className="max-w-md mx-auto rounded-xl border bg-white shadow-lg p-6 relative"
+      className="mx-auto rounded-xl shadow-lg p-5 relative"
       style={{
         fontFamily: "Arial, sans-serif",
-        width: 420,
-        background: "linear-gradient(135deg, #f8fafc 80%, #e2e8f0 100%)",
+        width: "500px",
+        maxWidth: "500px",
+        background: "linear-gradient(120deg, #E3F4FF 0%, #B5E3FF 200%)", 
       }}
     >
-      <div className="flex items-center mb-2">
+      <div className="flex items-center mb-4">
         <img
-            src="/ph-comelec-logo.png"
-            alt="COMELEC Logo"
-            className="h-12 w-12 mr-3"
-            />
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wide">
+          src="/ph-comelec-logo.png"
+          alt="COMELEC Logo"
+          className="h-16 w-16 mr-4" 
+        />
+        <div className="flex-1 text-center">
+          <div className="text-xs uppercase tracking-wide">
             Republic of the Philippines
           </div>
           <div className="text-xs font-semibold uppercase tracking-wide">
             COMMISSION ON ELECTIONS
           </div>
-          <div className="text-xs">QUEZON CITY, NCR - SECOND DISTRICT</div>
+          <div className="text-xs">RIZAL, CALABARZON</div>
         </div>
+        <div className="w-12"></div> 
       </div>
-      <div className="text-xs mb-2">
+      <div className="text-xs mb-2 text-center">
         <span className="font-semibold">VIN:</span> XXXXXXXXXXXXXXXX
       </div>
       <div className="flex">
         <div>
-          <div
-            className="h-24 w-20 bg-gray-300 rounded mb-2 flex items-center justify-center text-xs text-gray-500"
+          <Image
+            src="/1x1.jpg"
+            alt="Voter Photo"
+            width={80}
+            height={96}
+            className="rounded object-cover"
             style={{ border: "1px solid #bbb" }}
-          >
-            Photo
-          </div>
+          />
         </div>
         <div className="ml-4 flex-1">
-          <div className="font-bold text-base leading-tight mb-1">
+          <div className="font-bold text-base leading-tight mb-3"> 
             OJA<br />
             MA. IZABELLE<br />
             LOPES
           </div>
-          <div className="text-xs">
+          <div className="text-xs space-y-1"> 
             <div>
-              <span className="inline-block w-20">Date of Birth</span>: December 14, 2004
+              <span className="font-bold inline-block w-20">Date of Birth</span>: December 14, 2004
             </div>
             <div>
-              <span className="inline-block w-20">Civil Status</span>: Single
+              <span className="font-bold inline-block w-20">Civil Status</span>: Single
             </div>
             <div>
-              <span className="inline-block w-20">Citizenship</span>: Filipino
+              <span className="font-bold inline-block w-20">Citizenship</span>: Filipino
             </div>
             <div>
-              <span className="inline-block w-20">Address</span>: 118 A. Bonifacio St. Libid, Binangonan, Rizal
+              <span className="font-bold inline-block w-20">Address</span>: 118 A. Bonifacio St. Libid, Binangonan, Rizal
             </div>
             <div>
-              <span className="inline-block w-20">Precinct No.</span>: 1234A
+              <span className="font-bold inline-block w-20">Precinct No.</span>: 1234A
             </div>
           </div>
         </div>
       </div>
-      <div className="flex items-center mt-4">
+      <div className="flex items-end mt-4"> 
         <div className="flex-1">
-          <div
-            className="h-6 w-32 bg-gray-200 rounded mb-1"
-            style={{ border: "1px solid #bbb" }}
-          >
-            {/* Signature placeholder */}
-          </div>
-          <div className="text-xs text-gray-600">Signature of Voter</div>
+          <Image
+            src="/signature.png"
+            alt="Voter Signature"
+            width={128}
+            height={20}
+            className="mb-1"
+          />
+          <div className="font-bold text-xs text-gray-600">Signature of Voter</div>
         </div>
         <div className="flex-1 text-right">
           <div className="text-xs font-semibold">GEORGE ERWIN M. GARCIA</div>

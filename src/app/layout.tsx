@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'eRehistroPh Portal',
+  title: 'eRehistroPh',
   description: 'Voter Registration and Application Management System',
 };
 

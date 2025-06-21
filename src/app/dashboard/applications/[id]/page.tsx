@@ -1,4 +1,3 @@
-
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -10,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, CheckCircle, Edit, FileText, User, MapPin, CalendarDays, Briefcase, Accessibility, Save, XCircle, MessageSquare, Building, Users, ShieldCheck, Trash2, Clock } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Edit, FileText, User, MapPin, CalendarDays, Briefcase, Accessibility, Save, XCircle, MessageSquare, Building, Users, ShieldCheck, Trash2, Clock, CreditCard, Camera } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   AlertDialog,
@@ -22,6 +21,49 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
+import Image from "next/image";
+
+type IdVerificationDialogProps = {
+  imageUrl: string;
+  title: string;
+  description: string;
+};
+
+function IdVerificationDialog({ imageUrl, title, description }: IdVerificationDialogProps) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <p className="text-sm text-blue-600 cursor-pointer hover:underline">
+          View Image
+        </p>
+      </DialogTrigger>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+        <div className="relative w-full h-[400px] mt-4">
+          <Image
+            src={imageUrl}
+            alt={title}
+            fill
+            className="object-contain rounded-lg"
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default function ApplicationDetailsPage() {
   const params = useParams();
@@ -144,7 +186,6 @@ export default function ApplicationDetailsPage() {
         </Button>
       </div>
 
-
       <Card>
         <CardHeader className="flex flex-row justify-between items-start">
           <div>
@@ -247,6 +288,87 @@ export default function ApplicationDetailsPage() {
                 </CardContent>
             </Card>
           )}
+
+          <Card className="lg:col-span-1">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <CreditCard className="mr-2 text-blue-500"/>ID Verification
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DetailItem label="ID Type" value={application.governmentIdType || 'N/A'} />
+              <DetailItem label="ID Number" value={application.governmentIdNumber || 'N/A'} />
+              <DetailItem 
+                label="Verification Status" 
+                value={application.idVerificationStatus || 'Pending Review'} 
+              />
+              
+              {application.frontIdFile && (
+                <div className="mt-4">
+                  <Label className="text-sm font-semibold text-muted-foreground">
+                    Front ID Image
+                  </Label>
+                  <IdVerificationDialog
+                    imageUrl={application.frontIdFile}
+                    title="Front ID Verification"
+                    description="Front view of the submitted government ID"
+                  />
+                </div>
+              )}
+              
+              {application.backIdFile && (
+                <div className="mt-2">
+                  <Label className="text-sm font-semibold text-muted-foreground">
+                    Back ID Image
+                  </Label>
+                  <IdVerificationDialog
+                    imageUrl={application.backIdFile}
+                    title="Back ID Verification"
+                    description="Back view of the submitted government ID"
+                  />
+                </div>
+              )}
+
+              {isActionable && (
+                <div className="mt-4 space-y-2">
+                  <Label className="text-sm font-semibold">Quick Actions</Label>
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => handleStatusUpdate('reviewing')}
+                    >
+                      <ShieldCheck className="mr-2 h-4 w-4" />
+                      Verify ID
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="lg:col-span-1">
+            <CardHeader><CardTitle className="flex items-center"><Camera className="mr-2 text-green-500"/>Selfie Verification</CardTitle></CardHeader>
+            <CardContent>
+              <DetailItem label="Selfie Status" value={application.selfieStatus || 'Pending'} />
+              <DetailItem label="Face Match Score" value={application.faceMatchScore ? `${application.faceMatchScore}%` : 'N/A'} />
+              <DetailItem label="Selfie Quality" value={application.selfieQuality || 'N/A'} />
+              {application.selfieFile && (
+                <div className="mt-2">
+                  <Label className="text-sm font-semibold text-muted-foreground">Selfie Photo</Label>
+                  <p className="text-sm text-green-600 cursor-pointer hover:underline">View Photo</p>
+                </div>
+              )}
+              {application.selfieVerificationDate && (
+                <DetailItem 
+                  label="Verification Date" 
+                  value={format(new Date(application.selfieVerificationDate), 'PPP p')} 
+                  icon={CalendarDays}
+                />
+              )}
+            </CardContent>
+          </Card>
           
           {biometricsSchedule && (application.status === 'approvedBiometricsScheduled' || application.status === 'approved') && (
              <Card className="lg:col-span-2">
@@ -278,40 +400,60 @@ export default function ApplicationDetailsPage() {
 
         {isActionable ? (
           <CardFooter className="flex-col items-start space-y-4 pt-6 border-t">
-             <div>
-                <Label htmlFor="remarks" className="text-lg font-semibold">Add/Update Remarks</Label>
-                <Textarea
-                    id="remarks"
-                    value={remarks}
-                    onChange={(e) => setRemarks(e.target.value)}
-                    placeholder="Enter remarks for approval, rejection, or status update..."
-                    className="mt-2 min-h-[100px]"
-                />
+            <div>
+              <Label htmlFor="remarks" className="text-lg font-semibold">Add/Update Remarks</Label>
+              <Textarea
+                id="remarks"
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                placeholder="Enter remarks for approval, rejection, or status update..."
+                className="mt-2 min-h-[100px]"
+              />
             </div>
             <div className="flex flex-wrap gap-2">
               {application.status === 'pending' && (
                 <Button onClick={() => handleStatusUpdate('reviewing')} variant="outline">
-                    <Edit className="mr-2 h-4 w-4" /> Mark as Reviewing
+                  <Edit className="mr-2 h-4 w-4" /> Mark as Reviewing
                 </Button>
               )}
-              {(application.status === 'pending' || application.status === 'reviewing') && (
-                <>
-                <Button onClick={() => handleStatusUpdate('approvedAwaitingBiometrics')} className="bg-green-600 hover:bg-green-700">
-                  <CheckCircle className="mr-2 h-4 w-4" /> Approve (Await Biometrics)
-                </Button>
-                <Button onClick={() => handleStatusUpdate('rejected')} variant="destructive">
-                  <XCircle className="mr-2 h-4 w-4" /> Reject
-                </Button>
-                </>
+              
+              {(application.status === 'reviewing') && (
+                <div className="flex flex-wrap gap-2">
+                  <Button 
+                    onClick={() => {
+                      setRemarks(prev => 
+                        `${prev}\nID verification completed successfully. Documents are valid.`
+                      );
+                      handleStatusUpdate('approvedAwaitingBiometrics');
+                    }} 
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <ShieldCheck className="mr-2 h-4 w-4" /> 
+                    Verify & Approve ID
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      setRemarks(prev => 
+                        `${prev}\nID verification failed. Documents are invalid or unclear.`
+                      );
+                      handleStatusUpdate('rejected');
+                    }} 
+                    variant="destructive"
+                  >
+                    <XCircle className="mr-2 h-4 w-4" /> 
+                    Reject ID
+                  </Button>
+                </div>
               )}
-              {application.status === 'approvedBiometricsScheduled' && (
-                <Button onClick={() => handleStatusUpdate('approved')} className="bg-blue-600 hover:bg-blue-700">
-                    <CheckCircle className="mr-2 h-4 w-4" /> Mark Biometrics Complete & Final Approve
-                </Button>
-              )}
-            </div>
-          </CardFooter>
-        ) : null}
+
+            {application.status === 'approvedBiometricsScheduled' && (
+              <Button onClick={() => handleStatusUpdate('approved')} className="bg-blue-600 hover:bg-blue-700">
+                <CheckCircle className="mr-2 h-4 w-4" /> Mark Biometrics Complete & Final Approve
+              </Button>
+            )}
+          </div>
+        </CardFooter>
+      ) : null}
       </Card>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

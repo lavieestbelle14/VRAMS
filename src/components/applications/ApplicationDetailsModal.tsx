@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle2, Clock, XCircle, FileText, CalendarDays, User, AlertCircle, Download, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import type { Application } from "@/types";
+import { useRouter } from "next/navigation";  // Add this import at the top
 
 interface ApplicationDetailsModalProps {
   application: Application | null;
@@ -30,6 +31,12 @@ const getStatusInfo = (status: string) => {
 export function ApplicationDetailsModal({ application, isOpen, onClose }: ApplicationDetailsModalProps) {
   if (!application) return null;
   
+  const router = useRouter();  // Add this hook
+  const handleReapply = () => {
+    onClose();  // Close the modal first
+    router.push("/public/apply");  // Redirect to apply page
+  };
+
   const { icon: StatusIcon, color, text } = getStatusInfo(application.status);
   
   // Mock timeline data - in a real app, this would come from the application object
@@ -402,12 +409,12 @@ export function ApplicationDetailsModal({ application, isOpen, onClose }: Applic
           </TabsContent>
         </Tabs>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Close</Button>
-          {application.status === 'rejected' && (
-            <Button>Reapply</Button>
-          )}
-        </DialogFooter>
+      <DialogFooter>
+        <Button variant="outline" onClick={onClose}>Close</Button>
+        {application.status === 'rejected' && (
+          <Button onClick={handleReapply}>Reapply</Button>
+        )}
+      </DialogFooter>
       </DialogContent>
     </Dialog>
   );
