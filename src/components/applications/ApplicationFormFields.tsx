@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { Save, Trash2, CalendarIcon } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { saveApplication } from '@/lib/applicationStore';
+import { submitApplication } from '@/services/applicationService';
 import { format } from "date-fns";
 import { z } from 'zod';
 import { useFormDraft } from '@/hooks/useFormDraft';
@@ -69,45 +69,77 @@ export function ApplicationFormFields() {
   const form = useForm<ApplicationFormValues>({
     resolver: zodResolver(applicationFormSchema),
     defaultValues: {
-      // Personal Info
-      firstName: '', lastName: '', middleName: '',
-      sex: '', dob: '', placeOfBirthCityMun: '', placeOfBirthProvince: '', // Corrected placeOfBirth fields
-      citizenshipType: '', naturalizationDate: undefined, naturalizationCertNo: '', // Corrected naturalization fields
-      contactNumber: '', email: '',
-      residencyYearsCityMun: undefined, residencyMonthsCityMun: undefined, residencyYearsPhilippines: undefined, // Corrected residency fields
+      // --- applicant table ---
+      firstName: '', lastName: '', middleName: '', suffix: '',
+      citizenshipType: 'By Birth',
+      dateOfNaturalization: '', 
+      certificateNumber: '',
       professionOccupation: '',
+      contactNumber: '',
+      emailAddress: '',
+      civilStatus: 'Single',
+      spouseName: '',
+      sex: 'M',
+      dateOfBirth: '',
+      placeOfBirthMunicipality: '',
+      placeOfBirthProvince: '',
+      fatherName: '',
+      motherMaidenName: '',
 
-      // Address Details (Current)
-      houseNoStreet: '', barangay: '', cityMunicipality: '', province: '', // Corrected address fields
+      // --- applicant_special_sector table ---
+      isIlliterate: false,
+      isSeniorCitizen: false,
+      tribe: '',
+      typeOfDisability: '',
+      assistanceNeeded: '',
+      assistorName: '',
+      voteOnGroundFloor: false,
 
-      // Civil Details
-      civilStatus: '', spouseName: '',
-      fatherFirstName: '', fatherLastName: '', motherFirstName: '', motherLastName: '', // Corrected parent fields
-        // Special Needs
-      isIlliterate: false, isSenior: false, indigenousTribe: '', disabilityType: '', // Corrected special needs fields
-      assistanceNeeded: '', assistorName: '', prefersGroundFloor: false, isPwd: false, isIndigenousPerson: false,
+      // --- application table ---
+      applicationType: 'register',
 
-      // Application
-      applicationType: '', // Use '' instead of undefined for enums
-      biometricsFile: 'For on-site capture', 
+      // --- application_registration table ---
+      registrationType: 'Regular',
+      adultRegistrationConsent: false,
+      governmentIdFrontUrl: undefined,
+      governmentIdBackUrl: undefined,
+      idSelfieUrl: undefined,
 
-      declarationAccepted: false,
-      
-      // Conditional fields
-      previousPrecinctNumber: '', previousBarangay: '', previousCityMunicipality: '', previousProvince: '',
-      previousForeignPost: '', previousCountry: '',
-      transferDeclarantName: '', transferDeclarantBirthDate: '', // Added new fields
-      correctionField: undefined,
-      presentData: '', // Corrected correction fields
-      newData: '',
-      
-      // Oath fields
-      oathAccepted: false,
-      regularRegistrationType: undefined,
-      regularVoterStatus: undefined,
-      regularOathAccepted: false,
+      // --- application_transfer table ---
+      previousPrecinctNumber: '',
+      previousBarangay: '',
+      previousCityMunicipality: '',
+      previousProvince: '',
+      previousForeignPost: '',
+      previousCountry: '',
       transferType: undefined,
-      adultRegistrationConsent: undefined,
+
+      // --- application_reactivation table ---
+      reasonForDeactivation: undefined,
+
+      // --- application_correction table ---
+      targetField: undefined,
+      currentValue: '',
+      requestedValue: '',
+
+      // --- application_reinstatement table ---
+      reinstatementType: undefined,
+
+      // --- application_declared_address table ---
+      houseNumber: '',
+      street: '',
+      barangay: '',
+      cityMunicipality: '',
+      province: '',
+      yearsOfResidenceMunicipality: undefined,
+      monthsOfResidenceMunicipality: undefined,
+      yearsInCountry: undefined,
+
+      // --- UI-only / Logic fields ---
+      isPwd: false,
+      isIndigenousPerson: false,
+      declarationAccepted: false,
+      oathAccepted: false,
     },
   });
 
@@ -124,38 +156,12 @@ export function ApplicationFormFields() {
 
   const [isDeclarationDialogOpen, setDeclarationDialogOpen] = useState(false);
   
-  // Define the missing handleAcceptDeclaration function
   const handleAcceptDeclaration = () => {
     form.setValue("declarationAccepted", true, { shouldValidate: true });
   };
 
   const handleClearDraft = () => {
-    clearDraft({
-      firstName: '', lastName: '', middleName: '', suffix: '',
-      sex: '', dob: '', placeOfBirthCityMun: '', placeOfBirthProvince: '',
-      citizenshipType: '', naturalizationDate: undefined, naturalizationCertNo: '',
-      contactNumber: '', email: '',
-      residencyYearsCityMun: undefined, residencyMonthsCityMun: undefined, residencyYearsPhilippines: undefined,
-      professionOccupation: '',
-      houseNoStreet: '', barangay: '', cityMunicipality: '', province: '',
-      civilStatus: '', spouseName: '',
-      fatherFirstName: '', fatherLastName: '', motherFirstName: '', motherLastName: '',
-      isIlliterate: false, isSenior: false, indigenousTribe: '', disabilityType: '',
-      assistanceNeeded: '', assistorName: '', prefersGroundFloor: false, isPwd: false, isIndigenousPerson: false,
-      applicationType: '',
-      biometricsFile: 'For on-site capture',
-      previousPrecinctNumber: '', previousBarangay: '', previousCityMunicipality: '', previousProvince: '',
-      previousForeignPost: '', previousCountry: '',
-      transferDeclarantName: '', transferDeclarantBirthDate: '',
-      correctionField: undefined,
-      presentData: '',
-      newData: '',
-      oathAccepted: false,
-      regularRegistrationType: undefined,
-      regularVoterStatus: undefined,
-      regularOathAccepted: false,
-      adultRegistrationConsent: undefined,
-    });
+    clearDraft(); // clearDraft now resets to defaultValues, so no need to pass an object
   };
 
   const applicationType = form.watch('applicationType');
@@ -165,40 +171,48 @@ export function ApplicationFormFields() {
   const assistorName = form.watch('assistorName');
   const isIndigenousPerson = form.watch('isIndigenousPerson');
   const isPwd = form.watch('isPwd');
-  const transferType = form.watch('transferType'); // Watch transferType
+  const transferType = form.watch('transferType');
 
   const showDeclarationFields = applicationType === 'transfer';
   const isRegistered = !!user?.voterId;
 
-  // This will disable all personal information sections unless applicationType is 'register'
-  // For other sections like Address, specific logic will be applied.
   const shouldDisableSection = applicationType !== 'register';
 
-  // Keep the oath section disabled logic separate
-  // Update this line in your component
   const shouldDisableOath = applicationType !== 'register';
 
   const onSubmit: import("react-hook-form").SubmitHandler<ApplicationFormValues> = async (data) => {
+    if (!user) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to submit an application.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      // TODO: Update this to match the new schema field names
-      console.log('Form data:', data);
+      const applicationNumber = await submitApplication(data, user);
       
       toast({
         title: "Application Submitted!",
-        description: `Your application has been submitted successfully.`,
+        description: `Your application has been submitted successfully. Your application number is ${applicationNumber}.`,
       });
-      form.reset(); // Reset form to blank state
-      // router.push(`/public/application-submitted/${newApplication.id}`);
+      
+      form.reset();
+      clearDraft(); // Clear the draft from local storage
+      router.push(`/public/application-submitted/${applicationNumber}`);
 
     } catch (error) {
       console.error("Error submitting application:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
       toast({
         title: "Submission Failed",
-        description: "An error occurred while submitting the application. Please try again.",
+        description: `An error occurred while submitting the application: ${errorMessage}`,
         variant: "destructive",
       });
     }
   };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">

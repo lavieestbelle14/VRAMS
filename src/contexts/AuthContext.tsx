@@ -11,7 +11,7 @@ import type { User, Session } from '@supabase/supabase-js';
 
 type UserRole = 'officer' | 'public';
 
-interface AuthenticatedUser {
+export interface AuthenticatedUser {
   id: string; // Supabase auth user ID
   email: string;
   voterId?: string;
