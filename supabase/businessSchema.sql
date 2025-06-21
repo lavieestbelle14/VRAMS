@@ -3,18 +3,18 @@ DROP TABLE IF EXISTS officer_assignment CASCADE;
 DROP TABLE IF EXISTS officer CASCADE;
 
 -- Drop application-related tables
-DROP TABLE IF EXISTS address_at_registration CASCADE;
-DROP TABLE IF EXISTS reinstatement_record CASCADE;
-DROP TABLE IF EXISTS correction_record CASCADE;
-DROP TABLE IF EXISTS reactivation_record CASCADE;
-DROP TABLE IF EXISTS transfer_record CASCADE;
-DROP TABLE IF EXISTS registration_record CASCADE;
+DROP TABLE IF EXISTS application_declared_address CASCADE;
+DROP TABLE IF EXISTS application_reinstatement CASCADE;
+DROP TABLE IF EXISTS application_correction CASCADE;
+DROP TABLE IF EXISTS application_reactivation CASCADE;
+DROP TABLE IF EXISTS application_transfer CASCADE;
+DROP TABLE IF EXISTS application_registration CASCADE;
 DROP TABLE IF EXISTS application CASCADE;
 
 -- Drop applicant-related tables
 DROP TABLE IF EXISTS applicant_special_sector CASCADE;
-DROP TABLE IF EXISTS deactivation_record CASCADE;
-DROP TABLE IF EXISTS voter_record CASCADE;
+DROP TABLE IF EXISTS applicant_deactivation_record CASCADE;
+DROP TABLE IF EXISTS applicant_voter_record CASCADE;
 DROP TABLE IF EXISTS applicant_biometrics CASCADE;
 DROP TABLE IF EXISTS applicant CASCADE;
 
@@ -36,13 +36,13 @@ DROP TABLE IF EXISTS applicant CASCADE;
   Tables related to the applicant entity:
 
   - applicant: stores personal and biometric information
-  - voter_record: optional voter details linked to an applicant (ONE-TO-ONE)
-  - deactivation_record: records of applicant deactivations (ONE-TO-MANY - keeps separate PK)
+  - applicant_voter_record: optional voter details linked to an applicant (ONE-TO-ONE)
+  - applicant_deactivation_record: records of applicant deactivations (ONE-TO-MANY - keeps separate PK)
   - applicant_special_sector: special sector attributes linked optionally to an applicant (ONE-TO-ONE)
 */
 CREATE TABLE IF NOT EXISTS applicant (
     applicant_id SERIAL PRIMARY KEY,
-    auth_id UUID UNIQUE NOT NULL REFERENCES profile(auth_id) ON DELETE CASCADE,
+    auth_id UUID UNIQUE NOT NULL REFERENCES app_user(auth_id) ON DELETE CASCADE,
 
     first_name VARCHAR(50),
     last_name VARCHAR(50),
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS applicant (
     father_name VARCHAR(100) NOT NULL,
     mother_maiden_name VARCHAR(100) NOT NULL,
 
-    voting_status TEXT NOT NULL CHECK (voting_status IN ('Unregistered', 'Active', 'Deactivated'))
+    voting_status TEXT NOT NULL DEFAULT 'Unregistered' CHECK (voting_status IN ('Unregistered', 'Active', 'Deactivated'))
 );
 
 -- FK as PK enforces one-to-one relationship
@@ -89,7 +89,7 @@ CREATE TABLE applicant_biometrics (
 );
 
 -- FK as PK enforces one-to-one relationship  
-CREATE TABLE IF NOT EXISTS voter_record (
+CREATE TABLE IF NOT EXISTS applicant_voter_record (
     applicant_id INTEGER PRIMARY KEY,
     precinct_number VARCHAR(10) NOT NULL,
     voter_id VARCHAR(20) NOT NULL,
@@ -101,8 +101,8 @@ CREATE TABLE IF NOT EXISTS voter_record (
 );
 
 -- One applicant can have multiple deactivation records over time
-CREATE TABLE IF NOT EXISTS deactivation_record (
-    id SERIAL PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS applicant_deactivation_record (
+    deactivation_id SERIAL PRIMARY KEY,
     applicant_id INTEGER NOT NULL,
     reason TEXT NOT NULL CHECK (reason IN (
         'Sentenced by final judgment to suffer imprisonment for not less than one (1) year',
@@ -146,12 +146,12 @@ CREATE TABLE IF NOT EXISTS applicant_special_sector (
   Tables related to the application entity:
 
   - application: main table storing application details and status
-  - registration_record: registration requirements (ids, and KK consent) 
-  - transfer_record: stores old address details for transfer applications 
-  - reactivation_record: reason for reactivation requests 
-  - correction_record: requested corrections to applicant details  
-  - reinstatement_record: reinstatement details 
-  - address_at_registration_or_transfer: address provided during application, only applicable at type registration, transfer, and transfer_with_reactivation
+  - application_registration: registration requirements (ids, and KK consent) 
+  - application_transfer: stores old address details for transfer applications 
+  - application_reactivation: reactivation requests and reason for deactivation
+  - application_correction: requested corrections to applicant details  
+  - application_reinstatement: reinstatement details 
+  - application_declared_address_or_transfer: address provided during application, only applicable at type registration, transfer, and transfer_with_reactivation
 */
 CREATE TABLE IF NOT EXISTS application (
     application_number SERIAL PRIMARY KEY,
@@ -182,7 +182,7 @@ CREATE TABLE IF NOT EXISTS application (
 );
 
 -- FK as PK enforces one-to-one relationship
-CREATE TABLE IF NOT EXISTS registration_record (
+CREATE TABLE IF NOT EXISTS application_registration (
     application_number INTEGER PRIMARY KEY,
     registration_type TEXT CHECK (registration_type IN ('Katipunan ng Kabataan', 'Regular')),
     adult_registration_consent BOOLEAN NOT NULL,
@@ -197,7 +197,7 @@ CREATE TABLE IF NOT EXISTS registration_record (
 );
 
 -- FK as PK enforces one-to-one relationship
-CREATE TABLE IF NOT EXISTS transfer_record (
+CREATE TABLE IF NOT EXISTS application_transfer (
     application_number INTEGER PRIMARY KEY,
     previous_precinct_number VARCHAR(10),
     previous_barangay VARCHAR(50),
@@ -219,7 +219,7 @@ CREATE TABLE IF NOT EXISTS transfer_record (
 );
 
 -- FK as PK enforces one-to-one relationship
-CREATE TABLE IF NOT EXISTS reactivation_record (
+CREATE TABLE IF NOT EXISTS application_reactivation (
     application_number INTEGER PRIMARY KEY,
 
     reason_for_deactivation TEXT NOT NULL CHECK (reason_for_deactivation IN (
@@ -239,7 +239,7 @@ CREATE TABLE IF NOT EXISTS reactivation_record (
 );
 
 -- FK as PK enforces one-to-one relationship
-CREATE TABLE IF NOT EXISTS correction_record (
+CREATE TABLE IF NOT EXISTS application_correction (
     application_number INTEGER PRIMARY KEY,
     target_field TEXT NOT NULL,
     requested_value TEXT NOT NULL,
@@ -265,7 +265,7 @@ CREATE TABLE IF NOT EXISTS correction_record (
 );
 
 -- FK as PK enforces one-to-one relationship 
-CREATE TABLE IF NOT EXISTS reinstatement_record (
+CREATE TABLE IF NOT EXISTS application_reinstatement (
     application_number INTEGER PRIMARY KEY,
 
     reinstatement_type TEXT NOT NULL CHECK (reinstatement_type IN (
@@ -281,7 +281,7 @@ CREATE TABLE IF NOT EXISTS reinstatement_record (
 );
 
 -- FK as PK enforces one-to-one relationship 
-CREATE TABLE IF NOT EXISTS address_at_registration_or_transfer (
+CREATE TABLE IF NOT EXISTS application_declared_address (
     application_number INTEGER PRIMARY KEY,
     house_number VARCHAR(20) NOT NULL,
     street VARCHAR(100) NOT NULL,
@@ -310,7 +310,7 @@ CREATE TABLE IF NOT EXISTS officer (
     first_name VARCHAR(50), 
     last_name VARCHAR(50), 
     
-    auth_id UUID UNIQUE NOT NULL REFERENCES profile(auth_id) ON DELETE CASCADE,
+    auth_id UUID UNIQUE NOT NULL REFERENCES app_user(auth_id) ON DELETE CASCADE,
     position TEXT NOT NULL CHECK (position IN ('Election Officer', 'Board Member'))
 );
 
