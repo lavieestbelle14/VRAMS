@@ -283,8 +283,7 @@ CREATE TABLE IF NOT EXISTS application_reinstatement (
 -- FK as PK enforces one-to-one relationship 
 CREATE TABLE IF NOT EXISTS application_declared_address (
     application_number INTEGER PRIMARY KEY,
-    house_number VARCHAR(20) NOT NULL,
-    street VARCHAR(100) NOT NULL,
+    house_number_street VARCHAR(100) NOT NULL,
     barangay VARCHAR(50) NOT NULL,
     city_municipality VARCHAR(50) NOT NULL,
     province VARCHAR(50) NOT NULL,

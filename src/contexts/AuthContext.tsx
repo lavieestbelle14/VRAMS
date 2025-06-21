@@ -94,20 +94,36 @@ const handleSession = useCallback(async (session: Session | null) => {
   const supabaseUser = session?.user;
   if (supabaseUser) {
     try {
-      // Add explicit logging to see what's happening
       console.log('Processing session for user:', supabaseUser.id);
       
-      // Try to fetch the user profile - DON'T use single() initially to avoid errors
-      const { data: appUsers, error: fetchError } = await supabase
+      // Fetch the user profile and related applicant/voter records in one go
+      const { data: appUser, error: fetchError } = await supabase
         .from('app_user')
-        .select('role, username')
-        .eq('auth_id', supabaseUser.id);
+        .select(`
+          role, 
+          username,
+          applicant:applicant(
+            applicant_voter_record(
+              voter_id,
+              precinct_number
+            )
+          )
+        `)
+        .eq('auth_id', supabaseUser.id)
+        .single(); // Use single() as auth_id should be unique
 
-      // Log what we got back
-      console.log('Fetch result:', { appUsers, fetchError });
+      console.log('Fetch result:', { appUser, fetchError });
 
-      // If there's an error in the fetch itself
       if (fetchError) {
+        // Handle cases where the profile might not exist yet, especially after sign-up
+        if (fetchError.code === 'PGRST116') { // "single() row not found"
+          console.warn(`No user profile found for auth_id: ${supabaseUser.id}. This can happen right after sign-up.`);
+          // The profile will be created on the next successful login or page load.
+          setUser(null);
+          setIsLoading(false);
+          return null;
+        }
+        
         console.error('Database error fetching user:', fetchError.message, fetchError);
         toast({ 
           title: 'Database Error', 
@@ -116,101 +132,33 @@ const handleSession = useCallback(async (session: Session | null) => {
         });
         setUser(null);
         setIsLoading(false);
-        return;
+        return null;
       }
 
-      // Check if we found a user profile
-      if (!appUsers || appUsers.length === 0) {
-        console.error(`No user profile found for auth_id: ${supabaseUser.id}`);
-        
-        // Check if we can auto-create the profile
-        if (supabaseUser.email) {
-          console.log('Attempting to create user profile automatically');
-          
-          // Extract username from email or metadata
-          const username = supabaseUser.user_metadata?.username || 
-                          supabaseUser.email.split('@')[0];
-          
-          // Create a profile for this authenticated user
-          const { data: newProfile, error: insertError } = await supabase
-            .from('app_user')
-            .insert([
-              { 
-                auth_id: supabaseUser.id, 
-                email: supabaseUser.email,
-                username: username,
-                role: 'public', // Default role for auto-created users
-                created_at: new Date().toISOString()
-              }
-            ])
-            .select('role, username')
-            .single();
-          
-          console.log('Profile creation result:', { newProfile, insertError });
-          
-          if (insertError) {
-            console.error('Failed to create user profile:', insertError.message, insertError);
-            toast({ 
-              title: 'Profile Error', 
-              description: 'Could not create your user profile. Please contact support.',
-              variant: 'destructive' 
-            });
-            setUser(null);
-          } else if (newProfile) {
-            console.log('User profile created successfully:', newProfile);
-            // Set the user with the newly created profile
-            setUser({
-              id: supabaseUser.id,
-              email: supabaseUser.email,
-              role: newProfile.role as UserRole,
-              username: newProfile.username,
-            });
-            
-            toast({ 
-              title: 'Profile Created', 
-              description: 'Your profile has been set up.'
-            });
-          }
-        } else {
-          // Not enough information to create a profile
-          console.error('Cannot auto-create profile: missing email address');
-          toast({ 
-            title: 'Profile Error', 
-            description: 'Your account information is incomplete. Please contact support.',
-            variant: 'destructive' 
-          });
-          setUser(null);
-        }
-      } else if (appUsers.length > 1) {
-        // Handle multiple profiles (should not happen with proper DB constraints)
-        console.error(`Multiple profiles found for auth_id ${supabaseUser.id}`);
-        toast({ 
-          title: 'Profile Error', 
-          description: 'Multiple profiles were found for your account. Please contact support.',
-          variant: 'destructive' 
-        });
-        setUser(null);
-      } else {
-        // Success case - exactly one user found
-        const appUser = appUsers[0];
+      if (appUser) {
         console.log('User profile found:', appUser);
         
-            const userData = {
-      id: supabaseUser.id,
-      email: supabaseUser.email!,
-      role: appUser.role as UserRole,
-      username: appUser.username,
-    };
+        // Safely access nested voter record data
+        const voterRecord = appUser.applicant?.[0]?.applicant_voter_record?.[0];
+
+        const userData: AuthenticatedUser = {
+          id: supabaseUser.id,
+          email: supabaseUser.email!,
+          role: appUser.role as UserRole,
+          username: appUser.username,
+          voterId: voterRecord?.voter_id,
+          precinct: voterRecord?.precinct_number,
+        };
     
-    setUser(userData);
-    return userData; // Return the user data
-  }
+        setUser(userData);
+        return userData; // Return the fully populated user data
+      }
+
     } catch (unexpectedError) {
-      // Handle any other unexpected errors
-      console.error('Unexpected error in session handling:', unexpectedError);
+      console.error('An unexpected error occurred in handleSession:', unexpectedError);
       toast({ 
-        title: 'System Error', 
-        description: 'An unexpected error occurred. Please try again later.',
+        title: 'Unexpected Error', 
+        description: 'An unexpected error occurred while loading your profile.',
         variant: 'destructive' 
       });
       setUser(null);

@@ -24,6 +24,7 @@ import { format } from "date-fns";
 import { z } from 'zod';
 import { useFormDraft } from '@/hooks/useFormDraft';
 import { DeclarationDialog } from './form-fields/DeclarationDialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Import all form field components
 import {
@@ -63,6 +64,7 @@ const generateFingerprint = (data: Partial<ApplicationFormValues>): string => {
 export function ApplicationFormFields() {
   const { toast } = useToast();
   const router = useRouter();
+  const { user } = useAuth();
 
   const form = useForm<ApplicationFormValues>({
     resolver: zodResolver(applicationFormSchema),
@@ -166,7 +168,7 @@ export function ApplicationFormFields() {
   const transferType = form.watch('transferType'); // Watch transferType
 
   const showDeclarationFields = applicationType === 'transfer';
-  const isRegistered = true; // TODO: Replace with actual registration status check
+  const isRegistered = !!user?.voterId;
 
   // This will disable all personal information sections unless applicationType is 'register'
   // For other sections like Address, specific logic will be applied.
