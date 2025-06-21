@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import { Control } from 'react-hook-form';
 import { z } from 'zod';
 import { applicationFormSchema } from '@/schemas/applicationSchema';
@@ -13,6 +14,8 @@ interface RegularOathFieldsProps {
 }
 
 export function RegularOathFields({ control, shouldDisableOath }: RegularOathFieldsProps) {
+  const [oathAccepted, setOathAccepted] = useState(false);
+
   return (
     <div className="space-y-6">
       <div className="prose prose-sm max-w-none">
@@ -21,33 +24,45 @@ export function RegularOathFields({ control, shouldDisableOath }: RegularOathFie
         </p>
       </div>
       <div className="flex items-start space-x-3 mt-6">
-        <FormField
-          control={control}
-          name="regularOathAccepted"
-          render={({ field }) => (
-            <FormItem className="flex items-start space-x-3 space-y-0">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                  required={!shouldDisableOath}
-                  aria-required={!shouldDisableOath}
-                />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel className="text-base font-semibold">
-                  I understand and agree to the oath stated above {!shouldDisableOath && '*'}
-                </FormLabel>
-                <FormDescription>
-                  By checking this box, I confirm that I have read, understood, and agree to the oath.
-                  I understand that providing false information may result in legal consequences.
-                </FormDescription>
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="flex items-start space-x-3 space-y-0">
+          <Checkbox
+            checked={oathAccepted}
+            onCheckedChange={(checked) => setOathAccepted(checked === true)}
+            required={!shouldDisableOath}
+            aria-required={!shouldDisableOath}
+            disabled={shouldDisableOath}
+          />
+          <div className="space-y-1 leading-none">
+            <label className="text-base font-semibold cursor-pointer">
+              I understand and agree to the oath stated above {!shouldDisableOath && '*'}
+            </label>
+            <p className="text-sm text-muted-foreground">
+              By checking this box, I confirm that I have read, understood, and agree to the oath.
+              I understand that providing false information may result in legal consequences.
+            </p>
+          </div>
+        </div>
       </div>
+      
+      {/* Hidden field to integrate with form validation */}
+      <FormField
+        control={control}
+        name="declarationAccepted"
+        render={() => (
+          <FormItem className="hidden">
+            <FormControl>
+              <input 
+                type="hidden" 
+                value={oathAccepted ? "true" : "false"}
+                onChange={() => {}} // Required by React but not used
+              />
+            </FormControl>
+            {!shouldDisableOath && !oathAccepted && (
+              <FormMessage>You must accept the oath to proceed</FormMessage>
+            )}
+          </FormItem>
+        )}
+      />
     </div>
   );
 }

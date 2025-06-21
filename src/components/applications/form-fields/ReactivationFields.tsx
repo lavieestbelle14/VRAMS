@@ -16,7 +16,7 @@ export function ReactivationFields({ control }: ReactivationFieldsProps) {
     <div className="space-y-4">
       <FormField
         control={control}
-        name={"reactivationReason" as any}
+        name={"reasonForDeactivation" as any}
         render={({ field }) => (
           <FormItem className="space-y-3">
             <FormControl>

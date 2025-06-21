@@ -15,19 +15,34 @@ interface AddressResidencyFieldsProps {
 export const AddressResidencyFields: React.FC<AddressResidencyFieldsProps> = ({ control }) => (
   <>
     {/* === Start of original AddressFields.tsx content === */}
-    <FormField 
-      control={control} 
-      name="houseNoStreet" 
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>House No. / Street / Subdivision</FormLabel>
-          <FormControl>
-            <Input placeholder="123 Rizal St, Pleasant Village" {...field} value={field.value ?? ''} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )} 
-    />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <FormField 
+        control={control} 
+        name="houseNumber" 
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>House Number</FormLabel>
+            <FormControl>
+              <Input placeholder="123" {...field} value={field.value ?? ''} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )} 
+      />
+      <FormField 
+        control={control} 
+        name="street" 
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Street / Subdivision</FormLabel>
+            <FormControl>
+              <Input placeholder="Rizal St, Pleasant Village" {...field} value={field.value ?? ''} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )} 
+      />
+    </div>
     
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <FormField 
@@ -74,7 +89,7 @@ export const AddressResidencyFields: React.FC<AddressResidencyFieldsProps> = ({ 
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <FormField 
         control={control} 
-        name="yearsOfResidency" 
+        name="yearsOfResidenceAddress" 
         render={({ field }) => (
           <FormItem>
             <FormLabel>Years at Current Address</FormLabel>
@@ -83,8 +98,8 @@ export const AddressResidencyFields: React.FC<AddressResidencyFieldsProps> = ({ 
                 type="number" 
                 placeholder="5" 
                 {...field} 
-                value={typeof field.value === 'number' ? field.value : ''} 
-                onChange={e => field.onChange(parseInt(e.target.value,10) || undefined)} 
+                value={field.value?.toString() ?? ''} 
+                onChange={e => field.onChange(e.target.value ? parseInt(e.target.value, 10) : 0)} 
               />
             </FormControl>
             <FormMessage />
@@ -93,7 +108,7 @@ export const AddressResidencyFields: React.FC<AddressResidencyFieldsProps> = ({ 
       />
       <FormField 
         control={control} 
-        name="monthsOfResidency" 
+        name="monthsOfResidenceAddress" 
         render={({ field }) => (
           <FormItem>
             <FormLabel>Months at Current Address</FormLabel>
@@ -104,8 +119,8 @@ export const AddressResidencyFields: React.FC<AddressResidencyFieldsProps> = ({ 
                 min="0" 
                 max="11" 
                 {...field} 
-                value={typeof field.value === 'number' ? field.value : ''} 
-                onChange={e => field.onChange(parseInt(e.target.value,10) || undefined)} 
+                value={field.value?.toString() ?? ''} 
+                onChange={e => field.onChange(e.target.value ? parseInt(e.target.value, 10) : 0)} 
               />
             </FormControl>
             <FormMessage />
@@ -125,7 +140,7 @@ export const AddressResidencyFields: React.FC<AddressResidencyFieldsProps> = ({ 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField 
           control={control} 
-          name="residencyYearsCityMun" 
+          name="yearsOfResidenceMunicipality" 
           render={({ field }) => (
             <FormItem>
               <FormLabel>No. of Years</FormLabel>
@@ -134,8 +149,8 @@ export const AddressResidencyFields: React.FC<AddressResidencyFieldsProps> = ({ 
                   type="number" 
                   placeholder="10" 
                   {...field} 
-                  value={typeof field.value === 'number' ? field.value : ''} 
-                  onChange={e => field.onChange(parseInt(e.target.value,10) || undefined)} 
+                  value={field.value?.toString() ?? ''} 
+                  onChange={e => field.onChange(e.target.value ? parseInt(e.target.value, 10) : 0)} 
                 />
               </FormControl>
               <FormMessage />
@@ -144,7 +159,7 @@ export const AddressResidencyFields: React.FC<AddressResidencyFieldsProps> = ({ 
         />
         <FormField 
           control={control} 
-          name="residencyMonthsCityMun" 
+          name="monthsOfResidenceMunicipality" 
           render={({ field }) => (
             <FormItem>
               <FormLabel>No. of Months</FormLabel>
@@ -155,8 +170,8 @@ export const AddressResidencyFields: React.FC<AddressResidencyFieldsProps> = ({ 
                   min="0" 
                   max="11" 
                   {...field} 
-                  value={typeof field.value === 'number' ? field.value : ''} 
-                  onChange={e => field.onChange(parseInt(e.target.value,10) || undefined)} 
+                  value={field.value?.toString() ?? ''} 
+                  onChange={e => field.onChange(e.target.value ? parseInt(e.target.value, 10) : 0)} 
                 />
               </FormControl>
               <FormMessage />
@@ -167,7 +182,7 @@ export const AddressResidencyFields: React.FC<AddressResidencyFieldsProps> = ({ 
       
       <FormField 
         control={control} 
-        name="residencyYearsPhilippines" 
+        name="yearsInCountry" 
         render={({ field }) => (
           <FormItem className="mt-4">
             <FormLabel>In the Philippines (No. of Years)</FormLabel>
@@ -176,8 +191,8 @@ export const AddressResidencyFields: React.FC<AddressResidencyFieldsProps> = ({ 
                 type="number" 
                 placeholder="25" 
                 {...field} 
-                value={typeof field.value === 'number' ? field.value : ''} 
-                onChange={e => field.onChange(parseInt(e.target.value,10) || undefined)} 
+                value={field.value?.toString() ?? ''} 
+                onChange={e => field.onChange(e.target.value ? parseInt(e.target.value, 10) : 0)} 
               />
             </FormControl>
             <FormMessage />

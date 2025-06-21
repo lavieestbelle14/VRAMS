@@ -17,11 +17,24 @@ export const applicationFormSchema = z.object({
   civilStatus: z.enum(["Single", "Married", "Widowed", "Legally Separated"], { errorMap: () => ({ message: "Please select a civil status" }) }),
   spouseName: z.string().optional(),
   sex: z.enum(["M", "F"]),
-  dateOfBirth: z.string().min(1, "Date of birth is required"), // Corresponds to date_of_birth
+  dateOfBirth: z.string().min(1, "Date of birth is required").refine((val) => {
+    const today = new Date();
+    const birthDate = new Date(val);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age >= 14;
+  }, {
+    message: "You must be at least 14 years old to register.",
+  }), // Corresponds to date_of_birth
   placeOfBirthMunicipality: z.string().min(1, "Required"),
   placeOfBirthProvince: z.string().min(1, "Required"),
-  fatherName: z.string().min(1, "Required"), // Combined from fatherFirstName/lastName
-  motherMaidenName: z.string().min(1, "Required"), // Combined from motherFirstName/lastName
+  fatherFirstName: z.string().min(1, "Father's first name is required"),
+  fatherLastName: z.string().min(1, "Father's last name is required"),
+  motherFirstName: z.string().min(1, "Mother's first name is required"),
+  motherMaidenLastName: z.string().min(1, "Mother's maiden last name is required"),
 
   // --- applicant_special_sector table ---
   isIlliterate: z.boolean().default(false),
@@ -40,7 +53,7 @@ export const applicationFormSchema = z.object({
     'transfer_with_reactivation',
     'correction_of_entry',
     'reinstatement'
-  ]),
+  ]).optional(),
 
   // --- application_registration table ---
   registrationType: z.enum(['Katipunan ng Kabataan', 'Regular']).optional(), // Corresponds to registrationIntention
@@ -95,9 +108,11 @@ export const applicationFormSchema = z.object({
   barangay: z.string().min(1, "Required"),
   cityMunicipality: z.string().min(1, "Required"),
   province: z.string().min(1, "Required"),
-  yearsOfResidenceMunicipality: z.number().optional(), // Corresponds to residencyYearsCityMun
-  monthsOfResidenceMunicipality: z.number().optional(), // Corresponds to residencyMonthsCityMun
-  yearsInCountry: z.number().optional(), // Corresponds to residencyYearsPhilippines
+  yearsOfResidenceAddress: z.number().min(0, "Required"), // For address-level residency
+  monthsOfResidenceAddress: z.number().min(0, "Required"), // For address-level residency
+  yearsOfResidenceMunicipality: z.number().min(0, "Required"), // Corresponds to residencyYearsCityMun
+  monthsOfResidenceMunicipality: z.number().min(0, "Required"), // Corresponds to residencyMonthsCityMun
+  yearsInCountry: z.number().min(0, "Required"), // Corresponds to residencyYearsPhilippines
 
   // --- UI-only / Logic fields (do not map directly to a single DB column) ---
   isPwd: z.boolean().default(false), // UI helper for typeOfDisability
@@ -122,6 +137,7 @@ export const applicationFormSchema = z.object({
 
   if (data.applicationType === 'register') {
     if (!data.governmentIdFrontUrl) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "ID Front Photo is required for registration", path: ["governmentIdFrontUrl"] });
+    if (!data.governmentIdBackUrl) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "ID Back Photo is required for registration", path: ["governmentIdBackUrl"] });
     if (!data.idSelfieUrl) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Selfie with ID is required for registration", path: ["idSelfieUrl"] });
   }
   

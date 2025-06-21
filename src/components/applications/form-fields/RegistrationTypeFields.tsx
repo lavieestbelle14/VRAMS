@@ -7,21 +7,21 @@ import { applicationFormSchema } from '@/schemas/applicationSchema';
 
 type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
 
-interface RegistrationIntentionFieldsProps {
+interface RegistrationTypeFieldsProps {
   control: Control<ApplicationFormValues>;
 }
 
-export const RegistrationIntentionFields: React.FC<RegistrationIntentionFieldsProps> = ({ control }) => (
+export const RegistrationTypeFields: React.FC<RegistrationTypeFieldsProps> = ({ control }) => (
   <div className="space-y-4">
     <FormField
       control={control}
-      name="registrationIntention"
+      name="registrationType"
       render={({ field }) => (
         <FormItem className="space-y-3">
           <FormControl>
-            <RadioGroup 
-              onValueChange={field.onChange} 
-              value={field.value ?? ''} 
+            <RadioGroup
+              onValueChange={field.onChange}
+              value={field.value ?? ''}
               className="space-y-4"
             >
               <FormItem className="flex items-start space-x-3 space-y-0">

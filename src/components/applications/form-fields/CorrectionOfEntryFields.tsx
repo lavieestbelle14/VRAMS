@@ -25,11 +25,11 @@ export function CorrectionOfEntryFields({ control }: CorrectionOfEntryFieldsProp
           <div className="space-y-4">
             <FormField
               control={control}
-              name="correctionField"
+              name="targetField"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Field to Correct</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a field to correct" />
@@ -51,24 +51,30 @@ export function CorrectionOfEntryFields({ control }: CorrectionOfEntryFieldsProp
                 </FormItem>
               )}
             />
-            <FormField name="presentData" control={control}
+            <FormField 
+              control={control}
+              name="currentValue"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Present Data/Information:</FormLabel>
                   <FormControl>
-                    <Input {...field} value={typeof field.value === 'boolean' ? '' : field.value ?? ''} />
+                    <Input {...field} value={field.value ?? ''} />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
             
-            <FormField name="newData" control={control}
+            <FormField 
+              control={control}
+              name="requestedValue"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>New/Corrected Data/Information:</FormLabel>
                   <FormControl>
-                    <Input {...field} value={typeof field.value === 'boolean' || typeof field.value === 'undefined' ? '' : field.value} />
+                    <Input {...field} value={field.value ?? ''} />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />

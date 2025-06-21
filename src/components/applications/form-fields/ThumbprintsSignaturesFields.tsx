@@ -2,8 +2,6 @@
 import { Control } from 'react-hook-form';
 import { z } from 'zod';
 import { applicationFormSchema } from '@/schemas/applicationSchema';
-import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 
 type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
 
@@ -50,23 +48,6 @@ export function ThumbprintsSignaturesFields({ control }: ThumbprintsSignaturesFi
             ))}
           </div>
         </div>
-
-        <FormField
-          control={control}
-          name="biometricsFile"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Input 
-                  type="hidden" 
-                  {...field} 
-                  value="For on-site capture" 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
       </div>
     </div>
   );

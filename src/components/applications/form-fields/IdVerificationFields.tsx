@@ -42,7 +42,7 @@ export function IdVerificationFields({ control }: IdVerificationFieldsProps) {
 
       <FormField
         control={control}
-        name="idFrontPhoto"
+        name="governmentIdFrontUrl"
         render={({ field: { onChange, value, ...field } }) => (
           <FormItem>
             <FormLabel>ID Front Photo</FormLabel>
@@ -50,7 +50,7 @@ export function IdVerificationFields({ control }: IdVerificationFieldsProps) {
               <Input
                 type="file"
                 accept="image/*"
-                onChange={handleFileChange(onChange, 'idFrontPhoto')}
+                onChange={handleFileChange(onChange, 'governmentIdFrontUrl')}
                 {...field}
               />
             </FormControl>
@@ -64,7 +64,7 @@ export function IdVerificationFields({ control }: IdVerificationFieldsProps) {
 
       <FormField
         control={control}
-        name="idBackPhoto"
+        name="governmentIdBackUrl"
         render={({ field: { onChange, value, ...field } }) => (
           <FormItem>
             <FormLabel>ID Back Photo</FormLabel>
@@ -72,7 +72,7 @@ export function IdVerificationFields({ control }: IdVerificationFieldsProps) {
               <Input
                 type="file"
                 accept="image/*"
-                onChange={handleFileChange(onChange, 'idBackPhoto')}
+                onChange={handleFileChange(onChange, 'governmentIdBackUrl')}
                 {...field}
               />
             </FormControl>
@@ -86,7 +86,7 @@ export function IdVerificationFields({ control }: IdVerificationFieldsProps) {
 
       <FormField
         control={control}
-        name="selfieWithId"
+        name="idSelfieUrl"
         render={({ field: { onChange, value, ...field } }) => (
           <FormItem>
             <FormLabel>Selfie with ID</FormLabel>
@@ -94,7 +94,7 @@ export function IdVerificationFields({ control }: IdVerificationFieldsProps) {
               <Input
                 type="file"
                 accept="image/*"
-                onChange={handleFileChange(onChange, 'selfieWithId')}
+                onChange={handleFileChange(onChange, 'idSelfieUrl')}
                 {...field}
               />
             </FormControl>

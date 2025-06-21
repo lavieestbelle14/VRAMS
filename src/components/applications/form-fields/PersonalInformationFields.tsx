@@ -64,12 +64,12 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
         />
         <FormField
           control={control}
-          name={"middleName" as any}
+          name="middleName"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Middle Name (Optional)</FormLabel>
               <FormControl>
-                <Input placeholder="Santos" {...field} value={typeof field.value === 'string' ? field.value : ''} />
+                <Input placeholder="Santos" {...field} value={field.value ?? ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -100,7 +100,7 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
         />
         <FormField
           control={control}
-          name="dob"
+          name="dateOfBirth"
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Date of Birth</FormLabel>
@@ -143,7 +143,7 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={control}
-          name="placeOfBirthCityMun"
+          name="placeOfBirthMunicipality"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Place of Birth (City/Municipality)</FormLabel>
@@ -170,12 +170,12 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
       </div>
       <FormField
         control={control}
-        name={"contactNumber" as any}
+        name="contactNumber"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Contact No. (Optional)</FormLabel>
             <FormControl>
-              <Input placeholder="09123456789" {...field} value={typeof field.value === 'string' ? field.value : ''} />
+              <Input placeholder="09123456789" {...field} value={field.value ?? ''} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -183,12 +183,12 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
       />
       <FormField
         control={control}
-        name={"email" as any}
+        name="emailAddress"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Email (Optional)</FormLabel>
             <FormControl>
-              <Input type="email" placeholder="juan.delacruz@example.com" {...field} value={typeof field.value === 'string' ? field.value : ''} />
+              <Input type="email" placeholder="juan.delacruz@example.com" {...field} value={field.value ?? ''} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -224,7 +224,7 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <FormField
               control={control}
-              name="naturalizationDate"
+              name="dateOfNaturalization"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Date of Naturalization/Reacquisition</FormLabel>
@@ -261,7 +261,7 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
             />
             <FormField
               control={control}
-              name="naturalizationCertNo"
+              name="certificateNumber"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Certificate No./Order of Approval</FormLabel>
@@ -281,7 +281,7 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
         <h3 className="text-lg font-semibold mt-2 mb-3 border-t pt-6">Profession / Occupation</h3>
         <FormField
           control={control}
-          name={"professionOccupation" as any}
+          name="professionOccupation"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Profession / Occupation (Optional)</FormLabel>
@@ -323,7 +323,7 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
         {civilStatus === 'Married' && (
           <FormField
             control={control}
-            name={"spouseName" as any}
+            name="spouseName"
             render={({ field }) => (
               <FormItem className="mt-4">
                 <FormLabel>Spouse's Full Name</FormLabel>
@@ -379,7 +379,7 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
           />
           <FormField
             control={control}
-            name="motherLastName"
+            name="motherMaidenLastName"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Mother's Maiden Last Name</FormLabel>
@@ -436,7 +436,7 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
           />
           <FormField
             control={control}
-            name="isSenior"
+            name="isSeniorCitizen"
             render={({ field }) => (
               <FormItem className="flex flex-row items-center space-x-3 space-y-0 p-2 border rounded-md">
                 <FormControl>
@@ -448,7 +448,7 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
           />
           <FormField
             control={control}
-            name="prefersGroundFloor"
+            name="voteOnGroundFloor"
             render={({ field }) => (
               <FormItem className="flex flex-row items-center space-x-3 space-y-0 p-2 border rounded-md">
                 <FormControl>
@@ -463,12 +463,12 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
         {isIndigenousPerson && (
           <FormField
             control={control}
-            name={"indigenousTribe" as any}
+            name="tribe"
             render={({ field }) => (
               <FormItem className="mt-4">
                 <FormLabel>Tribe Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Aeta, Ati, Badjao" {...field} />
+                  <Input placeholder="e.g., Aeta, Ati, Badjao" {...field} value={field.value ?? ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -479,7 +479,7 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
         {isPwd && (
           <FormField
             control={control}
-            name={"disabilityType" as any}
+            name="typeOfDisability"
             render={({ field }) => (
               <FormItem className="mt-4">
                 <FormLabel>Type of Disability</FormLabel>
@@ -494,7 +494,7 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
 
         <FormField
           control={control}
-          name={"assistorName" as any}
+          name="assistorName"
           render={({ field }) => (
             <FormItem className="mt-4">
               <FormLabel>Assistor's Full Name (If any)</FormLabel>
@@ -509,7 +509,7 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
         {/* Add the assistanceNeeded field below assistorName */}
         <FormField
           control={control}
-          name={"assistanceNeeded" as any}
+          name="assistanceNeeded"
           render={({ field }) => (
             <FormItem className="mt-4">
               <FormLabel>Type of Assistance Needed</FormLabel>

@@ -281,7 +281,7 @@ const handleSession = useCallback(async (session: Session | null) => {
     if (!user) return false;
 
     const { error } = await supabase
-      .from('app_user')
+      .from('profile')
       .update({ username: updates.username })
       .eq('auth_id', user.id);
 

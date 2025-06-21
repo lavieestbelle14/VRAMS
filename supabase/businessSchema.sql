@@ -44,8 +44,8 @@ CREATE TABLE IF NOT EXISTS applicant (
     applicant_id SERIAL PRIMARY KEY,
     auth_id UUID UNIQUE NOT NULL REFERENCES app_user(auth_id) ON DELETE CASCADE,
 
-    first_name VARCHAR(50),
-    last_name VARCHAR(50),
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
     middle_name VARCHAR(50),
     suffix VARCHAR(10),
 
@@ -82,9 +82,9 @@ CREATE TABLE IF NOT EXISTS applicant (
 -- FK as PK enforces one-to-one relationship
 CREATE TABLE applicant_biometrics (
     applicant_id INTEGER PRIMARY KEY,
-    left_thumbprint_url TEXT,
-    right_thumbprint_url TEXT,
-    signature_specimen_url TEXT,
+    left_thumbprint_url TEXT NOT NULL,
+    right_thumbprint_url TEXT NOT NULL,
+    signature_specimen_url TEXT NOT NULL,
     FOREIGN KEY (applicant_id) REFERENCES applicant(applicant_id) ON DELETE CASCADE
 );
 
@@ -287,8 +287,10 @@ CREATE TABLE IF NOT EXISTS application_declared_address (
     barangay VARCHAR(50) NOT NULL,
     city_municipality VARCHAR(50) NOT NULL,
     province VARCHAR(50) NOT NULL,
-    years_of_residence_municipality INTEGER NOT NULL,
+    months_of_residence_address INTEGER NOT NULL,
+    years_of_residence_address INTEGER NOT NULL,
     months_of_residence_municipality INTEGER NOT NULL,
+    years_of_residence_municipality INTEGER NOT NULL,
     years_in_country INTEGER NOT NULL,
 
     CONSTRAINT fk_application_address

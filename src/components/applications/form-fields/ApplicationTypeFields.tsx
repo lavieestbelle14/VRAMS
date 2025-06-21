@@ -11,44 +11,14 @@ type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
 interface ApplicationTypeFieldsProps {
   control: Control<ApplicationFormValues>;
   form: UseFormReturn<ApplicationFormValues>;
-  registrationIntention?: string;
   isRegistered: boolean;
 }
 
 export const ApplicationTypeFields: React.FC<ApplicationTypeFieldsProps> = ({ 
   control, 
   form, 
-  registrationIntention, 
   isRegistered 
 }) => {
-  const applicationType = form.watch('applicationType');
-  const transferType = form.watch('transferType');
-
-  // Determine the display value for the radio group
-  const getDisplayValue = () => {
-    if (applicationType === 'transfer' && transferType === 'transfer-reactivation') {
-      return 'transfer-reactivation';
-    }
-    return applicationType ?? '';
-  };
-
-  const handleApplicationTypeChange = (value: string) => {
-    if (value === 'transfer-reactivation') {
-      // Set applicationType to 'transfer' and transferType to 'transfer-reactivation'
-      form.setValue('applicationType', 'transfer');
-      form.setValue('transferType', 'transfer-reactivation');
-    } else if (value === 'transfer') {
-      // Set applicationType to 'transfer' and transferType to 'transfer-record'
-      form.setValue('applicationType', 'transfer');
-      form.setValue('transferType', 'transfer-record');
-    } else {
-      // For other types, just set the applicationType
-      form.setValue('applicationType', value as any);
-      // Clear transferType if not transfer-related
-      form.setValue('transferType', undefined);
-    }
-  };
-
   return (
     <div className="space-y-4">
       <FormField
@@ -68,8 +38,8 @@ export const ApplicationTypeFields: React.FC<ApplicationTypeFieldsProps> = ({
 
             <FormControl>
               <RadioGroup 
-                onValueChange={handleApplicationTypeChange} 
-                value={getDisplayValue()} 
+                onValueChange={field.onChange} 
+                value={field.value ?? ''} 
                 className="flex flex-col space-y-2"
               >
                 {/* Registration */}
@@ -131,7 +101,7 @@ export const ApplicationTypeFields: React.FC<ApplicationTypeFieldsProps> = ({
                   <div className="flex items-center space-x-3">
                     <FormControl>
                       <RadioGroupItem 
-                        value="transfer-reactivation" 
+                        value="transfer_with_reactivation" 
                         disabled={!isRegistered}
                       />
                     </FormControl>
