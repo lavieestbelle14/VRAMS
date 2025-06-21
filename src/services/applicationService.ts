@@ -12,14 +12,90 @@ interface AuthenticatedUser {
 }
 
 // Helper function for securely uploading a file and getting its public URL
-const uploadFile = async (file: File, bucket: string, path: string) => {
-  const { error } = await supabase.storage.from(bucket).upload(path, file);
-  if (error) {
-    console.error(`Error uploading to ${bucket}:`, error);
-    throw new Error(`Failed to upload file to ${bucket}.`);
+const uploadFile = async (file: File, bucket: string, path: string): Promise<string> => {
+  // Validate file before upload
+  if (!file || !(file instanceof File)) {
+    throw new Error(`Invalid file provided for upload to ${bucket}`);
   }
-  const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(path);
-  return publicUrl;
+
+  // Check file size (5MB limit)
+  const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+  if (file.size > maxSize) {
+    throw new Error(`File size (${(file.size / 1024 / 1024).toFixed(2)}MB) exceeds the 5MB limit for ${bucket}`);
+  }
+
+  // Validate file type for ID uploads
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error(`Invalid file type "${file.type}". Only JPEG, JPG, PNG, and WebP files are allowed.`);
+  }
+
+  try {
+    const { data, error } = await supabase.storage.from(bucket).upload(path, file, {
+      cacheControl: '3600',
+      upsert: false // Don't overwrite existing files
+    });
+
+    if (error) {
+      console.error(`Detailed upload error for ${bucket}:`, {
+        error,
+        bucket,
+        path,
+        fileSize: file.size,
+        fileType: file.type,
+        fileName: file.name
+      });
+
+      // Handle specific error cases
+      if (error.message?.includes('Duplicate')) {
+        throw new Error(`A file with this name already exists. Please try again or rename your file.`);
+      }
+      if (error.message?.includes('Bucket not found')) {
+        throw new Error(`Storage bucket "${bucket}" not found. Please contact support.`);
+      }
+      if (error.message?.includes('unauthorized') || error.message?.includes('permission')) {
+        throw new Error(`You don't have permission to upload to ${bucket}. Please contact support.`);
+      }
+      if (error.message?.includes('payload too large')) {
+        throw new Error(`File is too large for upload to ${bucket}. Maximum size is 5MB.`);
+      }
+      
+      // Generic error with more detail
+      throw new Error(`Failed to upload file to ${bucket}: ${error.message || 'Unknown error'}`);
+    }
+
+    if (!data?.path) {
+      throw new Error(`Upload succeeded but no file path returned from ${bucket}`);
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(path);
+    
+    if (!urlData?.publicUrl) {
+      throw new Error(`Failed to generate public URL for uploaded file in ${bucket}`);
+    }
+
+    return urlData.publicUrl;
+  } catch (uploadError) {
+    console.error(`Exception during file upload to ${bucket}:`, {
+      error: uploadError,
+      bucket,
+      path,
+      fileInfo: {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      }
+    });
+    
+    // Re-throw if it's already our custom error
+    if (uploadError instanceof Error && uploadError.message.includes('Failed to upload')) {
+      throw uploadError;
+    }
+    
+    // Wrap unexpected errors
+    throw new Error(`Unexpected error during file upload to ${bucket}: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`);
+  }
 };
 
 
@@ -30,36 +106,40 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
 
   let applicant_id: number;
 
-  // Step 1: Handle File Uploads if it's a registration application
-  if (data.applicationType === 'register') {
-    if (data.governmentIdFrontUrl) {
-      const path = `public/${user.id}-${data.governmentIdFrontUrl.name}-front`;
-      try {
-        idFrontPhotoUrl = await uploadFile(data.governmentIdFrontUrl, 'government-ids', path);
-      } catch (e) {
-        console.error('Error uploading governmentIdFrontUrl:', e, data.governmentIdFrontUrl);
-        throw e;
+  try {
+    // Step 1: Handle File Uploads if it's a registration application
+    if (data.applicationType === 'register') {
+      if (data.governmentIdFrontUrl) {
+        const timestamp = Date.now();
+        const path = `public/${user.id}-${timestamp}-front-${data.governmentIdFrontUrl.name}`;
+        try {
+          idFrontPhotoUrl = await uploadFile(data.governmentIdFrontUrl, 'government-ids', path);
+        } catch (e) {
+          console.error('Error uploading governmentIdFrontUrl:', e);
+          throw new Error(`Failed to upload ID front photo: ${e instanceof Error ? e.message : 'Unknown error'}`);
+        }
       }
-    }
-    if (data.governmentIdBackUrl) {
-        const path = `public/${user.id}-${data.governmentIdBackUrl.name}-back`;
+      if (data.governmentIdBackUrl) {
+        const timestamp = Date.now();
+        const path = `public/${user.id}-${timestamp}-back-${data.governmentIdBackUrl.name}`;
         try {
           idBackPhotoUrl = await uploadFile(data.governmentIdBackUrl, 'government-ids', path);
         } catch (e) {
-          console.error('Error uploading governmentIdBackUrl:', e, data.governmentIdBackUrl);
-          throw e;
+          console.error('Error uploading governmentIdBackUrl:', e);
+          throw new Error(`Failed to upload ID back photo: ${e instanceof Error ? e.message : 'Unknown error'}`);
         }
-    }
-    if (data.idSelfieUrl) {
-      const path = `public/${user.id}-${data.idSelfieUrl.name}-selfie`;
-      try {
-        selfieWithIdUrl = await uploadFile(data.idSelfieUrl, 'id-selfie', path);
-      } catch (e) {
-        console.error('Error uploading idSelfieUrl:', e, data.idSelfieUrl);
-        throw e;
+      }
+      if (data.idSelfieUrl) {
+        const timestamp = Date.now();
+        const path = `public/${user.id}-${timestamp}-selfie-${data.idSelfieUrl.name}`;
+        try {
+          selfieWithIdUrl = await uploadFile(data.idSelfieUrl, 'id-selfies', path);
+        } catch (e) {
+          console.error('Error uploading idSelfieUrl:', e);
+          throw new Error(`Failed to upload selfie photo: ${e instanceof Error ? e.message : 'Unknown error'}`);
+        }
       }
     }
-  }
 
   // Step 2: Insert or fetch applicant
   if (data.applicationType === 'register') {
@@ -277,4 +357,37 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
 
   // Step 7: Return the application number for redirection
   return String(application_number);
+
+  } catch (error) {
+    console.error('Application submission failed:', {
+      error,
+      applicationType: data.applicationType,
+      userId: user.id,
+      timestamp: new Date().toISOString()
+    });
+
+    // If it's already a custom error with a descriptive message, re-throw it
+    if (error instanceof Error && error.message.includes('Failed to')) {
+      throw error;
+    }
+
+    // For database errors, provide more context
+    if (error instanceof Error) {
+      if (error.message.includes('duplicate key')) {
+        throw new Error('An application with this information already exists. Please check your previous submissions.');
+      }
+      if (error.message.includes('foreign key')) {
+        throw new Error('Invalid reference data. Please refresh the page and try again.');
+      }
+      if (error.message.includes('not null')) {
+        throw new Error('Missing required information. Please check all required fields are filled.');
+      }
+      if (error.message.includes('check constraint')) {
+        throw new Error('Invalid data provided. Please check your input values and try again.');
+      }
+    }
+
+    // Generic fallback error
+    throw new Error(`Application submission failed: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+  }
 };
