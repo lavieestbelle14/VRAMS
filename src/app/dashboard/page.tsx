@@ -8,6 +8,7 @@ import {
   Filter, Search, Bell, FileText, ShieldCheck, Calendar, 
   CheckCircle, XCircle, Clock, AlertCircle, HelpCircle
 } from 'lucide-react';
+
 import { useEffect, useState, useMemo } from 'react';
 import type { Application } from '@/types';
 import { getApplications, seedInitialData } from '@/lib/applicationStore';
@@ -19,6 +20,7 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from "@/components/ui/chart";
+
 import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, Legend as RechartsLegend, Cell, CartesianGrid } from 'recharts';
 import { format, subDays, eachDayOfInterval, startOfDay, isSameDay } from 'date-fns';
 import { Input } from "@/components/ui/input";
@@ -35,6 +37,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -59,7 +62,7 @@ function exportApplicationsToCSV(applications: Application[], filename: string) 
     'Remarks'
   ];
 
-    // Function to safely handle values that might contain commas or quotes
+
   const escapeCsvValue = (value: string | undefined | null): string => {
     if (value === null || value === undefined) return '';
     const str = String(value);
@@ -80,7 +83,6 @@ function exportApplicationsToCSV(applications: Application[], filename: string) 
       escapeCsvValue(app.applicationType),
       escapeCsvValue(app.status),
       escapeCsvValue(format(parseISO(app.submissionDate), 'yyyy-MM-dd HH:mm:ss')),
-      // escapeCsvValue(format(parseISO(app.lastUpdated), 'yyyy-MM-dd HH:mm:ss')), // Removed because lastUpdated does not exist
       escapeCsvValue(app.remarks)
     ].join(','))
   ];
@@ -103,7 +105,6 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedView, setSelectedView] = useState<string>("all");
 
-    // State for ID Verification Modal
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [verificationNotes, setVerificationNotes] = useState('');
   const { toast } = useToast();
@@ -151,7 +152,6 @@ export default function DashboardPage() {
       acc[app.status] = (acc[app.status] || 0) + 1;
       acc.total = (acc.total || 0) + 1;
       
-      // Count applications with ID documents
       if (app.idDocumentUrl) {
         acc.withId = (acc.withId || 0) + 1;
       }
@@ -163,7 +163,6 @@ export default function DashboardPage() {
   const filteredApplications = useMemo(() => {
     let filtered = [...applications];
     
-    // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(app => 
@@ -172,7 +171,6 @@ export default function DashboardPage() {
       );
     }
     
-    // Filter by selected view
     if (selectedView !== "all") {
       filtered = filtered.filter(app => app.status === selectedView);
     }
@@ -182,10 +180,10 @@ export default function DashboardPage() {
 
 const statusChartData = useMemo(() => {
   return [
-    { name: 'Pending', value: summaryCounts.pending, fill: '#1261A0' }, // Blue
-    { name: 'Reviewing', value: summaryCounts.reviewing, fill: '#FFBF00' }, // Yellow/Gold
-    { name: 'Approved', value: summaryCounts.approved, fill: '#008000' }, // Green
-    { name: 'Rejected', value: summaryCounts.rejected, fill: '#EC7063' }, // Red/Salmon
+    { name: 'Pending', value: summaryCounts.pending, fill: '#1261A0' }, 
+    { name: 'Reviewing', value: summaryCounts.reviewing, fill: '#FFBF00' }, 
+    { name: 'Approved', value: summaryCounts.approved, fill: '#008000' }, 
+    { name: 'Rejected', value: summaryCounts.rejected, fill: '#EC7063' }, 
   ].filter(item => item.value > 0);
 }, [summaryCounts]);
 
