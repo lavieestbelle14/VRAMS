@@ -144,6 +144,17 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
   // Step 2: Insert or fetch applicant
   if (data.applicationType === 'register') {
     // Insert new applicant
+    const { data: existingApplicant } = await supabase
+      .from('applicant')
+      .select('applicant_id')
+      .eq('auth_id', user.id)
+      .single();
+
+    if (existingApplicant) {
+      console.log('Found existing applicant:', existingApplicant);
+      throw new Error(`You already have an existing application. Please use transfer, correction, or other application types.`);
+    }
+
     const { data: applicantData, error: applicantError } = await supabase
       .from('applicant')
       .insert({
@@ -159,21 +170,20 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
         contact_number: data.contactNumber,
         email_address: data.emailAddress,
         civil_status: data.civilStatus,
-        spouse_name: data.spouseName,
+        spouse_name: data.spouseName || (data.civilStatus === 'Married' ? '' : null),
         sex: data.sex,
         date_of_birth: data.dateOfBirth,
         place_of_birth_municipality: data.placeOfBirthMunicipality,
         place_of_birth_province: data.placeOfBirthProvince,
         father_name: `${data.fatherFirstName} ${data.fatherLastName}`.trim(),
         mother_maiden_name: `${data.motherFirstName} ${data.motherMaidenLastName}`.trim(),
-        voting_status: 'Unregistered', // Set default status
       })
       .select('applicant_id')
       .single();
 
     if (applicantError) {
-      console.error('Error inserting applicant:', applicantError, data);
-      throw new Error('Failed to create applicant record.');
+      console.error('Error inserting applicant:', JSON.stringify(applicantError), JSON.stringify(data));
+      throw new Error(`Failed to create applicant record: ${applicantError.message || 'Unknown error'}`);
     }
     applicant_id = applicantData.applicant_id;
   } else {

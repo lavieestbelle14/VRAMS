@@ -188,25 +188,8 @@ const normalizeFormData = (data: ApplicationFormValues): ApplicationFormValues =
   };
 };
 
-// Filter data to only include relevant fields
-function filterDataByType(data: ApplicationFormValues): Partial<ApplicationFormValues> {
-  const fields = applicationTypeFieldMap[data.applicationType || ''] || [];
-  // RegistrationType-specific logic
-  if (data.applicationType === 'register' && data.registrationType === 'Katipunan ng Kabataan') {
-    fields.push('oathAccepted');
-  }
-  // Always include applicationType and declarationAccepted
-  if (!fields.includes('applicationType')) fields.push('applicationType');
-  if (!fields.includes('declarationAccepted')) fields.push('declarationAccepted');
-  // Remove UI-only fields from payload
-  const uiOnlyFields = ['isPwd', 'isIndigenousPerson', 'declarationAccepted', 'oathAccepted'];
-  const filtered: any = {};
-  const dataObj = data as Record<string, any>;
-  for (const key of fields) {
-    if (key in dataObj && !uiOnlyFields.includes(key)) filtered[key] = dataObj[key];
-  }
-  return filtered;
-}
+// Remove filterDataByType and instead filter only UI-only fields from the normalized data
+const UI_ONLY_FIELDS = ['isPwd', 'isIndigenousPerson', 'declarationAccepted', 'oathAccepted'];
 
 export function useApplicationForm() {
   const { toast } = useToast();
@@ -249,9 +232,14 @@ export function useApplicationForm() {
       return;
     }
     const normalizedData = normalizeFormData(data);
-    const filteredData = filterDataByType(normalizedData);
+
+    // Remove only UI-only fields, submit all others (including filled optional fields)
+    const submissionData = Object.fromEntries(
+      Object.entries(normalizedData).filter(([key]) => !UI_ONLY_FIELDS.includes(key))
+    ) as ApplicationFormValues;
+
     try {
-      const applicationNumber = await submitApplication(filteredData as ApplicationFormValues, user);
+      const applicationNumber = await submitApplication(submissionData, user);
       toast({
         title: "Application Submitted!",
         description: `Your application has been submitted successfully. Your application number is ${applicationNumber}.`,

@@ -36,6 +36,7 @@ DROP TABLE IF EXISTS applicant CASCADE;
   Tables related to the applicant entity:
 
   - applicant: stores personal and biometric information
+  - applicant_biometrics: store links for applicant biometrics on voter registration (ONE-TO-ONE)
   - applicant_voter_record: optional voter details linked to an applicant (ONE-TO-ONE)
   - applicant_deactivation_record: records of applicant deactivations (ONE-TO-MANY - keeps separate PK)
   - applicant_special_sector: special sector attributes linked optionally to an applicant (ONE-TO-ONE)
@@ -62,7 +63,7 @@ CREATE TABLE IF NOT EXISTS applicant (
 
     profession_occupation VARCHAR(50),
     contact_number VARCHAR(50),
-    email_address VARCHAR(50) UNIQUE,
+    email_address VARCHAR(50),
 
     civil_status TEXT NOT NULL CHECK (civil_status IN ('Single', 'Married', 'Widowed', 'Legally Separated')),
     spouse_name VARCHAR(50) CHECK (civil_status != 'Married' OR spouse_name IS NOT NULL),
@@ -151,7 +152,7 @@ CREATE TABLE IF NOT EXISTS applicant_special_sector (
   - application_reactivation: reactivation requests and reason for deactivation
   - application_correction: requested corrections to applicant details  
   - application_reinstatement: reinstatement details 
-  - application_declared_address_or_transfer: address provided during application, only applicable at type registration, transfer, and transfer_with_reactivation
+  - application_declared_address: address provided during application, only applicable for type registration, transfer, and transfer_with_reactivation
 */
 CREATE TABLE IF NOT EXISTS application (
     application_number SERIAL PRIMARY KEY,
@@ -161,7 +162,7 @@ CREATE TABLE IF NOT EXISTS application (
 
     application_type TEXT NOT NULL CHECK (application_type IN ('register', 'transfer', 'reactivation', 'transfer_with_reactivation', 'correction_of_entry', 'reinstatement')),
 
-    application_date DATE NOT NULL,
+    application_date DATE NOT NULL DEFAULT CURRENT_DATE,
     processing_date DATE,
 
     status TEXT NOT NULL CHECK (status IN ('pending', 'verified', 'approved', 'disapproved')),
@@ -184,8 +185,8 @@ CREATE TABLE IF NOT EXISTS application (
 -- FK as PK enforces one-to-one relationship
 CREATE TABLE IF NOT EXISTS application_registration (
     application_number INTEGER PRIMARY KEY,
-    registration_type TEXT CHECK (registration_type IN ('Katipunan ng Kabataan', 'Regular')),
-    adult_registration_consent BOOLEAN NOT NULL,
+    registration_type TEXT NOT NULL CHECK (registration_type IN ('Katipunan ng Kabataan', 'Regular')) ,
+    adult_registration_consent BOOLEAN,
     government_id_front_url TEXT NOT NULL,
     government_id_back_url TEXT NOT NULL,
     id_selfie_url TEXT NOT NULL,

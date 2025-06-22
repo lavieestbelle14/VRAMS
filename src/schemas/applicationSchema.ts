@@ -13,7 +13,7 @@ export const applicationFormSchema = z.object({
   certificateNumber: z.string().optional(), // Corresponds to certificate_number
   professionOccupation: z.string().optional(),
   contactNumber: z.string().optional(),
-  emailAddress: z.string().email({ message: "Invalid email address" }).optional(), // Corresponds to email_address
+  emailAddress: z.string().email({ message: "Invalid email address" }).or(z.literal("")).optional(), // Corresponds to email_address
   civilStatus: z.enum(["Single", "Married", "Widowed", "Legally Separated"], { errorMap: () => ({ message: "Please select a civil status" }) }),
   spouseName: z.string().optional(),
   sex: z.enum(["M", "F"]),
@@ -136,6 +136,9 @@ export const applicationFormSchema = z.object({
   }
 
   if (data.applicationType === 'register') {
+    if (!data.registrationType) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Registration type is required.", path: ["registrationType"] });
+    }
     if (!data.governmentIdFrontUrl) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "ID Front Photo is required for registration", path: ["governmentIdFrontUrl"] });
     if (!data.governmentIdBackUrl) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "ID Back Photo is required for registration", path: ["governmentIdBackUrl"] });
     if (!data.idSelfieUrl) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Selfie with ID is required for registration", path: ["idSelfieUrl"] });
