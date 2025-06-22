@@ -104,9 +104,26 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
   let idBackPhotoUrl: string | undefined;
   let selfieWithIdUrl: string | undefined;
 
-  let applicant_id: number;
+  let applicant_id: number;  try {    console.log('Starting application submission for user:', { 
+      userId: user.id, 
+      userRole: user.role, 
+      applicationType: data.applicationType 
+    });
 
-  try {
+    // Verify user exists in app_user table (for RLS policy)
+    const { data: userRecord, error: userCheckError } = await supabase
+      .from('app_user')
+      .select('role')
+      .eq('auth_id', user.id)
+      .single();
+
+    if (userCheckError || !userRecord) {
+      console.error('User not found in app_user table:', userCheckError);
+      throw new Error('User profile not found. Please refresh the page and try again.');
+    }
+
+    console.log('User record verified:', userRecord);
+    
     // Step 1: Handle File Uploads if it's a registration application
     if (data.applicationType === 'register') {
       if (data.governmentIdFrontUrl) {
@@ -140,15 +157,19 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
         }
       }
     }
-
   // Step 2: Insert or fetch applicant
   if (data.applicationType === 'register') {
-    // Insert new applicant
-    const { data: existingApplicant } = await supabase
+    // Check for existing applicant (use maybeSingle to handle no records)
+    const { data: existingApplicant, error: checkError } = await supabase
       .from('applicant')
       .select('applicant_id')
       .eq('auth_id', user.id)
-      .single();
+      .maybeSingle();
+
+    if (checkError) {
+      console.error('Error checking for existing applicant:', checkError);
+      throw new Error('Failed to verify existing applications. Please try again.');
+    }
 
     if (existingApplicant) {
       console.log('Found existing applicant:', existingApplicant);
@@ -185,14 +206,13 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
       console.error('Error inserting applicant:', JSON.stringify(applicantError), JSON.stringify(data));
       throw new Error(`Failed to create applicant record: ${applicantError.message || 'Unknown error'}`);
     }
-    applicant_id = applicantData.applicant_id;
-  } else {
+    applicant_id = applicantData.applicant_id;  } else {
     // Fetch existing applicant for this user
     const { data: applicantData, error: fetchError } = await supabase
       .from('applicant')
       .select('applicant_id')
       .eq('auth_id', user.id)
-      .single();
+      .maybeSingle();
     if (fetchError || !applicantData) {
       console.error('Error fetching applicant for non-registration application:', fetchError, user.id);
       throw new Error('No applicant record found for this user. Please register first.');

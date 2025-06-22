@@ -24,11 +24,9 @@ export function ApplicationFormFields() {
   const assistorName = form.watch('assistorName');
   const isIndigenousPerson = form.watch('isIndigenousPerson');
   const isPwd = form.watch('isPwd');
-
-  // Derive isRegistered from actual user voting status (actual usage))
+  // Derive isRegistered from actual user registration status
   const { user } = useAuth();
-  const isRegistered = !!(user?.voterId && user?.precinct);
-  // const isRegistered = true; // For testing purposes, assume user is registered
+  const isRegistered = user?.registrationStatus === 'approved';
   const shouldDisableSection = applicationType !== 'register';
   const shouldDisableOath = applicationType !== 'register';
 

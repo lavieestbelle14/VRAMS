@@ -357,38 +357,82 @@ export function ApplicationDetailsModal({ application, isOpen, onClose }: Applic
 
             </div>
           </TabsContent>
-          
-          {/* Documents Tab */}
+            {/* Documents Tab */}
           <TabsContent value="documents">
             <div className="space-y-6">
               <h3 className="font-semibold mb-3">Submitted Documents</h3>
               
               {Array.isArray(application.documents) && application.documents.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {application.documents.map((doc, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-blue-600" />
-                        <div>
-                          <p className="font-medium">{doc.name}</p>
-                          <p className="text-xs text-gray-500">Uploaded on {format(new Date(doc.uploadDate || application.submissionDate), "MMM d, yyyy")}</p>
+                    <div key={index} className="border rounded-lg p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <FileText className="h-5 w-5 text-blue-600" />
+                          <div>
+                            <p className="font-medium">{doc.name}</p>
+                            <p className="text-xs text-gray-500">
+                              Uploaded on {format(new Date(doc.uploadDate || application.submissionDate), "MMM d, yyyy")}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => window.open(doc.url, '_blank')}
+                          >
+                            <Download className="h-4 w-4 mr-1" />
+                            Download
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => window.open(doc.url, '_blank')}
+                          >
+                            <ExternalLink className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          <Download className="h-4 w-4 mr-1" />
-                          Download
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <ExternalLink className="h-4 w-4 mr-1" />
-                          View
-                        </Button>
+                      
+                      {/* Image Preview */}
+                      <div className="mt-3">
+                        <div className="relative max-w-sm mx-auto border rounded-lg overflow-hidden bg-gray-50">
+                          <img 
+                            src={doc.url} 
+                            alt={doc.name}
+                            className="w-full h-48 object-contain bg-white"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const parent = target.parentElement;
+                              if (parent) {
+                                parent.innerHTML = `
+                                  <div class="flex items-center justify-center h-48 text-gray-500">
+                                    <div class="text-center">
+                                      <svg class="h-12 w-12 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                      </svg>
+                                      <p class="text-sm">Document Preview Not Available</p>
+                                      <p class="text-xs">Click View or Download to access file</p>
+                                    </div>
+                                  </div>
+                                `;
+                              }
+                            }}
+                          />
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-4">No documents available</p>
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-500 mb-2">No documents available</p>
+                  <p className="text-sm text-gray-400">Documents will appear here once your application is processed</p>
+                </div>
               )}
 
               {/* Required Documents Section */}
@@ -397,10 +441,10 @@ export function ApplicationDetailsModal({ application, isOpen, onClose }: Applic
                   <h3 className="font-semibold mb-3">Required Documents</h3>
                   <div className="p-4 border rounded-lg bg-yellow-50">
                     <ul className="list-disc list-inside space-y-1 text-sm">
-                      <li>Valid Government-issued ID</li>
+                      <li>Valid Government-issued ID (Front & Back)</li>
+                      <li>ID Selfie (Photo holding your ID)</li>
                       <li>Proof of Residence (Utility bill, etc.)</li>
-                      <li>Birth Certificate</li>
-                      <li>Recent 2x2 ID Picture</li>
+                      <li>Birth Certificate (if required)</li>
                     </ul>
                   </div>
                 </div>

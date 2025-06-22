@@ -89,7 +89,7 @@ export default function VRAMSLandingPage() {
     <div className="flex flex-col min-h-screen bg-[#f8f9fa]">
       {/* Hero Header */}
       <header className="sticky top-0 z-50 bg-gradient-to-a from-white/60 to-blue-800/60 backdrop-blur-md backdrop-saturate-180 shadow-sm transition-all text-blue-900">
-        <div className="absolute inset-0 bg-[url('/grid-pattern.png')] opacity-10"></div>
+        <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
         <div className="container mx-auto px-4 py-6 relative z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">

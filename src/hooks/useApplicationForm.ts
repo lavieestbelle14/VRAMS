@@ -194,7 +194,7 @@ const UI_ONLY_FIELDS = ['isPwd', 'isIndigenousPerson', 'declarationAccepted', 'o
 export function useApplicationForm() {
   const { toast } = useToast();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
 
   // Use a dummy form first, then swap resolver dynamically
   const form = useForm<ApplicationFormValues>({
@@ -222,8 +222,7 @@ export function useApplicationForm() {
     toast,
   });
 
-  const onSubmit = async (data: ApplicationFormValues) => {
-    if (!user) {
+  const onSubmit = async (data: ApplicationFormValues) => {    if (!user) {
       toast({
         title: "Authentication Error",
         description: "You must be logged in to submit an application.",
@@ -231,25 +230,51 @@ export function useApplicationForm() {
       });
       return;
     }
+
+    console.log('User attempting submission:', { 
+      id: user.id, 
+      role: user.role, 
+      registrationStatus: user.registrationStatus,
+      email: user.email 
+    });
     const normalizedData = normalizeFormData(data);
 
     // Remove only UI-only fields, submit all others (including filled optional fields)
     const submissionData = Object.fromEntries(
       Object.entries(normalizedData).filter(([key]) => !UI_ONLY_FIELDS.includes(key))
-    ) as ApplicationFormValues;
-
-    try {
+    ) as ApplicationFormValues;    try {
       const applicationNumber = await submitApplication(submissionData, user);
-      toast({
-        title: "Application Submitted!",
-        description: `Your application has been submitted successfully. Your application number is ${applicationNumber}.`,
-      });
+      
       if (typeof window !== 'undefined') {
         const fingerprint = generateFingerprint(normalizedData);
         localStorage.setItem(LAST_SUBMITTED_FINGERPRINT_KEY, fingerprint);
       }
-      clearDraftFromHook(initialDefaultValues);
-      router.push(`/public/application-submitted/${applicationNumber}`);
+      clearDraftFromHook(initialDefaultValues);      // Give database a moment to propagate changes, then refresh user data
+      setTimeout(async () => {
+        try {
+          await refreshUser();
+        } catch (error) {
+          console.error('Error refreshing user data:', error);
+        }
+      }, 500);
+      
+      // Show success toast with longer duration
+      toast({
+        title: "Application Submitted!",
+        description: `Your application has been submitted successfully. Your application number is ${applicationNumber}.`,
+        duration: 3000, // Show for 3 seconds
+      });
+      
+      // For registration applications, redirect to apply page to show pending message
+      // For other applications, redirect to confirmation page
+      setTimeout(() => {
+        if (submissionData.applicationType === 'register') {
+          router.push('/public/apply');
+        } else {
+          router.push(`/public/application-submitted/${applicationNumber}`);
+        }
+      }, 2000);
+      
     } catch (error) {
       console.error("Error submitting application:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";

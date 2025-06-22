@@ -72,9 +72,16 @@ export interface SpecialNeeds {
   isSenior: boolean; // Maintained
 }
 
+export interface DocumentInfo {
+  name: string;
+  url: string;
+  type: 'government_id_front' | 'government_id_back' | 'id_selfie';
+  uploadDate?: string;
+}
+
 export interface Application {
   addressInfo: any;
-  documents: boolean;
+  documents: DocumentInfo[];
   id: string;
   personalInfo: PersonalInfo;
   addressDetails: AddressDetails; // Current address

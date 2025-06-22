@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -21,6 +21,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useAuth } from '@/contexts/AuthContext';
 import { Home, FileSearch, LogOut, UserCircle, FilePlus2, Settings, HelpCircle, Search as SearchIcon } from 'lucide-react';
 import Image from 'next/image';
+import { supabase } from '@/lib/supabase/client';
 
 interface NavItem {
   href: string;
@@ -53,9 +54,15 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const logoSrc = "/vrams_logo.png"; 
-
-
-
+  const [hasApprovedRegistration, setHasApprovedRegistration] = useState<boolean | null>(null);
+  useEffect(() => {    if (!user?.id) {
+      return;
+    }
+      // Use the registration status from AuthContext instead of making separate queries
+    const hasApprovedReg = user.registrationStatus === 'approved';
+    setHasApprovedRegistration(hasApprovedReg);
+  }, [user]);
+  
   const getAvatarFallback = () => {
     if (user?.username) {
       return user.username.substring(0, 2).toUpperCase();
@@ -75,10 +82,12 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
     
     // Fallback for nav items if no specific title detail found
     const currentNavItem = navItems.find(item => pathname === item.href || (item.href !== '/public/home' && pathname.startsWith(item.href)));
-    return currentNavItem?.label || 'VRAMS Public Portal';
-  };
+    return currentNavItem?.label || 'VRAMS Public Portal';  };
 
   const pageTitle = getCurrentPageTitle();
+
+  // Always show all nav items
+  const filteredNavItems = navItems;
 
   return (
     <SidebarProvider defaultOpen>
@@ -93,11 +102,10 @@ export function PublicAppShell({ children }: { children: ReactNode }) {
               data-ai-hint="VRAMS official seal"
             />
             <span className="text-xl font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">eRehistroPh</span>
-          </Link>
-        </SidebarHeader>
+          </Link>        </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            {navItems.map((item) => (
+            {filteredNavItems.map((item) => (
               <SidebarMenuItem key={item.href}>
                 <Link href={item.href}>
                   <SidebarMenuButton
