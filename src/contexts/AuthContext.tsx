@@ -47,6 +47,21 @@ const publicUserAuthenticatedPaths = [
   '/public/schedule-biometrics'
 ];
 
+const publicUnauthenticatedPaths = [
+  '/auth',
+  '/',
+  '/landing',
+  '/public/forgot-password',
+  '/public/reset-password'
+];
+
+// Helper function to check if a path is allowed for unauthenticated users
+const isPublicPath = (pathname: string): boolean => {
+  return publicUnauthenticatedPaths.includes(pathname) || 
+         pathname.includes('/reset-password') || 
+         pathname.includes('/forgot-password');
+};
+
 // ---- AUTH PROVIDER COMPONENT ---- //
 
 export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
@@ -399,15 +414,11 @@ useEffect(() => {
     // If public user is trying to access officer pages
     else if (user.role === 'public' && pathname.startsWith('/dashboard')) {
       router.push('/public/home');
-    }
-  } 
+    }  } 
   // If not authenticated and trying to access protected pages
   else if (!user && 
              !publicUserAuthenticatedPaths.includes(pathname) &&
-             pathname !== '/auth' && 
-             pathname !== '/' && 
-             pathname !== '/landing' &&
-             !pathname.includes('/reset-password')) {
+             !isPublicPath(pathname)) {
     router.push('/auth');
   }
 }, [user, isLoading, pathname, router, toast]);  const value = useMemo(() => ({
