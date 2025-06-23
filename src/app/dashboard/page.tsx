@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/chart";
 
 import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, Legend as RechartsLegend, Cell, CartesianGrid } from 'recharts';
-import { format, subDays, eachDayOfInterval, startOfDay, isSameDay } from 'date-fns';
+import { format, subDays, eachDayOfInterval, startOfDay, isSameDay, parseISO } from 'date-fns';
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
@@ -304,10 +304,10 @@ export default function DashboardPage() {
 
   const statusChartData = useMemo(() => {
   return [
-    { name: 'Pending', value: summaryCounts.pending, fill: '#1261A0' }, 
-    { name: 'Verified', value: summaryCounts.verified, fill: '#FFBF00' }, 
-    { name: 'Approved', value: summaryCounts.approved, fill: '#008000' }, 
-    { name: 'Disapproved', value: summaryCounts.disapproved, fill: '#EC7063' }, 
+    { name: 'Pending', value: summaryCounts.pending, fill: 'hsl(45, 93%, 47%)' }, // matches amber-500
+    { name: 'Verified', value: summaryCounts.verified, fill: 'hsl(217, 91%, 60%)' }, // matches blue-500
+    { name: 'Approved', value: summaryCounts.approved, fill: 'hsl(142, 76%, 36%)' }, // matches green-500
+    { name: 'Disapproved', value: summaryCounts.disapproved, fill: 'hsl(0, 84%, 60%)' }, // matches red-500
   ].filter(item => item.value > 0);
 }, [summaryCounts]);
 
@@ -665,49 +665,7 @@ export default function DashboardPage() {
           </div>
         </CardContent>
       </Card>
-      
-      {/* Recent Applications - Quick Overview */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <div>
-            <CardTitle className="text-lg">Recent Applications</CardTitle>
-            <CardDescription>Latest 10 submitted voter applications</CardDescription>
-          </div>
-          <div className="flex gap-2">
-            <Link href="/dashboard/applications">
-              <Button variant="outline" size="sm">
-                <Files className="mr-2 h-4 w-4" />
-                View All
-              </Button>
-            </Link>
-            <Button variant="outline" size="sm" onClick={refreshData}>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <ApplicationDataTable 
-            applications={applications.slice(0, 10)} 
-            showPagination={false}
-            showSearch={false}
-            showFilters={false}
-          />
-          {applications.length > 10 && (
-            <div className="mt-4 text-center text-sm text-muted-foreground">
-              <Link href="/dashboard/applications" className="text-primary hover:underline">
-                View all {applications.length} applications →
-              </Link>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
-}
-
-function parseISO(dateString: string): Date {
-    const date = new Date(dateString);
-    return date;
 }
 

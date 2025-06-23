@@ -56,8 +56,18 @@ export function ApplicationDataTable({
       case 'approved': return 'default';
       case 'pending': return 'secondary';
       case 'disapproved': return 'destructive';
-      case 'verified': return 'outline';
+      case 'verified': return 'default'; // Changed from 'outline' to 'default' for better visibility
       default: return 'secondary';
+    }
+  };
+
+  const getStatusClassName = (status: Application['status']) => {
+    switch (status) {
+      case 'approved': return 'bg-green-100 text-green-800 hover:bg-green-100';
+      case 'pending': return 'bg-amber-100 text-amber-800 hover:bg-amber-100';
+      case 'disapproved': return 'bg-red-100 text-red-800 hover:bg-red-100';
+      case 'verified': return 'bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-200';
+      default: return '';
     }
   };
 
@@ -287,7 +297,10 @@ export function ApplicationDataTable({
                   <TableCell className="capitalize">{app.applicationType}</TableCell>
                   <TableCell>{format(new Date(app.submissionDate), 'MMM dd, yyyy')}</TableCell>
                   <TableCell>
-                    <Badge variant={getStatusVariant(app.status)} className="capitalize">
+                    <Badge 
+                      variant={getStatusVariant(app.status)} 
+                      className={`capitalize ${getStatusClassName(app.status)}`}
+                    >
                       {app.status}
                     </Badge>
                   </TableCell>

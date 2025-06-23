@@ -3,10 +3,15 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ApplicationDataTable } from '@/components/dashboard/ApplicationDataTable';
-import { ArrowLeft, Download, RefreshCw, Filter, Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { 
+  ArrowLeft, Download, RefreshCw, Filter, Search, 
+  Files, Clock, CheckCircle, XCircle, FileText,
+  Users, BarChart3, Calendar
+} from 'lucide-react';
+import { useEffect, useState, useMemo } from 'react';
 import type { Application } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -174,6 +179,17 @@ export default function AllApplicationsPage() {
     loadApplications();
   }, []);
 
+  // Calculate statistics
+  const statistics = useMemo(() => {
+    const total = applications.length;
+    const pending = applications.filter(app => app.status === 'pending').length;
+    const verified = applications.filter(app => app.status === 'verified').length;
+    const approved = applications.filter(app => app.status === 'approved').length;
+    const disapproved = applications.filter(app => app.status === 'disapproved').length;
+    
+    return { total, pending, verified, approved, disapproved };
+  }, [applications]);
+
   const exportApplicationsToCSV = (applications: Application[]) => {
     if (!applications.length) {
       toast({
@@ -233,13 +249,19 @@ export default function AllApplicationsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">All Applications</h2>
-          <p className="text-muted-foreground">
-            Comprehensive management of all voter registration applications
-          </p>
+    <div className="space-y-6 p-4 md:p-8">
+      {/* Enhanced Header Section */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-6 rounded-xl shadow-sm">
+        <div className="flex items-center space-x-4">
+          <div className="p-3 bg-primary/10 rounded-xl">
+            <Files className="h-7 w-7 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">All Applications</h2>
+            <p className="text-muted-foreground">
+              Comprehensive management of all voter registration applications
+            </p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => router.push('/dashboard')}>
@@ -260,56 +282,107 @@ export default function AllApplicationsPage() {
         </div>
       </div>
       
-      {/* Statistics Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+      {/* Enhanced Statistics Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <Card className="border-l-4 border-l-primary bg-gradient-to-r from-blue-50 to-indigo-50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
+            <Users className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{applications.length}</div>
+            <div className="text-2xl font-bold text-primary">{statistics.total}</div>
+            <div className="flex items-center gap-1 mt-1">
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50">
+                All Submissions
+              </Badge>
+            </div>
           </CardContent>
         </Card>
-        <Card>
+        
+        <Card className="border-l-4 border-l-amber-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending</CardTitle>
+            <Clock className="h-5 w-5 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {applications.filter(app => app.status === 'pending').length}
+            <div className="text-2xl font-bold">{statistics.pending}</div>
+            <div className="flex items-center gap-1 mt-1">
+              <Badge variant="outline" className="bg-amber-50 text-amber-700 hover:bg-amber-50">
+                Awaiting Review
+              </Badge>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        
+        <Card className="border-l-4 border-l-blue-500">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Verified</CardTitle>
+            <FileText className="h-5 w-5 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{statistics.verified}</div>
+            <div className="flex items-center gap-1 mt-1">
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50">
+                Ready for Decision
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-l-4 border-l-green-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Approved</CardTitle>
+            <CheckCircle className="h-5 w-5 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {applications.filter(app => app.status === 'approved').length}
+            <div className="text-2xl font-bold">{statistics.approved}</div>
+            <div className="flex items-center gap-1 mt-1">
+              <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                Successfully Verified
+              </Badge>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        
+        <Card className="border-l-4 border-l-red-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Disapproved</CardTitle>
+            <XCircle className="h-5 w-5 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {applications.filter(app => app.status === 'disapproved').length}
+            <div className="text-2xl font-bold">{statistics.disapproved}</div>
+            <div className="flex items-center gap-1 mt-1">
+              <Badge variant="outline" className="bg-red-50 text-red-700 hover:bg-red-50">
+                Failed Requirements
+              </Badge>
             </div>
           </CardContent>
         </Card>
       </div>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Application Management</CardTitle>
-          <CardDescription>
-            Complete list with advanced filtering, search, and export capabilities
-          </CardDescription>
+      {/* Enhanced Application Management Section */}
+      <Card className="shadow-lg">
+        <CardHeader className="border-b bg-gradient-to-r from-gray-50 to-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <BarChart3 className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="flex items-center text-xl">Application Management</CardTitle>
+                <CardDescription className="mt-1">
+                  Complete list with advanced filtering, search, and export capabilities
+                </CardDescription>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="bg-white">
+                {statistics.total} Total Records
+              </Badge>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <ApplicationDataTable applications={applications} />
         </CardContent>
       </Card>
