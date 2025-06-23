@@ -17,12 +17,12 @@ const getStatusInfo = (status: string) => {
   switch (status) {
     case 'pending':
       return { icon: Clock, color: 'bg-yellow-100 text-yellow-800 border-yellow-200', text: 'Pending Review' };
-    case 'reviewing':
-      return { icon: FileText, color: 'bg-blue-100 text-blue-800 border-blue-200', text: 'Under Review' };
+    case 'verified':
+      return { icon: FileText, color: 'bg-blue-100 text-blue-800 border-blue-200', text: 'Verified' };
     case 'approved':
       return { icon: CheckCircle2, color: 'bg-green-100 text-green-800 border-green-200', text: 'Approved' };
-    case 'rejected':
-      return { icon: XCircle, color: 'bg-red-100 text-red-800 border-red-200', text: 'Rejected' };
+    case 'disapproved':
+      return { icon: XCircle, color: 'bg-red-100 text-red-800 border-red-200', text: 'Disapproved' };
     default:
       return { icon: AlertCircle, color: 'bg-gray-100 text-gray-800 border-gray-200', text: status };
   }
@@ -57,14 +57,14 @@ export function ApplicationDetailsModal({ application, isOpen, onClose }: Applic
       date: new Date(new Date(application.submissionDate).getTime() + 3 * 24 * 60 * 60 * 1000).toISOString(), 
       status: 'Background Check', 
       description: 'Applicant information validated',
-      completed: ['approved', 'rejected'].includes(application.status)
+      completed: ['approved', 'disapproved'].includes(application.status)
     },
     { 
       date: new Date(new Date(application.submissionDate).getTime() + 5 * 24 * 60 * 60 * 1000).toISOString(), 
       status: 'Final Decision', 
       description: application.status === 'approved' ? 'Application approved' : 
-                   application.status === 'rejected' ? 'Application rejected' : 'Pending decision',
-      completed: ['approved', 'rejected'].includes(application.status)
+                   application.status === 'disapproved' ? 'Application disapproved' : 'Pending decision',
+      completed: ['approved', 'disapproved'].includes(application.status)
     }
   ];
 
@@ -155,9 +155,9 @@ export function ApplicationDetailsModal({ application, isOpen, onClose }: Applic
                 <p className="text-sm">
                   Your application has been approved! Your voter record is now active. You will receive your voter ID via mail within 2-3 weeks.
                 </p>
-              ) : application.status === 'rejected' ? (
+              ) : application.status === 'disapproved' ? (
                 <p className="text-sm">
-                  Your application has been rejected. Please review the remarks section for reasons and resubmit a new application addressing the issues.
+                  Your application has been disapproved. Please review the remarks section for reasons and resubmit a new application addressing the issues.
                 </p>
               ) : (
                 <p className="text-sm">
@@ -455,7 +455,7 @@ export function ApplicationDetailsModal({ application, isOpen, onClose }: Applic
 
       <DialogFooter>
         <Button variant="outline" onClick={onClose}>Close</Button>
-        {application.status === 'rejected' && (
+        {application.status === 'disapproved' && (
           <Button onClick={handleReapply}>Reapply</Button>
         )}
       </DialogFooter>

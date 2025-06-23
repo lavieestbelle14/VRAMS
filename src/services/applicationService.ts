@@ -563,3 +563,136 @@ export async function getApplicationByPublicId(publicId: string) {
     // TODO: Add special sector, biometrics, voter record, etc. if needed
   };
 }
+
+// Function to update application remarks
+export const updateApplicationRemarks = async (applicationId: string, remarks: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('application')
+      .update({ 
+        remarks: remarks.trim() || null
+      })
+      .eq('public_facing_id', applicationId);
+
+    if (error) {
+      console.error('Error updating application remarks:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Failed to update application remarks:', error);
+    return false;
+  }
+};
+
+export const updateApplicationStatus = async (
+  applicationId: string, 
+  status: 'pending' | 'verified' | 'approved' | 'disapproved',
+  reasonForDisapproval?: string
+): Promise<boolean> => {
+  try {
+    const updateData: any = { 
+      status,
+      processing_date: status !== 'pending' ? new Date().toISOString() : null
+    };
+
+    // Only include reason_for_disapproval if status is disapproved
+    if (status === 'disapproved') {
+      if (!reasonForDisapproval?.trim()) {
+        throw new Error('Reason for disapproval is required when disapproving an application');
+      }
+      updateData.reason_for_disapproval = reasonForDisapproval.trim();
+    } else {
+      updateData.reason_for_disapproval = null;
+    }
+
+    const { error } = await supabase
+      .from('application')
+      .update(updateData)
+      .eq('public_facing_id', applicationId);
+
+    if (error) {
+      console.error('Error updating application status:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Failed to update application status:', error);
+    return false;
+  }
+};
+
+export const approveApplicationWithVoterRecord = async (
+  applicationId: string, 
+  voterData: { precinctNumber: string; voterId: string },
+  reasonForDisapproval?: string
+): Promise<boolean> => {
+  try {
+    // First, get the application to find the applicant_id
+    const { data: applicationData, error: fetchError } = await supabase
+      .from('application')
+      .select('applicant_id')
+      .eq('public_facing_id', applicationId)
+      .single();
+
+    if (fetchError || !applicationData) {
+      console.error('Error fetching application:', fetchError);
+      return false;
+    }
+
+    // Start a transaction-like operation
+    // 1. Update application status to approved
+    const { error: statusError } = await supabase
+      .from('application')
+      .update({ 
+        status: 'approved',
+        processing_date: new Date().toISOString(),
+        reason_for_disapproval: null
+      })
+      .eq('public_facing_id', applicationId);
+
+    if (statusError) {
+      console.error('Error updating application status:', statusError);
+      return false;
+    }
+
+    // 2. Create voter record
+    const { error: voterError } = await supabase
+      .from('applicant_voter_record')
+      .upsert({
+        applicant_id: applicationData.applicant_id,
+        precinct_number: voterData.precinctNumber.trim(),
+        voter_id: voterData.voterId.trim()
+      });
+
+    if (voterError) {
+      console.error('Error creating voter record:', voterError);
+      
+      // Rollback: revert application status to verified
+      await supabase
+        .from('application')
+        .update({ status: 'verified', processing_date: null })
+        .eq('public_facing_id', applicationId);
+      
+      return false;
+    }
+
+    // 3. Update applicant voting status to Active
+    const { error: applicantError } = await supabase
+      .from('applicant')
+      .update({ voting_status: 'Active' })
+      .eq('applicant_id', applicationData.applicant_id);
+
+    if (applicantError) {
+      console.error('Error updating applicant voting status:', applicantError);
+      // Note: We don't rollback here as the voter record is created successfully
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Failed to approve application with voter record:', error);
+    return false;
+  }
+};

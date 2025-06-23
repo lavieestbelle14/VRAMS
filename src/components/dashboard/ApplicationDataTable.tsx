@@ -4,54 +4,39 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import type { Application } from '@/types';
-import { Eye, MoreHorizontal, ArrowUpDown, Trash2, Calendar as CalendarIconLucide, FileDown, Search } from 'lucide-react';
+import { Eye, MoreHorizontal, ArrowUpDown, Calendar as CalendarIconLucide, FileDown, Search } from 'lucide-react';
 import { format, parseISO, isValid, startOfDay, endOfDay } from 'date-fns';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import React, { useState, useMemo } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { deleteApplicationById } from '@/lib/applicationStore'; 
 import { useToast } from '@/hooks/use-toast';
+import { DateRange } from 'react-day-picker';
 
 interface ApplicationDataTableProps {
   applications: Application[];
-  onReviewId?: (application: Application) => void;
 }
 
 type SortKey = 'applicantName' | 'submissionDate' | 'status';
 type SortDirection = 'asc' | 'desc';
 
-export function ApplicationDataTable({ applications: initialApplications, onReviewId }: ApplicationDataTableProps) {
+export function ApplicationDataTable({ applications: initialApplications }: ApplicationDataTableProps) {
   const [applications, setApplications] = useState<Application[]>(initialApplications);
   const [sortKey, setSortKey] = useState<SortKey>('submissionDate');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
-  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({ from: undefined, to: undefined });
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState<string>('');
 
-    const handleDateRangeSelect = (
-    range: { from?: Date; to?: Date } | undefined
-  ) => {
-    setDateRange(range || { from: undefined, to: undefined });
+  const handleDateRangeSelect = (range: DateRange | undefined) => {
+    setDateRange(range);
   };
 
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [applicationToDeleteId, setApplicationToDeleteId] = useState<string | null>(null);
   const { toast } = useToast();
 
   React.useEffect(() => {
@@ -62,8 +47,8 @@ export function ApplicationDataTable({ applications: initialApplications, onRevi
     switch (status) {
       case 'approved': return 'default';
       case 'pending': return 'secondary';
-      case 'rejected': return 'destructive';
-      case 'reviewing': return 'outline';
+      case 'disapproved': return 'destructive';
+      case 'verified': return 'outline';
       default: return 'secondary';
     }
   };
@@ -74,25 +59,6 @@ export function ApplicationDataTable({ applications: initialApplications, onRevi
     } else {
       setSortKey(key);
       setSortDirection('asc');
-    }
-  };
-
-  const handleDeleteApplication = (id: string) => {
-    setApplicationToDeleteId(id);
-    setShowDeleteDialog(true);
-  };
-
-  const confirmDelete = () => {
-    if (applicationToDeleteId) {
-      const success = deleteApplicationById(applicationToDeleteId);
-      if (success) {
-        setApplications(prev => prev.filter(app => app.id !== applicationToDeleteId));
-        toast({ title: "Application Deleted", description: `Application ID ${applicationToDeleteId} has been deleted.` });
-      } else {
-        toast({ title: "Error", description: "Failed to delete application.", variant: "destructive" });
-      }
-      setApplicationToDeleteId(null);
-      setShowDeleteDialog(false);
     }
   };
 
@@ -117,14 +83,14 @@ export function ApplicationDataTable({ applications: initialApplications, onRevi
       filtered = filtered.filter(app => app.applicationType === typeFilter);
     }
     // Date range filter
-    if (dateRange.from) {
+    if (dateRange?.from) {
       const fromDate = startOfDay(dateRange.from);
       filtered = filtered.filter(app => {
         const submissionDate = parseISO(app.submissionDate);
         return isValid(submissionDate) && submissionDate >= fromDate;
       });
     }
-    if (dateRange.to) {
+    if (dateRange?.to) {
       const toDate = endOfDay(dateRange.to);
       filtered = filtered.filter(app => {
         const submissionDate = parseISO(app.submissionDate);
@@ -220,9 +186,9 @@ export function ApplicationDataTable({ applications: initialApplications, onRevi
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="reviewing">Reviewing</SelectItem>
+              <SelectItem value="verified">Verified</SelectItem>
               <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
+              <SelectItem value="disapproved">Disapproved</SelectItem>
             </SelectContent>
           </Select>
 
@@ -243,12 +209,12 @@ export function ApplicationDataTable({ applications: initialApplications, onRevi
                 variant={"outline"}
                 className={cn(
                   "w-full sm:w-[280px] justify-start text-left font-normal",
-                  !dateRange.from && !dateRange.to && "text-muted-foreground"
+                  !dateRange?.from && !dateRange?.to && "text-muted-foreground"
                 )}
               >
                 <CalendarIconLucide className="mr-2 h-4 w-4" />
-                {dateRange.from ? (
-                  dateRange.to ? (
+                {dateRange?.from ? (
+                  dateRange?.to ? (
                     <>
                       {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
                     </>
@@ -261,14 +227,16 @@ export function ApplicationDataTable({ applications: initialApplications, onRevi
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          mode="range"
-          selected={dateRange}
-          onSelect={handleDateRangeSelect} // Use the new handler here
-        />
+              <Calendar
+                initialFocus
+                mode="range"
+                selected={dateRange}
+                onSelect={handleDateRangeSelect}
+                numberOfMonths={2}
+              />
             </PopoverContent>
           </Popover>
-          <Button variant="outline" onClick={() => { setSearchTerm(''); setStatusFilter('all'); setTypeFilter('all'); setDateRange({}); }} className="w-full sm:w-auto">
+          <Button variant="outline" onClick={() => { setSearchTerm(''); setStatusFilter('all'); setTypeFilter('all'); setDateRange(undefined); }} className="w-full sm:w-auto">
             Clear Filters
           </Button>
           <Button variant="outline" onClick={exportToCSV} className="w-full sm:w-auto ml-auto">
@@ -285,14 +253,13 @@ export function ApplicationDataTable({ applications: initialApplications, onRevi
               <TableHead>Application Type</TableHead>
               <SortableHeader sortFieldKey="submissionDate">Submission Date</SortableHeader>
               <SortableHeader sortFieldKey="status">Status</SortableHeader>
-              <TableHead>ID Verification</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredAndSortedApplications.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={5} className="h-24 text-center">
                   No applications match your filters.
                 </TableCell>
               </TableRow>
@@ -310,21 +277,6 @@ export function ApplicationDataTable({ applications: initialApplications, onRevi
                       {app.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    {app.idDocumentUrl ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onReviewId && onReviewId(app)}
-                        className="flex items-center gap-1"
-                      >
-                        <Eye className="h-4 w-4" />
-                        Review ID
-                      </Button>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">No ID Submitted</span>
-                    )}
-                  </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -332,22 +284,12 @@ export function ApplicationDataTable({ applications: initialApplications, onRevi
                           <span className="sr-only">Open menu</span>
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      </DropdownMenuTrigger>                        <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem asChild>
                           <Link href={`/dashboard/applications/${app.id}`} className="flex items-center">
                             <Eye className="mr-2 h-4 w-4" /> View Details
                           </Link>
-                        </DropdownMenuItem>
-                        {app.idDocumentUrl && onReviewId && (
-                          <DropdownMenuItem onClick={() => onReviewId(app)}>
-                            <Eye className="mr-2 h-4 w-4" /> Review ID
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => handleDeleteApplication(app.id)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -358,24 +300,6 @@ export function ApplicationDataTable({ applications: initialApplications, onRevi
           </TableBody>
         </Table>
       </div>
-
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the application
-              (ID: {applicationToDeleteId}) from the system.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setApplicationToDeleteId(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className={buttonVariants({ variant: "destructive" })}>
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
     </div>
   );

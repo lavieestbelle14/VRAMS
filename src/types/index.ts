@@ -94,12 +94,13 @@ export interface Application {
   // Conditional based on applicationType
   oldAddressDetails?: AddressDetails; // For transfer applications (previous address)
   
-  status: 'pending' | 'approved' | 'rejected' | 'reviewing';
+  status: 'pending' | 'verified' | 'approved' | 'disapproved';
   submissionDate: string; // ISO string date
   approvalDate?: string; // ISO string date
   voterId?: string;
   precinct?: string;
   remarks?: string;
+  reasonForDisapproval?: string;
 }
 export type ApplicationFormData = PersonalInfo & AddressDetails & CivilDetails & SpecialNeeds & {
   applicationType: 'register' | 'transfer' | 'reactivation' | 'transfer_with_reactivation' | 'correction_of_entry' | 'reinstatement' | '';

@@ -305,7 +305,7 @@ export default function DashboardPage() {
       }
       
       return acc;
-    }, { pending: 0, approved: 0, rejected: 0, reviewing: 0, total: 0, withId: 0 } as Record<string, number>);
+    }, { pending: 0, verified: 0, approved: 0, disapproved: 0, total: 0, withId: 0 } as Record<string, number>);
   }, [applications]);
 
   const filteredApplications = useMemo(() => {
@@ -329,9 +329,9 @@ export default function DashboardPage() {
 const statusChartData = useMemo(() => {
   return [
     { name: 'Pending', value: summaryCounts.pending, fill: '#1261A0' }, 
-    { name: 'Reviewing', value: summaryCounts.reviewing, fill: '#FFBF00' }, 
+    { name: 'Verified', value: summaryCounts.verified, fill: '#FFBF00' }, 
     { name: 'Approved', value: summaryCounts.approved, fill: '#008000' }, 
-    { name: 'Rejected', value: summaryCounts.rejected, fill: '#EC7063' }, 
+    { name: 'Disapproved', value: summaryCounts.disapproved, fill: '#EC7063' }, 
   ].filter(item => item.value > 0);
 }, [summaryCounts]);
 
@@ -363,15 +363,15 @@ const statusChartData = useMemo(() => {
   const completionPercentage = useMemo(() => {
     const total = summaryCounts.total;
     if (total === 0) return 0;
-    return Math.round(((summaryCounts.approved || 0) + (summaryCounts.rejected || 0)) / total * 100);
+    return Math.round(((summaryCounts.approved || 0) + (summaryCounts.disapproved || 0)) / total * 100);
   }, [summaryCounts]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending': return <Clock className="h-5 w-5 text-amber-500" />;
-      case 'reviewing': return <FileText className="h-5 w-5 text-blue-500" />;
+      case 'verified': return <FileText className="h-5 w-5 text-blue-500" />;
       case 'approved': return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'rejected': return <XCircle className="h-5 w-5 text-red-500" />;
+      case 'disapproved': return <XCircle className="h-5 w-5 text-red-500" />;
       default: return <HelpCircle className="h-5 w-5 text-gray-500" />;
     }
   };
@@ -462,24 +462,48 @@ const statusChartData = useMemo(() => {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
-            <Files className="h-5 w-5 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{summaryCounts.total}</div>
-            <div className="mt-2 flex items-center text-xs text-muted-foreground">
-              <span>Completion rate: </span>
-              <span className="ml-1 font-medium text-green-600">{completionPercentage}%</span>
-              <div className="ml-2 flex-1">
-                <Progress value={completionPercentage} className="h-1" />
+      {/* Total Applications Overview - Prominent Section */}
+      <Card className="border-2 border-primary/20 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-primary/10 rounded-xl">
+                <Files className="h-7 w-7 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-semibold text-gray-900">Total Applications</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">Overall application statistics and completion tracking</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        
+            <div className="text-right">
+              <div className="text-4xl font-bold text-primary">{summaryCounts.total}</div>
+              <p className="text-sm text-muted-foreground mt-1">Total Submissions</p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="bg-white/60 rounded-lg p-4 border border-primary/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-6">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-gray-700">Completion Rate:</span>
+                  <span className="text-lg font-bold text-green-600">{completionPercentage}%</span>
+                </div>
+                <div className="flex-1 min-w-[200px]">
+                  <Progress value={completionPercentage} className="h-3" />
+                </div>
+              </div>
+              <div className="text-right text-sm text-muted-foreground">
+                <div className="font-medium">{summaryCounts.approved + summaryCounts.disapproved}</div>
+                <div className="text-xs">of {summaryCounts.total} processed</div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Status Cards Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="border-l-4 border-l-amber-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
@@ -490,6 +514,21 @@ const statusChartData = useMemo(() => {
             <div className="flex items-center gap-1 mt-1">
               <Badge variant="outline" className="bg-amber-50 text-amber-700 hover:bg-amber-50">
                 Awaiting Officer Review
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-l-4 border-l-blue-500">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Verified</CardTitle>
+            <FileText className="h-5 w-5 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{summaryCounts.verified}</div>
+            <div className="flex items-center gap-1 mt-1">
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50">
+                Ready for Decision
               </Badge>
             </div>
           </CardContent>
@@ -512,11 +551,11 @@ const statusChartData = useMemo(() => {
         
         <Card className="border-l-4 border-l-red-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Rejected</CardTitle>
+            <CardTitle className="text-sm font-medium">Disapproved</CardTitle>
             <XCircle className="h-5 w-5 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summaryCounts.rejected}</div>
+            <div className="text-2xl font-bold">{summaryCounts.disapproved}</div>
             <div className="flex items-center gap-1 mt-1">
               <Badge variant="outline" className="bg-red-50 text-red-700 hover:bg-red-50">
                 Failed Requirements
@@ -699,14 +738,14 @@ const statusChartData = useMemo(() => {
                   <DropdownMenuItem onClick={() => setSelectedView("pending")} className={selectedView === "pending" ? "bg-muted" : ""}>
                     Pending
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSelectedView("reviewing")} className={selectedView === "reviewing" ? "bg-muted" : ""}>
-                    Reviewing
+                  <DropdownMenuItem onClick={() => setSelectedView("verified")} className={selectedView === "verified" ? "bg-muted" : ""}>
+                    Verified
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setSelectedView("approved")} className={selectedView === "approved" ? "bg-muted" : ""}>
                     Approved
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSelectedView("rejected")} className={selectedView === "rejected" ? "bg-muted" : ""}>
-                    Rejected
+                  <DropdownMenuItem onClick={() => setSelectedView("disapproved")} className={selectedView === "disapproved" ? "bg-muted" : ""}>
+                    Disapproved
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -717,9 +756,9 @@ const statusChartData = useMemo(() => {
             <TabsList className="grid grid-cols-5 h-9">
               <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
               <TabsTrigger value="pending" className="text-xs">Pending</TabsTrigger>
-              <TabsTrigger value="reviewing" className="text-xs">Reviewing</TabsTrigger>
+              <TabsTrigger value="verified" className="text-xs">Verified</TabsTrigger>
               <TabsTrigger value="approved" className="text-xs">Approved</TabsTrigger>
-              <TabsTrigger value="rejected" className="text-xs">Rejected</TabsTrigger>
+              <TabsTrigger value="disapproved" className="text-xs">Disapproved</TabsTrigger>
             </TabsList>
           </Tabs>
         </CardHeader>

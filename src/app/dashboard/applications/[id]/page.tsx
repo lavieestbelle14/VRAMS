@@ -1,12 +1,13 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getApplicationByPublicId } from '@/services/applicationService';
+import { getApplicationByPublicId, updateApplicationRemarks, updateApplicationStatus, approveApplicationWithVoterRecord } from '@/services/applicationService';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, CheckCircle, Edit, FileText, User, MapPin, CalendarDays, Briefcase, Accessibility, Save, XCircle, MessageSquare, Building, Users, ShieldCheck, Trash2, Clock, CreditCard, Camera, X } from 'lucide-react';
 import { format } from 'date-fns';
@@ -31,6 +32,7 @@ import {
 } from "@/components/ui/dialog";
 
 import Image from "next/image";
+import { Application } from '@/types';
 
 type IdVerificationDialogProps = {
   imageUrl: string;
@@ -74,6 +76,12 @@ export default function ApplicationDetailsPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<{ url: string; label: string } | null>(null);
+  const [isEditingRemarks, setIsEditingRemarks] = useState(false);
+  const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
+  const [disapprovalReason, setDisapprovalReason] = useState('');
+  const [showDisapprovalDialog, setShowDisapprovalDialog] = useState(false);
+  const [showApprovalDialog, setShowApprovalDialog] = useState(false);
+  const [voterInfo, setVoterInfo] = useState({ precinctNumber: '', voterId: '' });
 
   const id = typeof params.id === 'string' ? params.id : '';
 
@@ -98,29 +106,103 @@ export default function ApplicationDetailsPage() {
     }
   }, [id]);
 
-  const handleStatusUpdate = (newStatus: Application['status']) => {
+  const handleStatusUpdate = async (newStatus: Application['status'], reasonForDisapproval?: string) => {
     if (!application) return;
-    const updatedApp = updateApplicationStatus(application.id, newStatus, remarks);
-    if (updatedApp) {
-      setApplication(updatedApp); 
-      toast({
-        title: `Application ${newStatus.replace(/([A-Z])/g, ' $1').trim()}`,
-        description: `Application ID ${updatedApp.id} has been updated.`,
+    
+    // For approval, show the voter information dialog instead
+    if (newStatus === 'approved') {
+      setShowApprovalDialog(true);
+      return;
+    }
+    
+    setStatusUpdateLoading(true);
+    try {
+      const success = await updateApplicationStatus(application.id, newStatus, reasonForDisapproval);
+      if (success) {
+        // Update local application state
+        setApplication((prev: any) => ({ 
+          ...prev, 
+          status: newStatus,
+          reasonForDisapproval: newStatus === 'disapproved' ? reasonForDisapproval : null
+        }));
+        
+        toast({
+          title: `Application ${newStatus}`,
+          description: `Application ${application.id} has been ${newStatus}.`,
+        });
+        
+        if (newStatus === 'disapproved') {
+          setShowDisapprovalDialog(false);
+          setDisapprovalReason('');
+        }
+      } else {
+        toast({ 
+          title: 'Error', 
+          description: 'Failed to update status.', 
+          variant: 'destructive' 
+        });
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast({ 
+        title: 'Error', 
+        description: 'Failed to update status.', 
+        variant: 'destructive' 
       });
-    } else {
-       toast({ title: 'Error', description: 'Failed to update status.', variant: 'destructive' });
+    } finally {
+      setStatusUpdateLoading(false);
+    }
+  };
+
+  const handleApprovalWithVoterRecord = async () => {
+    if (!application || !voterInfo.precinctNumber.trim() || !voterInfo.voterId.trim()) {
+      toast({
+        title: 'Missing Information',
+        description: 'Please provide both precinct number and voter ID.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setStatusUpdateLoading(true);
+    try {
+      const success = await approveApplicationWithVoterRecord(application.id, voterInfo);
+      if (success) {
+        // Update local application state
+        setApplication((prev: any) => ({ 
+          ...prev, 
+          status: 'approved',
+          reasonForDisapproval: null
+        }));
+        
+        toast({
+          title: 'Application Approved',
+          description: `Application ${application.id} has been approved and voter record created.`,
+        });
+        
+        setShowApprovalDialog(false);
+        setVoterInfo({ precinctNumber: '', voterId: '' });
+      } else {
+        toast({ 
+          title: 'Error', 
+          description: 'Failed to approve application and create voter record.', 
+          variant: 'destructive' 
+        });
+      }
+    } catch (error) {
+      console.error('Error approving application:', error);
+      toast({ 
+        title: 'Error', 
+        description: 'Failed to approve application.', 
+        variant: 'destructive' 
+      });
+    } finally {
+      setStatusUpdateLoading(false);
     }
   };
 
   const handleDeleteApplication = () => {
-    if (!application) return;
-    const success = deleteApplicationById(application.id);
-    if (success) {
-      toast({ title: "Application Deleted", description: `Application ID ${application.id} has been deleted.` });
-      router.push('/dashboard/applications');
-    } else {
-      toast({ title: "Error", description: "Failed to delete application.", variant: "destructive" });
-    }
+    // Delete functionality can be implemented if needed
     setShowDeleteDialog(false);
   };
   
@@ -229,16 +311,12 @@ export default function ApplicationDetailsPage() {
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'approved': return 'default';
-      case 'rejected': return 'destructive';
+      case 'disapproved': return 'destructive';
+      case 'verified': return 'outline';
       case 'pending': return 'secondary';
-      case 'reviewing': return 'outline';
       default: return 'secondary';
     }
   };
-
-  // Only show actions for actionable statuses
-  const isActionable = ['pending', 'reviewing'].includes(application.status);
-  const showApprovalOutcome = ['approved', 'rejected'].includes(application.status) || application.remarks;
 
   return (
     <div className="space-y-6">
@@ -260,6 +338,186 @@ export default function ApplicationDetailsPage() {
             {application.status}
           </Badge>
         </CardHeader>
+        
+        {/* Status Management Section */}
+        <div className="px-6 pb-4 border-b">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Status Management</h3>
+              <p className="text-sm text-muted-foreground">
+                Update the application status based on your review
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {application.status === 'pending' && (
+                <Button
+                  onClick={() => handleStatusUpdate('verified')}
+                  disabled={statusUpdateLoading}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {statusUpdateLoading ? (
+                    <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                  )}
+                  Mark as Verified
+                </Button>
+              )}
+              
+              {(application.status === 'pending' || application.status === 'verified') && (
+                <>
+                  <Button
+                    onClick={() => handleStatusUpdate('approved')}
+                    disabled={statusUpdateLoading}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    {statusUpdateLoading ? (
+                      <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    ) : (
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                    )}
+                    Approve
+                  </Button>
+                  
+                  <Button
+                    onClick={() => setShowDisapprovalDialog(true)}
+                    disabled={statusUpdateLoading}
+                    variant="destructive"
+                  >
+                    <XCircle className="mr-2 h-4 w-4" />
+                    Disapprove
+                  </Button>
+                </>
+              )}
+              
+              {application.status !== 'pending' && (
+                <Button
+                  onClick={() => handleStatusUpdate('pending')}
+                  disabled={statusUpdateLoading}
+                  variant="outline"
+                >
+                  {statusUpdateLoading ? (
+                    <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <Clock className="mr-2 h-4 w-4" />
+                  )}
+                  Revert to Pending
+                </Button>
+              )}
+            </div>
+          </div>
+          
+          {application.reasonForDisapproval && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <Label className="text-sm font-semibold text-red-800">Reason for Disapproval:</Label>
+              <p className="text-sm text-red-700 mt-1">{application.reasonForDisapproval}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Disapproval Dialog */}
+        <AlertDialog open={showDisapprovalDialog} onOpenChange={setShowDisapprovalDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Disapprove Application</AlertDialogTitle>
+              <AlertDialogDescription>
+                Please provide a reason for disapproving this application. This will be shown to the applicant.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="my-4">
+              <Label htmlFor="disapproval-reason">Reason for disapproval</Label>
+              <Textarea
+                id="disapproval-reason"
+                value={disapprovalReason}
+                onChange={(e) => setDisapprovalReason(e.target.value)}
+                placeholder="Enter the reason for disapproval..."
+                rows={4}
+                className="mt-2"
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => {
+                setDisapprovalReason('');
+                setShowDisapprovalDialog(false);
+              }}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => handleStatusUpdate('disapproved', disapprovalReason)}
+                disabled={!disapprovalReason.trim() || statusUpdateLoading}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {statusUpdateLoading ? 'Processing...' : 'Disapprove Application'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Approval Dialog with Voter Information */}
+        <AlertDialog open={showApprovalDialog} onOpenChange={setShowApprovalDialog}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Approve Application</AlertDialogTitle>
+              <AlertDialogDescription>
+                Please provide voter registration details to complete the approval process.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="space-y-4 my-4">
+              <div>
+                <Label htmlFor="precinct-number">Precinct Number</Label>
+                <Input
+                  id="precinct-number"
+                  value={voterInfo.precinctNumber}
+                  onChange={(e) => setVoterInfo(prev => ({ ...prev, precinctNumber: e.target.value }))}
+                  placeholder="e.g., 001-A"
+                  className="mt-2"
+                />
+              </div>
+              <div>
+                <Label htmlFor="voter-id">Voter ID</Label>
+                <Input
+                  id="voter-id"
+                  value={voterInfo.voterId}
+                  onChange={(e) => setVoterInfo(prev => ({ ...prev, voterId: e.target.value }))}
+                  placeholder="e.g., 20250001234"
+                  className="mt-2"
+                />
+              </div>
+              <div className="text-xs text-muted-foreground bg-blue-50 p-3 rounded-lg">
+                <p className="font-medium text-blue-900 mb-1">Information Required:</p>
+                <ul className="space-y-1 text-blue-800">
+                  <li>• Precinct Number: The assigned precinct for this voter</li>
+                  <li>• Voter ID: Unique identifier for the voter record</li>
+                </ul>
+              </div>
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => {
+                setVoterInfo({ precinctNumber: '', voterId: '' });
+                setShowApprovalDialog(false);
+              }}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleApprovalWithVoterRecord}
+                disabled={!voterInfo.precinctNumber.trim() || !voterInfo.voterId.trim() || statusUpdateLoading}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {statusUpdateLoading ? 'Processing...' : 'Approve Application'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        
         <CardContent className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card>
             <CardHeader><CardTitle className="flex items-center"><User className="mr-2"/>Personal Information</CardTitle></CardHeader>
@@ -315,7 +573,7 @@ export default function ApplicationDetailsPage() {
           <Card className="lg:col-span-1">
             <CardHeader><CardTitle className="flex items-center"><FileText className="mr-2"/>Application Type</CardTitle></CardHeader>
             <CardContent>
-              <DetailItem label="Application Type" value={applicationTypeLabels[application.applicationType || '']} />
+              <DetailItem label="Application Type" value={applicationTypeLabels[application.applicationType as keyof typeof applicationTypeLabels] || 'Unknown Type'} />
             </CardContent>
           </Card>
           {application.applicationType === 'register' && (
@@ -398,9 +656,92 @@ export default function ApplicationDetailsPage() {
               </CardContent>
             </Card>
           )}
-          {/* Add more cards for registration, transfer, etc. as needed */}
+          
+          {/* Officer Remarks & Outcome Section */}
+          <Card className="lg:col-span-3">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <MessageSquare className="mr-2 h-5 w-5" />
+                Officer Remarks & Outcome
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-semibold text-muted-foreground">Officer Remarks</Label>
+                  <Textarea
+                    value={remarks}
+                    onChange={e => setRemarks(e.target.value)}
+                    rows={4}
+                    placeholder="No remarks yet..."
+                    className="resize-none mt-2"
+                    readOnly={!isEditingRemarks}
+                    disabled={!isEditingRemarks}
+                  />
+                  <div className="flex gap-2 mt-3">
+                    {!isEditingRemarks ? (
+                      <Button 
+                        onClick={() => setIsEditingRemarks(true)}
+                        variant="outline"
+                        className="w-auto"
+                      >
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit
+                      </Button>
+                    ) : (
+                      <>
+                        <Button 
+                          onClick={async () => {
+                            try {
+                              const success = await updateApplicationRemarks(id, remarks);
+                              if (success) {
+                                // Update local application state
+                                setApplication((prev: any) => ({ ...prev, remarks }));
+                                setIsEditingRemarks(false);
+                                toast({
+                                  title: "Remarks Updated",
+                                  description: "Officer remarks have been saved successfully.",
+                                });
+                              } else {
+                                toast({
+                                  title: "Error",
+                                  description: "Failed to update remarks. Please try again.",
+                                  variant: "destructive",
+                                });
+                              }
+                            } catch (error) {
+                              console.error('Error saving remarks:', error);
+                              toast({
+                                title: "Error",
+                                description: "Failed to update remarks. Please try again.",
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                          className="w-auto"
+                        >
+                          <Save className="mr-2 h-4 w-4" />
+                          Save
+                        </Button>
+                        <Button 
+                          onClick={() => {
+                            setRemarks(application.remarks || '');
+                            setIsEditingRemarks(false);
+                          }}
+                          variant="outline"
+                          className="w-auto"
+                        >
+                          <XCircle className="mr-2 h-4 w-4" />
+                          Cancel
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </CardContent>
-        {/* Approval outcome, remarks, and actions can be added here as needed */}
       </Card>
     </div>
   );
