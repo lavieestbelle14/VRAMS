@@ -133,7 +133,7 @@ export const applicationFormSchema = z.object({
   // You will need to decide how to handle them. They are commented out here.
   // transferDeclarantName: z.string().optional(),
   // transferDeclarantBirthDate: z.string().optional(),
-  // inclusionPrecinctNo: z.string().optional(),
+  inclusionPrecinctNo: z.string().optional(),
 
 }).superRefine((data, ctx) => {
   // You will need to update this superRefine logic to use the new field names.

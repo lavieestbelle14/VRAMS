@@ -161,34 +161,39 @@ export default function PublicProfilePage() {
   </CardContent>
 </Card>
 
-<Card>
-  <CardHeader>
-    <CardTitle className="flex items-center">
-      Precinct & Voter Info
-    </CardTitle>
-    <CardDescription>
-      Your assigned precinct and voter ID (if any).
-    </CardDescription>
-  </CardHeader>
-  <CardContent>
-    <div className="grid grid-cols-2 gap-4 text-sm">
-      <div>
-        <span className="text-gray-500">Precinct Number:</span>
-        <p className="font-medium">
-          {user?.precinct || "1234A (mock)"}
-        </p>
-      </div>
-      <div>
-        <span className="text-gray-500">Voter ID Number:</span>
-        <p className="font-medium">
-          {user?.voterId || "VIN-00000001 (mock)"}
-        </p>
-      </div>
-    </div>
-  </CardContent>
-</Card>
+{/* Only show voter info if user has a voter record */}
+{user?.voterId && user?.precinct && (
+  <>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          Precinct & Voter Info
+        </CardTitle>
+        <CardDescription>
+          Your assigned precinct and voter ID.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="text-gray-500">Precinct Number:</span>
+            <p className="font-medium">
+              {user.precinct}
+            </p>
+          </div>
+          <div>
+            <span className="text-gray-500">Voter ID Number:</span>
+            <p className="font-medium">
+              {user.voterId}
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
 
-<VoterIdCard />
+    <VoterIdCard />
+  </>
+)}
 
 
       <Card>

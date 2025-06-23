@@ -84,6 +84,7 @@ const initialDefaultValues: ApplicationFormValues = {
   isIndigenousPerson: false,
   declarationAccepted: false,
   oathAccepted: false,
+  inclusionPrecinctNo: '', // Add this line
 };
 
 // Utility: Map applicationType to required fields
@@ -196,10 +197,16 @@ export function useApplicationForm() {
   const router = useRouter();
   const { user, refreshUser } = useAuth();
 
+  // Set default values, using user.precinct if available
+  const defaultValues = useMemo(() => ({
+    ...initialDefaultValues,
+    inclusionPrecinctNo: user?.precinct ?? '',
+  }), [user]);
+
   // Use a dummy form first, then swap resolver dynamically
   const form = useForm<ApplicationFormValues>({
     resolver: zodResolver(applicationFormSchema),
-    defaultValues: initialDefaultValues,
+    defaultValues,
   });
 
   // Dynamically update resolver when applicationType/registrationType changes

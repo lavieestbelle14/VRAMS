@@ -67,7 +67,12 @@ export function InclusionReinstatementFields({ control }: InclusionReinstatement
             render={({ field }) => (
               <FormItem className="w-32">
                 <FormControl>
-                  <Input {...field} placeholder="Precinct No." className="h-8" />
+                  <Input
+                    {...field}
+                    value={field.value ?? ""} // Always controlled
+                    placeholder="Precinct No."
+                    className="h-8"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

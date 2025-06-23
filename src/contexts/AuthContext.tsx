@@ -201,7 +201,9 @@ const handleSession = useCallback(async (session: Session | null): Promise<Authe
             registrationStatus = registrationApp?.status || null;
             
             // Get voter record if available
-            const voterRecord = applicantData.applicant_voter_record?.[0];
+            // Note: Supabase returns one-to-one relations as arrays, so we access the first element
+            const voterRecords = applicantData.applicant_voter_record;
+            const voterRecord = Array.isArray(voterRecords) ? voterRecords[0] : voterRecords;
             voterId = voterRecord?.voter_id;
             precinct = voterRecord?.precinct_number;
           }
