@@ -97,6 +97,7 @@ export const AddressResidencyFields: React.FC<AddressResidencyFieldsProps> = ({ 
               <Input 
                 type="number" 
                 placeholder="5" 
+                min="0"
                 {...field} 
                 value={field.value?.toString() ?? ''} 
                 onChange={e => field.onChange(e.target.value ? parseInt(e.target.value, 10) : 0)} 
@@ -148,6 +149,7 @@ export const AddressResidencyFields: React.FC<AddressResidencyFieldsProps> = ({ 
                 <Input 
                   type="number" 
                   placeholder="10" 
+                  min="0"
                   {...field} 
                   value={field.value?.toString() ?? ''} 
                   onChange={e => field.onChange(e.target.value ? parseInt(e.target.value, 10) : 0)} 
@@ -190,6 +192,7 @@ export const AddressResidencyFields: React.FC<AddressResidencyFieldsProps> = ({ 
               <Input 
                 type="number" 
                 placeholder="25" 
+                min="0"
                 {...field} 
                 value={field.value?.toString() ?? ''} 
                 onChange={e => field.onChange(e.target.value ? parseInt(e.target.value, 10) : 0)} 

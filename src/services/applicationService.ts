@@ -221,7 +221,9 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
   }
 
   // Step 3: Insert special sector info if provided (only for registration)
-  if (data.applicationType === 'register' && (data.isIlliterate || data.isSeniorCitizen || data.isIndigenousPerson || data.isPwd || data.voteOnGroundFloor)) {
+  if (data.applicationType === 'register' && 
+      (data.isIlliterate || data.isSeniorCitizen || data.isIndigenousPerson || 
+       data.isPwd || data.voteOnGroundFloor || data.assistanceNeeded || data.assistorName)) {
     const { error: specialSectorError } = await supabase
       .from('applicant_special_sector')
       .insert({

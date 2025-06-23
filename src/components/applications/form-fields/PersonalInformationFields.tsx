@@ -102,7 +102,7 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
           control={control}
           name="dateOfBirth"
           render={({ field }) => (
-            <FormItem className="flex flex-col">
+            <FormItem>
               <FormLabel>Date of Birth</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
@@ -226,7 +226,7 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
               control={control}
               name="dateOfNaturalization"
               render={({ field }) => (
-                <FormItem className="flex flex-col">
+                <FormItem>
                   <FormLabel>Date of Naturalization/Reacquisition</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
