@@ -117,6 +117,7 @@ export default function TrackStatusPage() {
               applicationType: app.application_type,
               status: app.status,
               submissionDate: app.application_date,
+              remarks: app.remarks || undefined,
               personalInfo: {
                 firstName: applicant?.first_name || 'Unknown',
                 lastName: applicant?.last_name || 'User',

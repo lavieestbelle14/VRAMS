@@ -115,6 +115,17 @@ export function ApplicationDetailsModal({ application, isOpen, onClose }: Applic
               </div>
             </div>
 
+            {/* Remarks section - prominently displayed at the top */}
+            {application.remarks && (
+              <div className="border rounded-lg p-4 bg-amber-50 border-amber-200">
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-amber-700" />
+                  Remarks from COMELEC
+                </h3>
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">{application.remarks}</p>
+              </div>
+            )}
+
             {/* Timeline */}
             <div>
               <h3 className="font-semibold mb-4">Application Progress Timeline</h3>
@@ -165,14 +176,6 @@ export function ApplicationDetailsModal({ application, isOpen, onClose }: Applic
                 </p>
               )}
             </div>
-
-            {/* Remarks section if application has remarks */}
-            {application.remarks && (
-              <div className="border rounded-lg p-4 bg-blue-50 border-blue-200">
-                <h3 className="font-semibold mb-2">Remarks from COMELEC</h3>
-                <p className="text-sm">{application.remarks}</p>
-              </div>
-            )}
           </TabsContent>
           
           {/* Application Details Tab */}
