@@ -1,4 +1,3 @@
-
 'use client';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,6 @@ import {
 
 import { useEffect, useState, useMemo } from 'react';
 import type { Application } from '@/types';
-import { getApplications, seedInitialData } from '@/lib/applicationStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import {
   ChartContainer,
@@ -41,7 +39,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { saveApplication } from '@/lib/applicationStore'; 
+import { supabase } from '@/lib/supabase/client';
 
 function exportApplicationsToCSV(applications: Application[], filename: string) {
   if (!applications.length) {
@@ -109,10 +107,160 @@ export default function DashboardPage() {
   const [verificationNotes, setVerificationNotes] = useState('');
   const { toast } = useToast();
 
+  // Fetch applications from Supabase on mount
   useEffect(() => {
-    seedInitialData(); 
-    setApplications(getApplications());
-    setIsLoading(false);
+    const fetchApplications = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch applications with applicant and address info
+        const { data, error } = await supabase
+          .from('application')
+          .select(`
+            application_number,
+            public_facing_id,
+            application_type,
+            application_date,
+            processing_date,
+            status,
+            remarks,
+            applicant:applicant_id (
+              first_name,
+              last_name,
+              middle_name,
+              suffix,
+              sex,
+              date_of_birth,
+              civil_status,
+              contact_number,
+              email_address,
+              profession_occupation,
+              citizenship_type,
+              father_name,
+              mother_maiden_name,
+              spouse_name
+            ),
+            application_declared_address (
+              house_number_street,
+              barangay,
+              city_municipality,
+              province,
+              months_of_residence_address,
+              years_of_residence_address,
+              months_of_residence_municipality,
+              years_of_residence_municipality,
+              years_in_country
+            ),
+            application_registration (
+              registration_type,
+              adult_registration_consent,
+              government_id_front_url,
+              government_id_back_url,
+              id_selfie_url
+            )
+          `)
+          .order('application_date', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching applications:', error);
+          setApplications([]);
+        } else {
+          // Map DB data to Application type
+          const mapped: Application[] = (data || []).map((app: any) => {
+            const applicant = Array.isArray(app.applicant) ? app.applicant[0] : app.applicant;
+            const address = Array.isArray(app.application_declared_address) ? app.application_declared_address[0] : app.application_declared_address;
+            const registration = Array.isArray(app.application_registration) ? app.application_registration[0] : app.application_registration;
+
+            return {
+              id: app.public_facing_id || `APP-${String(app.application_number).padStart(6, '0')}`,
+              applicationType: app.application_type,
+              status: app.status,
+              submissionDate: app.application_date,
+              remarks: app.remarks || '',
+              personalInfo: {
+                firstName: applicant?.first_name || '',
+                lastName: applicant?.last_name || '',
+                middleName: applicant?.middle_name || '',
+                suffix: applicant?.suffix || '',
+                sex: applicant?.sex || '',
+                dob: applicant?.date_of_birth || '',
+                birthDate: applicant?.date_of_birth || '',
+                civilStatus: applicant?.civil_status || '',
+                mobileNumber: applicant?.contact_number || '',
+                phoneNumber: applicant?.contact_number || '',
+                email: applicant?.email_address || '',
+                fatherFirstName: applicant?.father_name?.split(' ')[0] || '',
+                fatherLastName: applicant?.father_name?.split(' ').slice(1).join(' ') || '',
+                motherFirstName: applicant?.mother_maiden_name?.split(' ')[0] || '',
+                motherLastName: applicant?.mother_maiden_name?.split(' ').slice(1).join(' ') || '',
+                spouseName: applicant?.spouse_name || '',
+                isPwd: false,
+                isSenior: false,
+                isIndigenousPerson: false,
+                indigenousTribe: '',
+                isIlliterate: false,
+                placeOfBirthProvince: '',
+                citizenshipType: applicant?.citizenship_type || '',
+                professionOccupation: applicant?.profession_occupation || '',
+                residencyYearsCityMun: address?.years_of_residence_municipality || 0,
+                residencyMonthsCityMun: address?.months_of_residence_municipality || 0,
+                residencyYearsPhilippines: address?.years_in_country || 0
+              },
+              addressInfo: {
+                houseNoStreet: address?.house_number_street || '',
+                barangay: address?.barangay || '',
+                cityMunicipality: address?.city_municipality || '',
+                province: address?.province || ''
+              },
+              addressDetails: {
+                houseNoStreet: address?.house_number_street || '',
+                barangay: address?.barangay || '',
+                cityMunicipality: address?.city_municipality || '',
+                province: address?.province || '',
+                zipCode: '',
+                yearsOfResidency: address?.years_of_residence_address || 0,
+                monthsOfResidency: address?.months_of_residence_address || 0
+              },
+              civilDetails: {
+                civilStatus: applicant?.civil_status || '',
+                fatherFirstName: applicant?.father_name?.split(' ')[0] || '',
+                fatherLastName: applicant?.father_name?.split(' ').slice(1).join(' ') || '',
+                motherFirstName: applicant?.mother_maiden_name?.split(' ')[0] || '',
+                motherLastName: applicant?.mother_maiden_name?.split(' ').slice(1).join(' ') || ''
+              },
+              documents: [
+                ...(registration?.government_id_front_url ? [{
+                  name: 'Government ID (Front)',
+                  url: registration.government_id_front_url,
+                  type: 'government_id_front' as const,
+                  uploadDate: app.application_date
+                }] : []),
+                ...(registration?.government_id_back_url ? [{
+                  name: 'Government ID (Back)',
+                  url: registration.government_id_back_url,
+                  type: 'government_id_back' as const,
+                  uploadDate: app.application_date
+                }] : []),
+                ...(registration?.id_selfie_url ? [{
+                  name: 'ID Selfie',
+                  url: registration.id_selfie_url,
+                  type: 'id_selfie' as const,
+                  uploadDate: app.application_date
+                }] : [])
+              ],
+              // Add other fields as needed for your Application type
+            };
+          });
+          setApplications(mapped);
+        }
+      } catch (err) {
+        console.error('Failed to load applications:', err);
+        setApplications([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchApplications();
   }, []);
 
   const refreshData = () => {

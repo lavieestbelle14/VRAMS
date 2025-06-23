@@ -421,3 +421,145 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
     throw new Error(`Application submission failed: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
   }
 };
+
+/**
+ * Fetch a single application by its public-facing ID (e.g., APP-000123), joining applicant and all related tables.
+ * Returns a normalized object matching ApplicationFormValues naming conventions.
+ */
+export async function getApplicationByPublicId(publicId: string) {
+  // Debug: log the publicId being queried
+  console.log('[DEBUG] Fetching application with public_facing_id:', publicId);
+  const { data, error } = await supabase
+    .from('application')
+    .select(`
+      public_facing_id,
+      application_number,
+      application_type,
+      application_date,
+      processing_date,
+      status,
+      reason_for_disapproval,
+      erb_hearing_date,
+      remarks,
+      applicant:applicant_id (
+        first_name, last_name, middle_name, suffix, citizenship_type, date_of_naturalization, certificate_number, profession_occupation, contact_number, email_address, civil_status, spouse_name, sex, date_of_birth, place_of_birth_municipality, place_of_birth_province, father_name, mother_maiden_name
+      ),
+      declared_address:application_declared_address!fk_application_address (
+        house_number_street, barangay, city_municipality, province, months_of_residence_address, years_of_residence_address, months_of_residence_municipality, years_of_residence_municipality, years_in_country
+      ),
+      registration:application_registration!fk_application_registration (
+        registration_type, adult_registration_consent, government_id_front_url, government_id_back_url, id_selfie_url
+      ),
+      transfer:application_transfer!fk_application_transfer (
+        previous_precinct_number, previous_barangay, previous_city_municipality, previous_province, previous_foreign_post, previous_country, transfer_type
+      ),
+      reactivation:application_reactivation!fk_applicant_reactivation (
+        reason_for_deactivation
+      ),
+      correction:application_correction!fk_application_correction (
+        target_field, requested_value, current_value
+      ),
+      reinstatement:application_reinstatement!fk_application_reinstatement (
+        reinstatement_type
+      )
+    `)
+    .eq('public_facing_id', publicId)
+    .single();
+
+  // Debug: log the error and data
+  if (error) {
+    console.error('[DEBUG] Supabase error:', error);
+  }
+  if (!data) {
+    console.warn('[DEBUG] No data returned for public_facing_id:', publicId);
+  } else {
+    console.log('[DEBUG] Data returned for public_facing_id:', publicId, data);
+  }
+
+  if (error || !data) {
+    return undefined;
+  }
+
+  // Fix: Supabase join returns arrays for joined tables, use first element if array
+  const getFirst = (obj: any) => Array.isArray(obj) ? obj[0] : obj;
+  const applicant = getFirst(data.applicant) || {};
+  const address = getFirst(data.declared_address) || {};
+  const registration = getFirst(data.registration) || {};
+  const transfer = getFirst(data.transfer) || {};
+  const reactivation = getFirst(data.reactivation) || {};
+  const correction = getFirst(data.correction) || {};
+  const reinstatement = getFirst(data.reinstatement) || {};
+
+  // Split house_number_street into houseNumber and street
+  let houseNumber = '', street = '';
+  if (address.house_number_street) {
+    const parts = address.house_number_street.split(/\s+/, 2);
+    houseNumber = parts[0] || '';
+    street = parts[1] || '';
+  }
+
+  return {
+    id: data.public_facing_id,
+    applicationType: data.application_type,
+    status: data.status,
+    submissionDate: data.application_date,
+    approvalDate: data.processing_date,
+    remarks: data.remarks,
+    reasonForDisapproval: data.reason_for_disapproval,
+    // Applicant info
+    firstName: applicant.first_name,
+    lastName: applicant.last_name,
+    middleName: applicant.middle_name,
+    suffix: applicant.suffix,
+    citizenshipType: applicant.citizenship_type,
+    dateOfNaturalization: applicant.date_of_naturalization,
+    certificateNumber: applicant.certificate_number,
+    professionOccupation: applicant.profession_occupation,
+    contactNumber: applicant.contact_number,
+    emailAddress: applicant.email_address,
+    civilStatus: applicant.civil_status,
+    spouseName: applicant.spouse_name,
+    sex: applicant.sex,
+    dateOfBirth: applicant.date_of_birth,
+    placeOfBirthMunicipality: applicant.place_of_birth_municipality,
+    placeOfBirthProvince: applicant.place_of_birth_province,
+    fatherFirstName: (applicant.father_name || '').split(' ')[0] || '',
+    fatherLastName: (applicant.father_name || '').split(' ').slice(1).join(' ') || '',
+    motherFirstName: (applicant.mother_maiden_name || '').split(' ')[0] || '',
+    motherMaidenLastName: (applicant.mother_maiden_name || '').split(' ').slice(1).join(' ') || '',
+    // Address
+    houseNumber,
+    street,
+    barangay: address.barangay,
+    cityMunicipality: address.city_municipality,
+    province: address.province,
+    monthsOfResidenceAddress: address.months_of_residence_address,
+    yearsOfResidenceAddress: address.years_of_residence_address,
+    monthsOfResidenceMunicipality: address.months_of_residence_municipality,
+    yearsOfResidenceMunicipality: address.years_of_residence_municipality,
+    yearsInCountry: address.years_in_country,
+    // Registration
+    registrationType: registration.registration_type,
+    adultRegistrationConsent: registration.adult_registration_consent,
+    governmentIdFrontUrl: registration.government_id_front_url,
+    governmentIdBackUrl: registration.government_id_back_url,
+    idSelfieUrl: registration.id_selfie_url,
+    // Transfer
+    previousPrecinctNumber: transfer.previous_precinct_number,
+    previousBarangay: transfer.previous_barangay,
+    previousCityMunicipality: transfer.previous_city_municipality,
+    previousProvince: transfer.previous_province,
+    previousForeignPost: transfer.previous_foreign_post,
+    previousCountry: transfer.previous_country,
+    transferType: transfer.transfer_type,
+    // Reactivation
+    reasonForDeactivation: reactivation.reason_for_deactivation,
+    // Correction
+    targetField: correction.target_field,
+    requestedValue: correction.requested_value,
+    currentValue: correction.current_value,
+    // Reinstatement
+    reinstatementType: reinstatement.reinstatement_type,
+    // TODO: Add special sector, biometrics, voter record, etc. if needed
+  };
+}
