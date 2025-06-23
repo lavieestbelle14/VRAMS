@@ -45,7 +45,7 @@
     "next": "^15.3.4",
     "patch-package": "^8.0.0",
     "react": "^19.1.0",
-    "react-day-picker": "^8.10.1",
+    "react-day-picker": "^9.7.0",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.57.0",
     "recharts": "^2.15.1",

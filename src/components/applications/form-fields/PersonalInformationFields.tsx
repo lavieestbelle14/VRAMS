@@ -129,9 +129,9 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
                     onSelect={(date) =>
                       field.onChange(date ? format(date, "yyyy-MM-dd") : "")
                     }
-                    captionLayout="dropdown-buttons"
-                    fromYear={1900}
-                    toYear={new Date().getFullYear()}
+                    captionLayout="dropdown"
+                    startMonth={new Date(1900, 0)}
+                    endMonth={new Date()}
                     initialFocus
                   />
                 </PopoverContent>
@@ -249,9 +249,9 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
                         mode="single"
                         selected={field.value ? new Date(field.value) : undefined}
                         onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : '')}
-                        captionLayout="dropdown-buttons"
-                        fromYear={1900}
-                        toYear={new Date().getFullYear()}
+                        captionLayout="dropdown"
+                        startMonth={new Date(1900, 0)}
+                        endMonth={new Date()}
                         initialFocus
                       />
                     </PopoverContent>
