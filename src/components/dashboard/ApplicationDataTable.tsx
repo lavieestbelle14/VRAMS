@@ -18,12 +18,20 @@ import { DateRange } from 'react-day-picker';
 
 interface ApplicationDataTableProps {
   applications: Application[];
+  showPagination?: boolean;
+  showSearch?: boolean;
+  showFilters?: boolean;
 }
 
 type SortKey = 'applicantName' | 'submissionDate' | 'status';
 type SortDirection = 'asc' | 'desc';
 
-export function ApplicationDataTable({ applications: initialApplications }: ApplicationDataTableProps) {
+export function ApplicationDataTable({ 
+  applications: initialApplications, 
+  showPagination = true, 
+  showSearch = true, 
+  showFilters = true 
+}: ApplicationDataTableProps) {
   const [applications, setApplications] = useState<Application[]>(initialApplications);
   const [sortKey, setSortKey] = useState<SortKey>('submissionDate');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -167,83 +175,89 @@ export function ApplicationDataTable({ applications: initialApplications }: Appl
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-2 p-4 border rounded-lg bg-card">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search by name or ID..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8 w-full"
-          />
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 sm:flex-nowrap sm:items-center">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Filter by Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="verified">Verified</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="disapproved">Disapproved</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Filter by Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="register">New Registration</SelectItem>
-              <SelectItem value="transfer">Transfer</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-full sm:w-[280px] justify-start text-left font-normal",
-                  !dateRange?.from && !dateRange?.to && "text-muted-foreground"
-                )}
-              >
-                <CalendarIconLucide className="mr-2 h-4 w-4" />
-                {dateRange?.from ? (
-                  dateRange?.to ? (
-                    <>
-                      {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
-                    </>
-                  ) : (
-                    format(dateRange.from, "LLL dd, y")
-                  )
-                ) : (
-                  <span>Pick a date range</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                initialFocus
-                mode="range"
-                selected={dateRange}
-                onSelect={handleDateRangeSelect}
-                numberOfMonths={2}
+      {(showSearch || showFilters) && (
+        <div className="flex flex-col gap-2 p-4 border rounded-lg bg-card">
+          {showSearch && (
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search by name or ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8 w-full"
               />
-            </PopoverContent>
-          </Popover>
-          <Button variant="outline" onClick={() => { setSearchTerm(''); setStatusFilter('all'); setTypeFilter('all'); setDateRange(undefined); }} className="w-full sm:w-auto">
-            Clear Filters
-          </Button>
-          <Button variant="outline" onClick={exportToCSV} className="w-full sm:w-auto ml-auto">
-            <FileDown className="mr-2 h-4 w-4" /> Export to CSV
-          </Button>
+            </div>
+          )}
+          {showFilters && (
+            <div className="flex flex-col sm:flex-row gap-2 sm:flex-nowrap sm:items-center">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Filter by Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="verified">Verified</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="disapproved">Disapproved</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Filter by Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="register">New Registration</SelectItem>
+                  <SelectItem value="transfer">Transfer</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full sm:w-[280px] justify-start text-left font-normal",
+                      !dateRange?.from && !dateRange?.to && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIconLucide className="mr-2 h-4 w-4" />
+                    {dateRange?.from ? (
+                      dateRange?.to ? (
+                        <>
+                          {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
+                        </>
+                      ) : (
+                        format(dateRange.from, "LLL dd, y")
+                      )
+                    ) : (
+                      <span>Pick a date range</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    selected={dateRange}
+                    onSelect={handleDateRangeSelect}
+                    numberOfMonths={2}
+                  />
+                </PopoverContent>
+              </Popover>
+              <Button variant="outline" onClick={() => { setSearchTerm(''); setStatusFilter('all'); setTypeFilter('all'); setDateRange(undefined); }} className="w-full sm:w-auto">
+                Clear Filters
+              </Button>
+              <Button variant="outline" onClick={exportToCSV} className="w-full sm:w-auto ml-auto">
+                <FileDown className="mr-2 h-4 w-4" /> Export to CSV
+              </Button>
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       <div className="rounded-md border">
         <Table>

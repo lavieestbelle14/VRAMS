@@ -77,7 +77,7 @@ function exportApplicationsToCSV(applications: Application[], filename: string) 
       escapeCsvValue(app.personalInfo.firstName),
       escapeCsvValue(app.personalInfo.lastName),
       escapeCsvValue(app.personalInfo.email),
-      escapeCsvValue(app.personalInfo.phone),
+      escapeCsvValue(app.personalInfo.contactNumber || ''),
       escapeCsvValue(app.applicationType),
       escapeCsvValue(app.status),
       escapeCsvValue(format(parseISO(app.submissionDate), 'yyyy-MM-dd HH:mm:ss')),
@@ -100,178 +100,173 @@ function exportApplicationsToCSV(applications: Application[], filename: string) 
 export default function DashboardPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedView, setSelectedView] = useState<string>("all");
 
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [verificationNotes, setVerificationNotes] = useState('');
   const { toast } = useToast();
 
-  // Fetch applications from Supabase on mount
-  useEffect(() => {
-    const fetchApplications = async () => {
-      setIsLoading(true);
-      try {
-        // Fetch applications with applicant and address info
-        const { data, error } = await supabase
-          .from('application')
-          .select(`
-            application_number,
-            public_facing_id,
-            application_type,
-            application_date,
-            processing_date,
-            status,
-            remarks,
-            applicant:applicant_id (
-              first_name,
-              last_name,
-              middle_name,
-              suffix,
-              sex,
-              date_of_birth,
-              civil_status,
-              contact_number,
-              email_address,
-              profession_occupation,
-              citizenship_type,
-              father_name,
-              mother_maiden_name,
-              spouse_name
-            ),
-            application_declared_address (
-              house_number_street,
-              barangay,
-              city_municipality,
-              province,
-              months_of_residence_address,
-              years_of_residence_address,
-              months_of_residence_municipality,
-              years_of_residence_municipality,
-              years_in_country
-            ),
-            application_registration (
-              registration_type,
-              adult_registration_consent,
-              government_id_front_url,
-              government_id_back_url,
-              id_selfie_url
-            )
-          `)
-          .order('application_date', { ascending: false });
+  // Fetch applications from Supabase
+  const fetchApplications = async () => {
+    setIsLoading(true);
+    try {
+      // Fetch applications with applicant and address info
+      const { data, error } = await supabase
+        .from('application')
+        .select(`
+          application_number,
+          public_facing_id,
+          application_type,
+          application_date,
+          processing_date,
+          status,
+          remarks,
+          applicant:applicant_id (
+            first_name,
+            last_name,
+            middle_name,
+            suffix,
+            sex,
+            date_of_birth,
+            civil_status,
+            contact_number,
+            email_address,
+            profession_occupation,
+            citizenship_type,
+            father_name,
+            mother_maiden_name,
+            spouse_name
+          ),
+          application_declared_address (
+            house_number_street,
+            barangay,
+            city_municipality,
+            province,
+            months_of_residence_address,
+            years_of_residence_address,
+            months_of_residence_municipality,
+            years_of_residence_municipality,
+            years_in_country
+          ),
+          application_registration (
+            registration_type,
+            adult_registration_consent,
+            government_id_front_url,
+            government_id_back_url,
+            id_selfie_url
+          )
+        `)
+        .order('application_date', { ascending: false });
 
-        if (error) {
-          console.error('Error fetching applications:', error);
-          setApplications([]);
-        } else {
-          // Map DB data to Application type
-          const mapped: Application[] = (data || []).map((app: any) => {
-            const applicant = Array.isArray(app.applicant) ? app.applicant[0] : app.applicant;
-            const address = Array.isArray(app.application_declared_address) ? app.application_declared_address[0] : app.application_declared_address;
-            const registration = Array.isArray(app.application_registration) ? app.application_registration[0] : app.application_registration;
-
-            return {
-              id: app.public_facing_id || `APP-${String(app.application_number).padStart(6, '0')}`,
-              applicationType: app.application_type,
-              status: app.status,
-              submissionDate: app.application_date,
-              remarks: app.remarks || '',
-              personalInfo: {
-                firstName: applicant?.first_name || '',
-                lastName: applicant?.last_name || '',
-                middleName: applicant?.middle_name || '',
-                suffix: applicant?.suffix || '',
-                sex: applicant?.sex || '',
-                dob: applicant?.date_of_birth || '',
-                birthDate: applicant?.date_of_birth || '',
-                civilStatus: applicant?.civil_status || '',
-                mobileNumber: applicant?.contact_number || '',
-                phoneNumber: applicant?.contact_number || '',
-                email: applicant?.email_address || '',
-                fatherFirstName: applicant?.father_name?.split(' ')[0] || '',
-                fatherLastName: applicant?.father_name?.split(' ').slice(1).join(' ') || '',
-                motherFirstName: applicant?.mother_maiden_name?.split(' ')[0] || '',
-                motherLastName: applicant?.mother_maiden_name?.split(' ').slice(1).join(' ') || '',
-                spouseName: applicant?.spouse_name || '',
-                isPwd: false,
-                isSenior: false,
-                isIndigenousPerson: false,
-                indigenousTribe: '',
-                isIlliterate: false,
-                placeOfBirthProvince: '',
-                citizenshipType: applicant?.citizenship_type || '',
-                professionOccupation: applicant?.profession_occupation || '',
-                residencyYearsCityMun: address?.years_of_residence_municipality || 0,
-                residencyMonthsCityMun: address?.months_of_residence_municipality || 0,
-                residencyYearsPhilippines: address?.years_in_country || 0
-              },
-              addressInfo: {
-                houseNoStreet: address?.house_number_street || '',
-                barangay: address?.barangay || '',
-                cityMunicipality: address?.city_municipality || '',
-                province: address?.province || ''
-              },
-              addressDetails: {
-                houseNoStreet: address?.house_number_street || '',
-                barangay: address?.barangay || '',
-                cityMunicipality: address?.city_municipality || '',
-                province: address?.province || '',
-                zipCode: '',
-                yearsOfResidency: address?.years_of_residence_address || 0,
-                monthsOfResidency: address?.months_of_residence_address || 0
-              },
-              civilDetails: {
-                civilStatus: applicant?.civil_status || '',
-                fatherFirstName: applicant?.father_name?.split(' ')[0] || '',
-                fatherLastName: applicant?.father_name?.split(' ').slice(1).join(' ') || '',
-                motherFirstName: applicant?.mother_maiden_name?.split(' ')[0] || '',
-                motherLastName: applicant?.mother_maiden_name?.split(' ').slice(1).join(' ') || ''
-              },
-              documents: [
-                ...(registration?.government_id_front_url ? [{
-                  name: 'Government ID (Front)',
-                  url: registration.government_id_front_url,
-                  type: 'government_id_front' as const,
-                  uploadDate: app.application_date
-                }] : []),
-                ...(registration?.government_id_back_url ? [{
-                  name: 'Government ID (Back)',
-                  url: registration.government_id_back_url,
-                  type: 'government_id_back' as const,
-                  uploadDate: app.application_date
-                }] : []),
-                ...(registration?.id_selfie_url ? [{
-                  name: 'ID Selfie',
-                  url: registration.id_selfie_url,
-                  type: 'id_selfie' as const,
-                  uploadDate: app.application_date
-                }] : [])
-              ],
-              // Add other fields as needed for your Application type
-            };
-          });
-          setApplications(mapped);
-        }
-      } catch (err) {
-        console.error('Failed to load applications:', err);
+      if (error) {
+        console.error('Error fetching applications:', error);
         setApplications([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      } else {
+        // Map DB data to Application type
+        const mapped: Application[] = (data || []).map((app: any) => {
+          const applicant = Array.isArray(app.applicant) ? app.applicant[0] : app.applicant;
+          const address = Array.isArray(app.application_declared_address) ? app.application_declared_address[0] : app.application_declared_address;
+          const registration = Array.isArray(app.application_registration) ? app.application_registration[0] : app.application_registration;
 
+          return {
+            id: app.public_facing_id || `APP-${String(app.application_number).padStart(6, '0')}`,
+            applicationType: app.application_type,
+            status: app.status,
+            submissionDate: app.application_date,
+            remarks: app.remarks || '',
+            personalInfo: {
+              firstName: applicant?.first_name || '',
+              lastName: applicant?.last_name || '',
+              middleName: applicant?.middle_name || '',
+              suffix: applicant?.suffix || '',
+              sex: applicant?.sex || '',
+              dob: applicant?.date_of_birth || '',
+              birthDate: applicant?.date_of_birth || '',
+              civilStatus: applicant?.civil_status || '',
+              mobileNumber: applicant?.contact_number || '',
+              phoneNumber: applicant?.contact_number || '',
+              contactNumber: applicant?.contact_number || '',
+              email: applicant?.email_address || '',
+              fatherFirstName: applicant?.father_name?.split(' ')[0] || '',
+              fatherLastName: applicant?.father_name?.split(' ').slice(1).join(' ') || '',
+              motherFirstName: applicant?.mother_maiden_name?.split(' ')[0] || '',
+              motherLastName: applicant?.mother_maiden_name?.split(' ').slice(1).join(' ') || '',
+              spouseName: applicant?.spouse_name || '',
+              isPwd: false,
+              isSenior: false,
+              isIndigenousPerson: false,
+              indigenousTribe: '',
+              isIlliterate: false,
+              placeOfBirthProvince: '',
+              citizenshipType: applicant?.citizenship_type || '',
+              professionOccupation: applicant?.profession_occupation || '',
+              residencyYearsCityMun: address?.years_of_residence_municipality || 0,
+              residencyMonthsCityMun: address?.months_of_residence_municipality || 0,
+              residencyYearsPhilippines: address?.years_in_country || 0
+            },
+            addressInfo: {
+              houseNoStreet: address?.house_number_street || '',
+              barangay: address?.barangay || '',
+              cityMunicipality: address?.city_municipality || '',
+              province: address?.province || ''
+            },
+            addressDetails: {
+              houseNoStreet: address?.house_number_street || '',
+              barangay: address?.barangay || '',
+              cityMunicipality: address?.city_municipality || '',
+              province: address?.province || '',
+              zipCode: '',
+              yearsOfResidency: address?.years_of_residence_address || 0,
+              monthsOfResidency: address?.months_of_residence_address || 0
+            },
+            civilDetails: {
+              civilStatus: applicant?.civil_status || '',
+              fatherFirstName: applicant?.father_name?.split(' ')[0] || '',
+              fatherLastName: applicant?.father_name?.split(' ').slice(1).join(' ') || '',
+              motherFirstName: applicant?.mother_maiden_name?.split(' ')[0] || '',
+              motherLastName: applicant?.mother_maiden_name?.split(' ').slice(1).join(' ') || ''
+            },
+            documents: [
+              ...(registration?.government_id_front_url ? [{
+                name: 'Government ID (Front)',
+                url: registration.government_id_front_url,
+                type: 'government_id_front' as const,
+                uploadDate: app.application_date
+              }] : []),
+              ...(registration?.government_id_back_url ? [{
+                name: 'Government ID (Back)',
+                url: registration.government_id_back_url,
+                type: 'government_id_back' as const,
+                uploadDate: app.application_date
+              }] : []),
+              ...(registration?.id_selfie_url ? [{
+                name: 'ID Selfie',
+                url: registration.id_selfie_url,
+                type: 'id_selfie' as const,
+                uploadDate: app.application_date
+              }] : [])
+            ],
+          };
+        });
+        setApplications(mapped);
+      }
+    } catch (err) {
+      console.error('Failed to load applications:', err);
+      setApplications([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchApplications();
   }, []);
 
   const refreshData = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setApplications(getApplications());
-      setIsLoading(false);
-    }, 500);
+    fetchApplications();
+  };
 
-      const handleExportData = () => {
-    if (filteredApplications.length === 0) {
+  const handleExportData = () => {
+    if (applications.length === 0) {
       toast({
         title: "No Data to Export",
         description: "The current view has no applications to export.",
@@ -280,15 +275,14 @@ export default function DashboardPage() {
       return;
     }
     const date = format(new Date(), 'yyyy-MM-dd');
-    exportApplicationsToCSV(filteredApplications, `voter-applications-${date}`);
+    exportApplicationsToCSV(applications, `voter-applications-${date}`);
     toast({
       title: "Export Started",
-      description: `${filteredApplications.length} records are being downloaded.`,
+      description: `${applications.length} records are being downloaded.`,
     });
   };
-  };
 
-    const handleIdReview = (application: Application) => {
+  const handleIdReview = (application: Application) => {
     setSelectedApp(application);
     setVerificationNotes(application.remarks || '');
   };
@@ -300,7 +294,7 @@ export default function DashboardPage() {
       acc[app.status] = (acc[app.status] || 0) + 1;
       acc.total = (acc.total || 0) + 1;
       
-      if (app.idDocumentUrl) {
+      if (app.documents && app.documents.length > 0) {
         acc.withId = (acc.withId || 0) + 1;
       }
       
@@ -308,25 +302,7 @@ export default function DashboardPage() {
     }, { pending: 0, verified: 0, approved: 0, disapproved: 0, total: 0, withId: 0 } as Record<string, number>);
   }, [applications]);
 
-  const filteredApplications = useMemo(() => {
-    let filtered = [...applications];
-    
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(app => 
-        `${app.personalInfo.firstName} ${app.personalInfo.lastName}`.toLowerCase().includes(query) ||
-        app.id.toLowerCase().includes(query)
-      );
-    }
-    
-    if (selectedView !== "all") {
-      filtered = filtered.filter(app => app.status === selectedView);
-    }
-    
-    return filtered;
-  }, [applications, searchQuery, selectedView]);
-
-const statusChartData = useMemo(() => {
+  const statusChartData = useMemo(() => {
   return [
     { name: 'Pending', value: summaryCounts.pending, fill: '#1261A0' }, 
     { name: 'Verified', value: summaryCounts.verified, fill: '#FFBF00' }, 
@@ -388,24 +364,6 @@ const statusChartData = useMemo(() => {
         </div>
       </div>
     );
-  }
-
-  function handleExportData(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): void {
-    event.preventDefault();
-    if (filteredApplications.length === 0) {
-      toast({
-        title: "No Data to Export",
-        description: "The current view has no applications to export.",
-        variant: "destructive",
-      });
-      return;
-    }
-    const date = format(new Date(), 'yyyy-MM-dd');
-    exportApplicationsToCSV(filteredApplications, `voter-applications-${date}`);
-    toast({
-      title: "Export Started",
-      description: `${filteredApplications.length} records are being downloaded.`,
-    });
   }
 
   return (
@@ -708,72 +666,41 @@ const statusChartData = useMemo(() => {
         </CardContent>
       </Card>
       
-      <Card className="shadow-sm">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <CardTitle className="text-lg">Application Management</CardTitle>
-            <div className="flex items-center gap-2">
-              <div className="relative w-64">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search applications..."
-                  className="pl-8"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Filter className="mr-2 h-4 w-4" />
-                    Filter
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setSelectedView("all")} className={selectedView === "all" ? "bg-muted" : ""}>
-                    All Applications
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSelectedView("pending")} className={selectedView === "pending" ? "bg-muted" : ""}>
-                    Pending
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSelectedView("verified")} className={selectedView === "verified" ? "bg-muted" : ""}>
-                    Verified
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSelectedView("approved")} className={selectedView === "approved" ? "bg-muted" : ""}>
-                    Approved
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSelectedView("disapproved")} className={selectedView === "disapproved" ? "bg-muted" : ""}>
-                    Disapproved
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+      {/* Recent Applications - Quick Overview */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <div>
+            <CardTitle className="text-lg">Recent Applications</CardTitle>
+            <CardDescription>Latest 10 submitted voter applications</CardDescription>
           </div>
-          <Separator />
-          <Tabs defaultValue="all" onValueChange={(value) => setSelectedView(value)}>
-            <TabsList className="grid grid-cols-5 h-9">
-              <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
-              <TabsTrigger value="pending" className="text-xs">Pending</TabsTrigger>
-              <TabsTrigger value="verified" className="text-xs">Verified</TabsTrigger>
-              <TabsTrigger value="approved" className="text-xs">Approved</TabsTrigger>
-              <TabsTrigger value="disapproved" className="text-xs">Disapproved</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex gap-2">
+            <Link href="/dashboard/applications">
+              <Button variant="outline" size="sm">
+                <Files className="mr-2 h-4 w-4" />
+                View All
+              </Button>
+            </Link>
+            <Button variant="outline" size="sm" onClick={refreshData}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Refresh
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <ApplicationDataTable applications={filteredApplications} />
+          <ApplicationDataTable 
+            applications={applications.slice(0, 10)} 
+            showPagination={false}
+            showSearch={false}
+            showFilters={false}
+          />
+          {applications.length > 10 && (
+            <div className="mt-4 text-center text-sm text-muted-foreground">
+              <Link href="/dashboard/applications" className="text-primary hover:underline">
+                View all {applications.length} applications →
+              </Link>
+            </div>
+          )}
         </CardContent>
-        <CardFooter className="flex justify-between border-t px-6 py-4">
-          <div className="text-xs text-muted-foreground">
-            Showing {filteredApplications.length} of {applications.length} applications
-          </div>
-          <div className="space-x-2">
-            <Button variant="outline" size="sm">Previous</Button>
-            <Button variant="outline" size="sm">Next</Button>
-          </div>
-        </CardFooter>
       </Card>
     </div>
   );
