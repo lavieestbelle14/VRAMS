@@ -23,6 +23,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) { //
       return;
     }
     if (!isAuthenticated || user?.role !== 'public') {
+      console.log('Public layout redirect triggered:', { isAuthenticated, userRole: user?.role, pathname });
       router.push('/');
     }
   }, [isLoading, isAuthenticated, user, router, pathname]);

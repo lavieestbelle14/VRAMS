@@ -8,8 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { applicationFormSchema, ApplicationFormValues } from '@/schemas/applicationSchema';
 import { submitApplication } from '@/services/applicationService';
 import { useFormDraft } from './useFormDraft';
-import { useEffect, useMemo } from 'react';
-import { z, ZodType, ZodObject } from 'zod';
+import { useMemo } from 'react';
 
 const DRAFT_STORAGE_KEY = 'vrams_application_draft_v2';
 const LAST_SUBMITTED_FINGERPRINT_KEY = 'vrams_last_submitted_fingerprint_v1';
@@ -84,61 +83,7 @@ const initialDefaultValues: ApplicationFormValues = {
   isIndigenousPerson: false,
   declarationAccepted: false,
   oathAccepted: false,
-  inclusionPrecinctNo: '', // Add this line
 };
-
-// Utility: Map applicationType to required fields
-const applicationTypeFieldMap: Record<string, string[]> = {
-  register: [
-    'firstName', 'lastName', 'citizenshipType', 'dateOfBirth', 'sex', 'placeOfBirthMunicipality', 'placeOfBirthProvince',
-    'fatherFirstName', 'fatherLastName', 'motherFirstName', 'motherMaidenLastName', 'civilStatus', 'houseNumber', 'street', 'barangay', 'cityMunicipality', 'province',
-    'yearsOfResidenceMunicipality', 'monthsOfResidenceMunicipality', 'yearsOfResidenceAddress', 'monthsOfResidenceAddress', 'yearsInCountry',
-    'governmentIdFrontUrl', 'governmentIdBackUrl', 'idSelfieUrl', 'registrationType', 'declarationAccepted',
-    // Add all other required fields for registration
-  ],
-  transfer: [
-    'applicationType', 'previousPrecinctNumber', 'previousBarangay', 'previousCityMunicipality', 'previousProvince',
-    'houseNumber', 'street', 'barangay', 'cityMunicipality', 'province', 
-    'yearsOfResidenceMunicipality', 'monthsOfResidenceMunicipality', 'yearsOfResidenceAddress', 'monthsOfResidenceAddress', 'yearsInCountry',
-    'transferType', 'declarationAccepted',
-  ],
-  reactivation: [
-    'applicationType', 'reasonForDeactivation', 'declarationAccepted',
-  ],
-  transfer_with_reactivation: [
-    'applicationType', 'previousPrecinctNumber', 'previousBarangay', 'previousCityMunicipality', 'previousProvince',
-    'houseNumber', 'street', 'barangay', 'cityMunicipality', 'province',
-    'yearsOfResidenceMunicipality', 'monthsOfResidenceMunicipality', 'yearsOfResidenceAddress', 'monthsOfResidenceAddress', 'yearsInCountry',
-    'transferType', 'reasonForDeactivation', 'declarationAccepted',
-  ],
-  correction_of_entry: [
-    'applicationType', 'targetField', 'currentValue', 'requestedValue', 'declarationAccepted',
-  ],
-  reinstatement: [
-    'applicationType', 'reinstatementType', 'declarationAccepted',
-  ],
-};
-
-// Utility: Get dynamic schema for current applicationType
-function getDynamicSchema(applicationType: string | undefined, registrationType: string | undefined): ZodType<any> {
-  if (!applicationType) return applicationFormSchema;
-  let fields = applicationTypeFieldMap[applicationType] || [];
-  // RegistrationType-specific logic (example: add fields for Katipunan)
-  if (applicationType === 'register' && registrationType === 'Katipunan ng Kabataan') {
-    fields = [...fields, 'oathAccepted'];
-  }
-  // Always include applicationType and declarationAccepted
-  if (!fields.includes('applicationType')) fields.push('applicationType');
-  if (!fields.includes('declarationAccepted')) fields.push('declarationAccepted');
-  // Fix: Use .innerType() to get the ZodObject
-  const baseObject = (applicationFormSchema as any).innerType ? (applicationFormSchema as any).innerType() : applicationFormSchema;
-  const shape = baseObject.shape;
-  const picked: any = {};
-  for (const key of fields) {
-    if (shape[key]) picked[key] = shape[key];
-  }
-  return z.object(picked);
-}
 
 const normalizeFormData = (data: ApplicationFormValues): ApplicationFormValues => {
   const normalizeString = (val: any) => (typeof val === 'string' && val.trim() === '' ? undefined : val);
@@ -147,8 +92,8 @@ const normalizeFormData = (data: ApplicationFormValues): ApplicationFormValues =
 
   return {
     ...data,
-    firstName: data.firstName.trim(),
-    lastName: data.lastName.trim(),
+    firstName: data.firstName?.trim() || '',
+    lastName: data.lastName?.trim() || '',
     middleName: normalizeString(data.middleName),
     suffix: normalizeString(data.suffix),
     dateOfNaturalization: normalizeDate(data.dateOfNaturalization),
@@ -158,12 +103,12 @@ const normalizeFormData = (data: ApplicationFormValues): ApplicationFormValues =
     emailAddress: normalizeString(data.emailAddress),
     spouseName: normalizeString(data.spouseName),
     dateOfBirth: data.dateOfBirth, // Already a string 'yyyy-mm-dd'
-    placeOfBirthMunicipality: data.placeOfBirthMunicipality.trim(),
-    placeOfBirthProvince: data.placeOfBirthProvince.trim(),
-    fatherFirstName: data.fatherFirstName.trim(),
-    fatherLastName: data.fatherLastName.trim(),
-    motherFirstName: data.motherFirstName.trim(),
-    motherMaidenLastName: data.motherMaidenLastName.trim(),
+    placeOfBirthMunicipality: data.placeOfBirthMunicipality?.trim() || '',
+    placeOfBirthProvince: data.placeOfBirthProvince?.trim() || '',
+    fatherFirstName: data.fatherFirstName?.trim() || '',
+    fatherLastName: data.fatherLastName?.trim() || '',
+    motherFirstName: data.motherFirstName?.trim() || '',
+    motherMaidenLastName: data.motherMaidenLastName?.trim() || '',
     tribe: normalizeString(data.tribe),
     typeOfDisability: normalizeString(data.typeOfDisability),
     assistanceNeeded: normalizeString(data.assistanceNeeded),
@@ -176,11 +121,11 @@ const normalizeFormData = (data: ApplicationFormValues): ApplicationFormValues =
     previousCountry: normalizeString(data.previousCountry),
     currentValue: normalizeString(data.currentValue),
     requestedValue: normalizeString(data.requestedValue),
-    houseNumber: data.houseNumber.trim(),
-    street: data.street.trim(),
-    barangay: data.barangay.trim(),
-    cityMunicipality: data.cityMunicipality.trim(),
-    province: data.province.trim(),
+    houseNumber: data.houseNumber?.trim() || '',
+    street: data.street?.trim() || '',
+    barangay: data.barangay?.trim() || '',
+    cityMunicipality: data.cityMunicipality?.trim() || '',
+    province: data.province?.trim() || '',
     yearsOfResidenceMunicipality: normalizeRequiredNumber(data.yearsOfResidenceMunicipality),
     monthsOfResidenceMunicipality: normalizeRequiredNumber(data.monthsOfResidenceMunicipality),
     yearsOfResidenceAddress: normalizeRequiredNumber(data.yearsOfResidenceAddress),
@@ -200,26 +145,13 @@ export function useApplicationForm() {
   // Set default values, using user.precinct if available
   const defaultValues = useMemo(() => ({
     ...initialDefaultValues,
-    inclusionPrecinctNo: user?.precinct ?? '',
-  }), [user]);
+  }), []);
 
-  // Use a dummy form first, then swap resolver dynamically
+  // Use the main application schema for all validation
   const form = useForm<ApplicationFormValues>({
     resolver: zodResolver(applicationFormSchema),
     defaultValues,
   });
-
-  // Dynamically update resolver when applicationType/registrationType changes
-  const applicationType = form.watch('applicationType');
-  const registrationType = form.watch('registrationType');
-  const dynamicSchema = useMemo(() => getDynamicSchema(applicationType, registrationType), [applicationType, registrationType]);
-
-  useEffect(() => {
-    form.reset(form.getValues(), { keepValues: true });
-    // @ts-ignore
-    form.resolver = zodResolver(dynamicSchema);
-    // eslint-disable-next-line
-  }, [dynamicSchema]);
 
   const { clearDraft: clearDraftFromHook } = useFormDraft<ApplicationFormValues>({
     form,
@@ -230,6 +162,10 @@ export function useApplicationForm() {
   });
 
   const onSubmit = async (data: ApplicationFormValues) => {
+    console.log('=== FORM SUBMISSION DEBUG ===');
+    console.log('Application Type:', data.applicationType);
+    console.log('Form Data:', data);
+    
     if (!user) {
       toast({
         title: "Authentication Error",
@@ -250,21 +186,16 @@ export function useApplicationForm() {
     // Remove only UI-only fields, submit all others (including filled optional fields)
     const submissionData = Object.fromEntries(
       Object.entries(normalizedData).filter(([key]) => !UI_ONLY_FIELDS.includes(key))
-    ) as ApplicationFormValues;    try {
+    ) as ApplicationFormValues;
+    
+    try {
       const applicationNumber = await submitApplication(submissionData, user);
       
       if (typeof window !== 'undefined') {
         const fingerprint = generateFingerprint(normalizedData);
         localStorage.setItem(LAST_SUBMITTED_FINGERPRINT_KEY, fingerprint);
       }
-      clearDraftFromHook(initialDefaultValues);      // Give database a moment to propagate changes, then refresh user data
-      setTimeout(async () => {
-        try {
-          await refreshUser();
-        } catch (error) {
-          console.error('Error refreshing user data:', error);
-        }
-      }, 500);
+      clearDraftFromHook(initialDefaultValues);
       
       // Show success toast with longer duration
       toast({
@@ -273,15 +204,9 @@ export function useApplicationForm() {
         duration: 3000, // Show for 3 seconds
       });
       
-      // For registration applications, redirect to apply page to show pending message
-      // For other applications, redirect to confirmation page
-      setTimeout(() => {
-        if (submissionData.applicationType === 'register') {
-          router.push('/public/apply');
-        } else {
-          router.push(`/public/application-submitted/${applicationNumber}`);
-        }
-      }, 2000);
+      // Redirect to confirmation page immediately without delay - use replace to prevent back navigation issues
+      console.log('Redirecting to:', `/public/application-submitted/${applicationNumber}`);
+      router.replace(`/public/application-submitted/${applicationNumber}`);
       
     } catch (error) {
       console.error("Error submitting application:", error);

@@ -28,15 +28,41 @@ export default function ApplicationSubmittedPage() {
       try {
         console.log('Fetching application with ID:', id, 'for user:', user.id);
         
-        // First get the application data
-        const { data: applicationData, error: appError } = await supabase
-          .from('application')
-          .select('*')
-          .eq('public_facing_id', id)
-          .single();        console.log('Application query result:', { applicationData, appError });
+        let applicationData = null;
+        let retryCount = 0;
+        const maxRetries = 3;
+        
+        // Retry logic for potential timing issues with database
+        while (!applicationData && retryCount < maxRetries) {
+          const { data, error: appError } = await supabase
+            .from('application')
+            .select('*')
+            .eq('public_facing_id', id)
+            .maybeSingle();
 
-        if (appError) {
-          console.error('Error fetching application:', appError.message || appError);
+          console.log(`Application query attempt ${retryCount + 1}:`, { data, appError });
+
+          if (appError) {
+            console.error('Error fetching application:', appError.message || appError);
+            setApplication(null);
+            setIsLoading(false);
+            return;
+          }
+
+          if (data) {
+            applicationData = data;
+            break;
+          }
+
+          retryCount++;
+          if (retryCount < maxRetries) {
+            console.log(`Application not found, retrying in 500ms... (attempt ${retryCount}/${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+        }
+
+        if (!applicationData) {
+          console.warn('No application found with public_facing_id after retries:', id);
           setApplication(null);
           setIsLoading(false);
           return;
@@ -69,10 +95,55 @@ export default function ApplicationSubmittedPage() {
           return;
         }
 
-        // Combine the data
+        // Combine the data and map to expected Application structure
         const combinedData = {
           ...applicationData,
-          applicant: applicantData
+          id: applicationData.public_facing_id,
+          submissionDate: applicationData.application_date,
+          applicationType: applicationData.application_type,
+          personalInfo: {
+            firstName: applicantData.first_name || '',
+            lastName: applicantData.last_name || '',
+            middleName: applicantData.middle_name || '',
+            suffix: applicantData.suffix || '',
+            sex: applicantData.sex || '',
+            dob: applicantData.date_of_birth || '',
+            civilStatus: applicantData.civil_status || '',
+            contactNumber: applicantData.contact_number || '',
+            email: applicantData.email_address || '',
+            // Add other required fields with defaults
+            citizenshipType: '',
+            placeOfBirthProvince: '',
+            mobileNumber: '',
+            phoneNumber: '',
+            fatherFirstName: '',
+            fatherLastName: '',
+            motherFirstName: '',
+            motherLastName: '',
+            spouseName: '',
+            isPwd: false,
+            isSenior: false,
+            isIndigenousPerson: false,
+            indigenousTribe: '',
+            isIlliterate: false,
+            birthDate: applicantData.date_of_birth || '',
+          },
+          addressDetails: {
+            houseNoStreet: '',
+            barangay: '',
+            cityMunicipality: '',
+            province: '',
+            zipCode: '',
+          },
+          civilDetails: {
+            civilStatus: applicantData.civil_status || '',
+            fatherFirstName: '',
+            fatherLastName: '',
+            motherFirstName: '',
+            motherLastName: '',
+          },
+          documents: [],
+          addressInfo: {},
         };
 
         console.log('Final combined application data:', combinedData);
@@ -157,15 +228,16 @@ export default function ApplicationSubmittedPage() {
           <p className="text-center text-lg font-semibold text-primary">
             Your Application ID is: <strong className="text-2xl">{application.id}</strong>
           </p>
-          <p className="text-center text-muted-foreground">
-            Please save this ID. You will need it to track the status of your application.
-          </p>
           
           <div className="border-t pt-4">
             <h3 className="font-semibold text-lg mb-2">Submission Summary:</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
-              <p><strong>Applicant Name:</strong> {application.personalInfo.firstName} {application.personalInfo.lastName}</p>
-              <p><strong>Submission Date:</strong> {format(new Date(application.submissionDate), 'PPP p')}</p>
+              <p><strong>Applicant Name:</strong> {
+                application.personalInfo?.firstName && application.personalInfo?.lastName 
+                  ? `${application.personalInfo.firstName} ${application.personalInfo.lastName}`
+                  : 'Name not provided (Reinstatement Application)'
+              }</p>
+              <p><strong>Submission Date:</strong> {format(new Date(), 'PPP p')}</p>
               <p><strong>Application Type:</strong> {applicationTypeLabels[application.applicationType || '']}</p>
             </div>
           </div>

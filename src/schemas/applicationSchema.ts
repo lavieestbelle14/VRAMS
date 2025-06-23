@@ -4,21 +4,21 @@ import { z } from "zod";
 // You will need to update your form components to use these field names and enum values.
 export const applicationFormSchema = z.object({
   // --- applicant table ---
-  firstName: z.string().min(1, "Required"),
-  lastName: z.string().min(1, "Required"),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
   middleName: z.string().optional(),
   suffix: z.string().optional(),
-  citizenshipType: z.enum(["By Birth", "Naturalized", "Reacquired"], { errorMap: () => ({ message: "Please select a citizenship type" }) }),
+  citizenshipType: z.enum(["By Birth", "Naturalized", "Reacquired"], { errorMap: () => ({ message: "Please select a citizenship type" }) }).optional(),
   dateOfNaturalization: z.string().optional(), // Corresponds to date_of_naturalization
   certificateNumber: z.string().optional(), // Corresponds to certificate_number
   professionOccupation: z.string().optional(),
   contactNumber: z.string().optional(),
   emailAddress: z.string().email({ message: "Invalid email address" }).or(z.literal("")).optional(), // Corresponds to email_address
-  civilStatus: z.enum(["Single", "Married", "Widowed", "Legally Separated"], { errorMap: () => ({ message: "Please select a civil status" }) }),
+  civilStatus: z.enum(["Single", "Married", "Widowed", "Legally Separated"], { errorMap: () => ({ message: "Please select a civil status" }) }).optional(),
   spouseName: z.string().optional(),
-  sex: z.enum(["M", "F"]),
-  dateOfBirth: z.string().min(1, "Date of birth is required").refine((val) => {
-    if (!val) return false;
+  sex: z.enum(["M", "F"]).optional(),
+  dateOfBirth: z.string().optional().refine((val) => {
+    if (!val) return true; // Optional field
     const today = new Date();
     const birthDate = new Date(val);
     
@@ -36,12 +36,12 @@ export const applicationFormSchema = z.object({
   }, {
     message: "You must be at least 14 years old to register.",
   }), // Corresponds to date_of_birth
-  placeOfBirthMunicipality: z.string().min(1, "Required"),
-  placeOfBirthProvince: z.string().min(1, "Required"),
-  fatherFirstName: z.string().min(1, "Father's first name is required"),
-  fatherLastName: z.string().min(1, "Father's last name is required"),
-  motherFirstName: z.string().min(1, "Mother's first name is required"),
-  motherMaidenLastName: z.string().min(1, "Mother's maiden last name is required"),
+  placeOfBirthMunicipality: z.string().optional(),
+  placeOfBirthProvince: z.string().optional(),
+  fatherFirstName: z.string().optional(),
+  fatherLastName: z.string().optional(),
+  motherFirstName: z.string().optional(),
+  motherMaidenLastName: z.string().optional(),
 
   // --- applicant_special_sector table ---
   isIlliterate: z.boolean().default(false),
@@ -110,16 +110,16 @@ export const applicationFormSchema = z.object({
   ]).optional(), // Corresponds to inclusionType
 
   // --- application_declared_address table ---
-  houseNumber: z.string().min(1, "Required"), // Split from houseNoStreet
-  street: z.string().min(1, "Required"), // Split from houseNoStreet
-  barangay: z.string().min(1, "Required"),
-  cityMunicipality: z.string().min(1, "Required"),
-  province: z.string().min(1, "Required"),
-  yearsOfResidenceAddress: z.number().min(0, "Required"), // For address-level residency
-  monthsOfResidenceAddress: z.number().min(0, "Required"), // For address-level residency
-  yearsOfResidenceMunicipality: z.number().min(0, "Required"), // Corresponds to residencyYearsCityMun
-  monthsOfResidenceMunicipality: z.number().min(0, "Required"), // Corresponds to residencyMonthsCityMun
-  yearsInCountry: z.number().min(0, "Required"), // Corresponds to residencyYearsPhilippines
+  houseNumber: z.string().optional(), // Split from houseNoStreet
+  street: z.string().optional(), // Split from houseNoStreet
+  barangay: z.string().optional(),
+  cityMunicipality: z.string().optional(),
+  province: z.string().optional(),
+  yearsOfResidenceAddress: z.number().min(0).optional(), // For address-level residency
+  monthsOfResidenceAddress: z.number().min(0).optional(), // For address-level residency
+  yearsOfResidenceMunicipality: z.number().min(0).optional(), // Corresponds to residencyYearsCityMun
+  monthsOfResidenceMunicipality: z.number().min(0).optional(), // Corresponds to residencyMonthsCityMun
+  yearsInCountry: z.number().min(0).optional(), // Corresponds to residencyYearsPhilippines
 
   // --- UI-only / Logic fields (do not map directly to a single DB column) ---
   isPwd: z.boolean().default(false), // UI helper for typeOfDisability
@@ -133,16 +133,38 @@ export const applicationFormSchema = z.object({
   // You will need to decide how to handle them. They are commented out here.
   // transferDeclarantName: z.string().optional(),
   // transferDeclarantBirthDate: z.string().optional(),
-  inclusionPrecinctNo: z.string().optional(),
+  // inclusionPrecinctNo: z.string().optional(),
 
 }).superRefine((data, ctx) => {
-  // You will need to update this superRefine logic to use the new field names.
-  // Example:
-  if (data.civilStatus === 'Married' && !data.spouseName) {
-     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Spouse name is required if married", path: ["spouseName"] });
-  }
-
-  if (data.applicationType === 'register') {
+  // Conditional validation based on application type
+  const applicationType = data.applicationType;
+  
+  // Registration-specific validations
+  if (applicationType === 'register') {
+    // Required fields for registration
+    if (!data.firstName?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "First name is required", path: ["firstName"] });
+    if (!data.lastName?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Last name is required", path: ["lastName"] });
+    if (!data.citizenshipType) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Please select a citizenship type", path: ["citizenshipType"] });
+    if (!data.dateOfBirth) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Date of birth is required", path: ["dateOfBirth"] });
+    if (!data.sex) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Please select your sex", path: ["sex"] });
+    if (!data.placeOfBirthMunicipality?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Place of birth municipality is required", path: ["placeOfBirthMunicipality"] });
+    if (!data.placeOfBirthProvince?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Place of birth province is required", path: ["placeOfBirthProvince"] });
+    if (!data.fatherFirstName?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Father's first name is required", path: ["fatherFirstName"] });
+    if (!data.fatherLastName?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Father's last name is required", path: ["fatherLastName"] });
+    if (!data.motherFirstName?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Mother's first name is required", path: ["motherFirstName"] });
+    if (!data.motherMaidenLastName?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Mother's maiden last name is required", path: ["motherMaidenLastName"] });
+    if (!data.civilStatus) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Please select a civil status", path: ["civilStatus"] });
+    if (!data.houseNumber?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "House number is required", path: ["houseNumber"] });
+    if (!data.street?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Street is required", path: ["street"] });
+    if (!data.barangay?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Barangay is required", path: ["barangay"] });
+    if (!data.cityMunicipality?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "City/Municipality is required", path: ["cityMunicipality"] });
+    if (!data.province?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Province is required", path: ["province"] });
+    if (typeof data.yearsOfResidenceAddress !== 'number' || data.yearsOfResidenceAddress < 0) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Years of residence at address is required", path: ["yearsOfResidenceAddress"] });
+    if (typeof data.monthsOfResidenceAddress !== 'number' || data.monthsOfResidenceAddress < 0) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Months of residence at address is required", path: ["monthsOfResidenceAddress"] });
+    if (typeof data.yearsOfResidenceMunicipality !== 'number' || data.yearsOfResidenceMunicipality < 0) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Years of residence in municipality is required", path: ["yearsOfResidenceMunicipality"] });
+    if (typeof data.monthsOfResidenceMunicipality !== 'number' || data.monthsOfResidenceMunicipality < 0) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Months of residence in municipality is required", path: ["monthsOfResidenceMunicipality"] });
+    if (typeof data.yearsInCountry !== 'number' || data.yearsInCountry < 0) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Years in country is required", path: ["yearsInCountry"] });
+    
     if (!data.registrationType) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Registration type is required.", path: ["registrationType"] });
     }
@@ -151,12 +173,58 @@ export const applicationFormSchema = z.object({
     if (!data.idSelfieUrl) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Selfie with ID is required for registration", path: ["idSelfieUrl"] });
   }
   
-  if (data.isIndigenousPerson && !data.tribe) {
+  // Transfer-specific validations
+  if (applicationType === 'transfer') {
+    if (!data.previousPrecinctNumber?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous precinct number is required", path: ["previousPrecinctNumber"] });
+    if (!data.previousBarangay?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous barangay is required", path: ["previousBarangay"] });
+    if (!data.previousCityMunicipality?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous city/municipality is required", path: ["previousCityMunicipality"] });
+    if (!data.previousProvince?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous province is required", path: ["previousProvince"] });
+    if (!data.transferType) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Transfer type is required", path: ["transferType"] });
+    // Also require current address fields
+    if (!data.houseNumber?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "House number is required", path: ["houseNumber"] });
+    if (!data.street?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Street is required", path: ["street"] });
+    if (!data.barangay?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Barangay is required", path: ["barangay"] });
+    if (!data.cityMunicipality?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "City/Municipality is required", path: ["cityMunicipality"] });
+    if (!data.province?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Province is required", path: ["province"] });
+  }
+  
+  // Reactivation-specific validations
+  if (applicationType === 'reactivation') {
+    if (!data.reasonForDeactivation) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reason for deactivation is required", path: ["reasonForDeactivation"] });
+    }
+  }
+  
+  // Reinstatement-specific validations
+  if (applicationType === 'reinstatement') {
+    if (!data.reinstatementType) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Please select a reinstatement type.", path: ["reinstatementType"] });
+    }
+  }
+  
+  // Correction-specific validations
+  if (applicationType === 'correction_of_entry') {
+    if (!data.targetField) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Target field is required", path: ["targetField"] });
+    if (!data.currentValue?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Current value is required", path: ["currentValue"] });
+    if (!data.requestedValue?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Requested value is required", path: ["requestedValue"] });
+  }
+  
+  // Common validations for all application types
+  if (data.civilStatus === 'Married' && !data.spouseName?.trim()) {
+     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Spouse name is required if married", path: ["spouseName"] });
+  }
+  
+  if (data.isIndigenousPerson && !data.tribe?.trim()) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Tribe Name is required if Indigenous Person is selected.", path: ["tribe"] });
   }
 
-  if (data.isPwd && !data.typeOfDisability) {
+  if (data.isPwd && !data.typeOfDisability?.trim()) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Type of Disability is required if PWD is selected.", path: ["typeOfDisability"] });
+  }
+  
+  // Declaration must always be accepted for any application type
+  if (!data.declarationAccepted) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "You must accept the declaration to submit the application.", path: ["declarationAccepted"] });
   }
 });
 

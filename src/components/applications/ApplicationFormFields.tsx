@@ -40,11 +40,18 @@ export function ApplicationFormFields() {
 
   const handleFormSubmit = async (data: any) => {
     try {
+      console.log('Form submit triggered');
       await onSubmit(data);
     } catch (error) {
       // Handle any submission errors
       console.error('Form submission error:', error);
     }
+  };
+
+  const handleFormEvent = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Form event prevented');
+    form.handleSubmit(handleFormSubmit, handleFormError)(e);
   };
 
   const handleFormError = (errors: any) => {
@@ -108,7 +115,7 @@ export function ApplicationFormFields() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit, handleFormError)} className="space-y-8">
+      <form onSubmit={handleFormEvent} action="#" className="space-y-8">
         <ApplicationFormSections
           form={form}
           isRegistered={isRegistered}

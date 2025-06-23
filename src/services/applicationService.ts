@@ -248,10 +248,9 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
     .insert({
       applicant_id: applicant_id,
       application_type: data.applicationType,
-      application_date: new Date().toISOString(),
       status: 'pending', // Corrected status
     })
-    .select('application_number')
+    .select('application_number, public_facing_id')
     .single();
 
   if (appError) {
@@ -259,6 +258,7 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
     throw new Error('Failed to create application record.');
   }
   const application_number = appData.application_number;
+  const public_facing_id = appData.public_facing_id;
 
   // Step 5: Insert data into application-specific tables based on type
   try {
@@ -387,8 +387,8 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
     }
   }
 
-  // Step 7: Return the application number for redirection
-  return String(application_number);
+  // Step 7: Return the public_facing_id for redirection
+  return public_facing_id;
 
   } catch (error) {
     console.error('Application submission failed:', {
