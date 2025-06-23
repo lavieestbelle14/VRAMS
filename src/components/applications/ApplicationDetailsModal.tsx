@@ -182,181 +182,277 @@ export function ApplicationDetailsModal({ application, isOpen, onClose }: Applic
           <TabsContent value="details">
             <div className="space-y-8">
 
-              {/* Personal Information */}
-              <div>
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  Personal Information
-                </h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-500">Full Name:</span>
-                    <p className="font-medium">
-                      {[
-                        application.personalInfo.firstName,
-                        application.personalInfo.middleName,
-                        application.personalInfo.lastName,
-                        application.personalInfo.suffix
-                      ].filter(Boolean).join(" ") || "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Date of Birth:</span>
-                    <p className="font-medium">
-                      {application.personalInfo.dob || "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Sex:</span>
-                    <p className="font-medium">{application.personalInfo.sex || "—"}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Civil Status:</span>
-                    <p className="font-medium">
-                      {application.personalInfo.civilStatus || application.civilDetails?.civilStatus || "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Citizenship Type:</span>
-                    <p className="font-medium">{application.personalInfo.citizenshipType || "—"}</p>
-                  </div>
-                  {application.personalInfo.naturalizationDate && (
-                    <div>
-                      <span className="text-gray-500">Naturalization Date:</span>
-                      <p className="font-medium">{application.personalInfo.naturalizationDate}</p>
-                    </div>
-                  )}
-                  {application.personalInfo.naturalizationCertNo && (
-                    <div>
-                      <span className="text-gray-500">Naturalization Cert. No.:</span>
-                      <p className="font-medium">{application.personalInfo.naturalizationCertNo}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Contact Information */}
-              <div>
-                <h3 className="font-semibold mb-3">Contact Information</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-500">Email:</span>
-                    <p className="font-medium">{application.personalInfo.email || "—"}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Mobile Number:</span>
-                    <p className="font-medium">{application.personalInfo.mobileNumber || "—"}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Address Information */}
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-500">Current Address:</span>
-                  <p className="font-medium">{application.addressDetails.houseNoStreet || "—"}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500">Barangay:</span>
-                  <p className="font-medium">{application.addressDetails.barangay || "—"}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500">City/Municipality:</span>
-                  <p className="font-medium">{application.addressDetails.cityMunicipality || "—"}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500">Province:</span>
-                  <p className="font-medium">{application.addressDetails.province || "—"}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500">Length of Residency:</span>
-                  <p className="font-medium">
-                    {application.addressDetails.yearsOfResidency
-                      ? `${application.addressDetails.yearsOfResidency} years`
-                      : "—"}
-                    {application.addressDetails.monthsOfResidency
-                      ? `, ${application.addressDetails.monthsOfResidency} months`
-                      : ""}
-                  </p>
-                </div>
-              </div>
-
-              {/* Family Information */}
-              <div>
-                <h3 className="font-semibold mb-3">Family Information</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-500">Father's Name:</span>
-                    <p className="font-medium">
-                      {(application.personalInfo.fatherFirstName || application.civilDetails?.fatherFirstName || "—") + " " +
-                      (application.personalInfo.fatherLastName || application.civilDetails?.fatherLastName || "")}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Mother's Name:</span>
-                    <p className="font-medium">
-                      {(application.personalInfo.motherFirstName || application.civilDetails?.motherFirstName || "—") + " " +
-                      (application.personalInfo.motherLastName || application.civilDetails?.motherLastName || "")}
-                    </p>
-                  </div>
-                  {(application.personalInfo.spouseName || application.civilDetails?.spouseName) && (
-                    <div>
-                      <span className="text-gray-500">Spouse Name:</span>
-                      <p className="font-medium">
-                        {application.personalInfo.spouseName || application.civilDetails?.spouseName}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Other Information */}
-              <div>
-                <h3 className="font-semibold mb-3">Other Information</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-500">Profession/Occupation:</span>
-                    <p className="font-medium">{application.personalInfo.professionOccupation}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">PWD:</span>
-                    <p className="font-medium">{application.personalInfo.isPwd ? "Yes" : "No"}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Senior Citizen:</span>
-                    <p className="font-medium">{application.personalInfo.isSenior ? "Yes" : "No"}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Indigenous Person:</span>
-                    <p className="font-medium">{application.personalInfo.isIndigenousPerson ? "Yes" : "No"}</p>
-                  </div>
-                  {application.personalInfo.indigenousTribe && (
-                    <div>
-                      <span className="text-gray-500">Indigenous Tribe:</span>
-                      <p className="font-medium">{application.personalInfo.indigenousTribe}</p>
-                    </div>
-                  )}
-                  <div>
-                    <span className="text-gray-500">Illiterate:</span>
-                    <p className="font-medium">{application.personalInfo.isIlliterate ? "Yes" : "No"}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Application Type & Status */}
+              {/* Application Type & Status - Always shown */}
               <div>
                 <h3 className="font-semibold mb-3">Application Details</h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-gray-500">Application Type:</span>
-                    <p className="font-medium">{application.applicationType}</p>
+                    <p className="font-medium capitalize">{application.applicationType.replace(/_/g, ' ')}</p>
                   </div>
                   <div>
                     <span className="text-gray-500">Status:</span>
-                    <p className="font-medium">{application.status}</p>
+                    <p className="font-medium capitalize">{application.status}</p>
                   </div>
                 </div>
               </div>
+
+              {/* Personal Information - Only for register applications */}
+              {application.applicationType === 'register' && (
+                <>
+                  <div>
+                    <h3 className="font-semibold mb-3 flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Personal Information
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">                        <div>
+                          <span className="text-gray-500">Full Name:</span>
+                          <p className="font-medium">
+                            {[
+                              application.personalInfo.firstName,
+                              application.personalInfo.middleName,
+                              application.personalInfo.lastName,
+                              application.personalInfo.suffix
+                            ].filter(Boolean).join(" ") || "—"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Date of Birth:</span>
+                          <p className="font-medium">
+                            {application.personalInfo.dateOfBirth || "—"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Sex:</span>
+                          <p className="font-medium">{application.personalInfo.sex || "—"}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Civil Status:</span>
+                          <p className="font-medium">
+                            {application.personalInfo.civilStatus || "—"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Citizenship Type:</span>
+                          <p className="font-medium">{application.personalInfo.citizenshipType || "—"}</p>
+                        </div>
+                        {application.personalInfo.dateOfNaturalization && (
+                          <div>
+                            <span className="text-gray-500">Naturalization Date:</span>
+                            <p className="font-medium">{application.personalInfo.dateOfNaturalization}</p>
+                          </div>
+                        )}
+                        {application.personalInfo.certificateNumber && (
+                          <div>
+                            <span className="text-gray-500">Naturalization Cert. No.:</span>
+                            <p className="font-medium">{application.personalInfo.certificateNumber}</p>
+                          </div>
+                        )}
+                    </div>
+                  </div>
+
+                  {/* Contact Information */}
+                  <div>
+                    <h3 className="font-semibold mb-3">Contact Information</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-500">Email:</span>
+                        <p className="font-medium">{application.personalInfo.emailAddress || "—"}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Contact Number:</span>
+                        <p className="font-medium">{application.personalInfo.contactNumber || "—"}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Address Information */}
+                  {application.addressDetails && (
+                    <div>
+                      <h3 className="font-semibold mb-3">Current Address</h3>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-500">Address:</span>
+                          <p className="font-medium">{application.addressDetails.houseNumberStreet || "—"}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Barangay:</span>
+                          <p className="font-medium">{application.addressDetails.barangay || "—"}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">City/Municipality:</span>
+                          <p className="font-medium">{application.addressDetails.cityMunicipality || "—"}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Province:</span>
+                          <p className="font-medium">{application.addressDetails.province || "—"}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Residence at Address:</span>
+                          <p className="font-medium">
+                            {application.addressDetails.yearsOfResidenceAddress
+                              ? `${application.addressDetails.yearsOfResidenceAddress} years`
+                              : "—"}
+                            {application.addressDetails.monthsOfResidenceAddress
+                              ? `, ${application.addressDetails.monthsOfResidenceAddress} months`
+                              : ""}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Residence in Municipality:</span>
+                          <p className="font-medium">
+                            {application.addressDetails.yearsOfResidenceMunicipality
+                              ? `${application.addressDetails.yearsOfResidenceMunicipality} years`
+                              : "—"}
+                            {application.addressDetails.monthsOfResidenceMunicipality
+                              ? `, ${application.addressDetails.monthsOfResidenceMunicipality} months`
+                              : ""}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Family Information */}
+                  <div>
+                    <h3 className="font-semibold mb-3">Family Information</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-500">Father's Name:</span>
+                        <p className="font-medium">{application.personalInfo.fatherName || "—"}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Mother's Maiden Name:</span>
+                        <p className="font-medium">{application.personalInfo.motherMaidenName || "—"}</p>
+                      </div>
+                      {application.personalInfo.spouseName && (
+                        <div>
+                          <span className="text-gray-500">Spouse Name:</span>
+                          <p className="font-medium">{application.personalInfo.spouseName}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Other Information */}
+                  <div>
+                    <h3 className="font-semibold mb-3">Other Information</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-500">Profession/Occupation:</span>
+                        <p className="font-medium">{application.personalInfo.professionOccupation || "—"}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Place of Birth:</span>
+                        <p className="font-medium">
+                          {[application.personalInfo.placeOfBirthMunicipality, application.personalInfo.placeOfBirthProvince]
+                            .filter(Boolean).join(", ") || "—"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Transfer-specific details */}
+              {(application.applicationType === 'transfer' || application.applicationType === 'transfer_with_reactivation') && application.transfer && (
+                <div>
+                  <h3 className="font-semibold mb-3">Transfer Details</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-500">Transfer Type:</span>
+                      <p className="font-medium">{application.transfer.transferType || "—"}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Previous Precinct:</span>
+                      <p className="font-medium">{application.transfer.previousPrecinctNumber || "—"}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Previous Address:</span>
+                      <p className="font-medium">
+                        {[
+                          application.transfer.previousBarangay,
+                          application.transfer.previousCityMunicipality,
+                          application.transfer.previousProvince
+                        ].filter(Boolean).join(", ") || "—"}
+                      </p>
+                    </div>
+                    {application.transfer.previousCountry && (
+                      <div>
+                        <span className="text-gray-500">Previous Country:</span>
+                        <p className="font-medium">{application.transfer.previousCountry}</p>
+                      </div>
+                    )}
+                    {application.addressDetails && (
+                      <>
+                        <div>
+                          <span className="text-gray-500">New Address:</span>
+                          <p className="font-medium">{application.addressDetails.houseNumberStreet || "—"}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">New Barangay:</span>
+                          <p className="font-medium">{application.addressDetails.barangay || "—"}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">New City/Municipality:</span>
+                          <p className="font-medium">{application.addressDetails.cityMunicipality || "—"}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">New Province:</span>
+                          <p className="font-medium">{application.addressDetails.province || "—"}</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Reactivation-specific details */}
+              {(application.applicationType === 'reactivation' || application.applicationType === 'transfer_with_reactivation') && application.reactivation && (
+                <div>
+                  <h3 className="font-semibold mb-3">Reactivation Details</h3>
+                  <div className="grid grid-cols-1 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-500">Reason for Deactivation:</span>
+                      <p className="font-medium">{application.reactivation.reasonForDeactivation || "—"}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Correction of Entry details */}
+              {application.applicationType === 'correction_of_entry' && application.correction && (
+                <div>
+                  <h3 className="font-semibold mb-3">Correction Details</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-500">Field to Correct:</span>
+                      <p className="font-medium">{application.correction.targetField || "—"}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Current Value:</span>
+                      <p className="font-medium">{application.correction.currentValue || "—"}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Requested Value:</span>
+                      <p className="font-medium">{application.correction.requestedValue || "—"}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Reinstatement details */}
+              {application.applicationType === 'reinstatement' && application.reinstatement && (
+                <div>
+                  <h3 className="font-semibold mb-3">Reinstatement Details</h3>
+                  <div className="grid grid-cols-1 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-500">Reinstatement Type:</span>
+                      <p className="font-medium">{application.reinstatement.reinstatementType || "—"}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
             </div>
           </TabsContent>

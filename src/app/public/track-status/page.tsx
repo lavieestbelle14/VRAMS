@@ -62,20 +62,25 @@ export default function TrackStatusPage() {
             erb_hearing_date,
             remarks,
             applicant (
+              applicant_id,
               first_name,
               last_name,
               middle_name,
               suffix,
-              sex,
-              date_of_birth,
-              civil_status,
+              citizenship_type,
+              date_of_naturalization,
+              certificate_number,
+              profession_occupation,
               contact_number,
               email_address,
-              profession_occupation,
-              citizenship_type,
+              civil_status,
+              spouse_name,
+              sex,
+              date_of_birth,
+              place_of_birth_municipality,
+              place_of_birth_province,
               father_name,
-              mother_maiden_name,
-              spouse_name
+              mother_maiden_name
             ),
             application_declared_address (
               house_number_street,
@@ -94,6 +99,9 @@ export default function TrackStatusPage() {
               government_id_front_url,
               government_id_back_url,
               id_selfie_url
+            ),
+            application_reinstatement (
+              reinstatement_type
             )
           `)
           .eq('applicant_id', applicantData[0].applicant_id)
@@ -111,63 +119,71 @@ export default function TrackStatusPage() {
             const applicant = Array.isArray(app.applicant) ? app.applicant[0] : app.applicant;
             const address = Array.isArray(app.application_declared_address) ? app.application_declared_address[0] : app.application_declared_address;
             const registration = Array.isArray(app.application_registration) ? app.application_registration[0] : app.application_registration;
+            const reinstatement = Array.isArray(app.application_reinstatement) ? app.application_reinstatement[0] : app.application_reinstatement;
             
             return {
+              // Main application data
+              applicationNumber: app.application_number,
               id: app.public_facing_id || `APP-${String(app.application_number).padStart(6, '0')}`,
+              applicantId: applicant?.applicant_id,
               applicationType: app.application_type,
+              applicationDate: app.application_date,
+              processingDate: app.processing_date,
               status: app.status,
-              submissionDate: app.application_date,
+              reasonForDisapproval: app.reason_for_disapproval,
+              erbHearingDate: app.erb_hearing_date,
               remarks: app.remarks || undefined,
+
+              // Personal information from applicant table
               personalInfo: {
                 firstName: applicant?.first_name || 'Unknown',
                 lastName: applicant?.last_name || 'User',
                 middleName: applicant?.middle_name || '',
                 suffix: applicant?.suffix || '',
-                sex: applicant?.sex || '',
-                dob: applicant?.date_of_birth || '',
-                birthDate: applicant?.date_of_birth || '',
-                civilStatus: applicant?.civil_status || '',
-                mobileNumber: applicant?.contact_number || '',
-                phoneNumber: applicant?.contact_number || '',
-                email: applicant?.email_address || '',
-                fatherFirstName: applicant?.father_name?.split(' ')[0] || '',
-                fatherLastName: applicant?.father_name?.split(' ').slice(1).join(' ') || '',
-                motherFirstName: applicant?.mother_maiden_name?.split(' ')[0] || '',
-                motherLastName: applicant?.mother_maiden_name?.split(' ').slice(1).join(' ') || '',
-                spouseName: applicant?.spouse_name || '',
-                isPwd: false,
-                isSenior: false,
-                isIndigenousPerson: false,
-                indigenousTribe: '',
-                isIlliterate: false,
-                placeOfBirthProvince: '',
-                citizenshipType: applicant?.citizenship_type || '',
+                citizenshipType: applicant?.citizenship_type || 'By Birth',
+                dateOfNaturalization: applicant?.date_of_naturalization,
+                certificateNumber: applicant?.certificate_number,
                 professionOccupation: applicant?.profession_occupation || '',
-                residencyYearsCityMun: address?.years_of_residence_municipality || 0,
-                residencyMonthsCityMun: address?.months_of_residence_municipality || 0,
-                residencyYearsPhilippines: address?.years_in_country || 0
+                contactNumber: applicant?.contact_number || '',
+                emailAddress: applicant?.email_address || '',
+                civilStatus: applicant?.civil_status || 'Single',
+                spouseName: applicant?.spouse_name || '',
+                sex: applicant?.sex || 'M',
+                dateOfBirth: applicant?.date_of_birth || '',
+                placeOfBirthMunicipality: applicant?.place_of_birth_municipality || '',
+                placeOfBirthProvince: applicant?.place_of_birth_province || '',
+                fatherName: applicant?.father_name || '',
+                motherMaidenName: applicant?.mother_maiden_name || ''
               },
-              addressInfo: {
-                houseNoStreet: address?.house_number_street || '',
-                barangay: address?.barangay || '',
-                cityMunicipality: address?.city_municipality || '',
-                province: address?.province || ''
-              },
-              addressDetails: {
-                houseNoStreet: address?.house_number_street || '',
-                barangay: address?.barangay || '',
-                cityMunicipality: address?.city_municipality || '',
-                province: address?.province || '',
-                zipCode: '',
-                yearsOfResidency: address?.years_of_residence_address || 0,
-                monthsOfResidency: address?.months_of_residence_address || 0
-              },              civilDetails: {
-                civilStatus: applicant?.civil_status || '',
-                fatherFirstName: applicant?.father_name?.split(' ')[0] || '',
-                fatherLastName: applicant?.father_name?.split(' ').slice(1).join(' ') || '',
-                motherFirstName: applicant?.mother_maiden_name?.split(' ')[0] || '',
-                motherLastName: applicant?.mother_maiden_name?.split(' ').slice(1).join(' ') || ''
-              },
+
+              // Address details from application_declared_address table
+              addressDetails: address ? {
+                houseNumberStreet: address.house_number_street || '',
+                barangay: address.barangay || '',
+                cityMunicipality: address.city_municipality || '',
+                province: address.province || '',
+                monthsOfResidenceAddress: address.months_of_residence_address || 0,
+                yearsOfResidenceAddress: address.years_of_residence_address || 0,
+                monthsOfResidenceMunicipality: address.months_of_residence_municipality || 0,
+                yearsOfResidenceMunicipality: address.years_of_residence_municipality || 0,
+                yearsInCountry: address.years_in_country || 0
+              } : undefined,
+
+              // Registration details
+              registration: registration ? {
+                registrationType: registration.registration_type || 'Regular',
+                adultRegistrationConsent: registration.adult_registration_consent,
+                governmentIdFrontUrl: registration.government_id_front_url || '',
+                governmentIdBackUrl: registration.government_id_back_url || '',
+                idSelfieUrl: registration.id_selfie_url || ''
+              } : undefined,
+
+              // Reinstatement details
+              reinstatement: reinstatement ? {
+                reinstatementType: reinstatement.reinstatement_type
+              } : undefined,
+
+              // Documents array
               documents: [
                 ...(registration?.government_id_front_url ? [{
                   name: 'Government ID (Front)',
@@ -187,7 +203,11 @@ export default function TrackStatusPage() {
                   type: 'id_selfie' as const,
                   uploadDate: app.application_date
                 }] : [])
-              ]
+              ],
+
+              // Legacy fields for backward compatibility
+              submissionDate: app.application_date,
+              approvalDate: app.processing_date
             };
           });
           
