@@ -100,11 +100,32 @@ const uploadFile = async (file: File, bucket: string, path: string): Promise<str
 
 
 export const submitApplication = async (data: ApplicationFormValues, user: AuthenticatedUser): Promise<string> => {
+  // Enhanced debugging
+  console.log('=== SUBMIT APPLICATION DEBUG START ===');
+  console.log('Input data keys:', Object.keys(data));
+  console.log('Application type:', data.applicationType);
+  console.log('User info:', { id: user.id, email: user.email, role: user.role });
+  
+  // Check for required fields based on application type
+  if (data.applicationType === 'register') {
+    console.log('Registration data validation:');
+    console.log('- firstName:', data.firstName);
+    console.log('- lastName:', data.lastName);
+    console.log('- dateOfBirth:', data.dateOfBirth);
+    console.log('- registrationType:', data.registrationType);
+    console.log('- citizenshipType:', data.citizenshipType);
+    console.log('- sex:', data.sex);
+    console.log('- civilStatus:', data.civilStatus);
+  }
+  
   let idFrontPhotoUrl: string | undefined;
   let idBackPhotoUrl: string | undefined;
   let selfieWithIdUrl: string | undefined;
 
-  let applicant_id: number;  try {    console.log('Starting application submission for user:', { 
+  let applicant_id: number;
+
+  try {
+    console.log('Starting application submission for user:', { 
       userId: user.id, 
       userRole: user.role, 
       applicationType: data.applicationType 
@@ -191,7 +212,7 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
         contact_number: data.contactNumber,
         email_address: data.emailAddress,
         civil_status: data.civilStatus,
-        spouse_name: data.spouseName || (data.civilStatus === 'Married' ? '' : null),
+        spouse_name: data.civilStatus === 'Married' ? (data.spouseName || '') : null,
         sex: data.sex,
         date_of_birth: data.dateOfBirth,
         place_of_birth_municipality: data.placeOfBirthMunicipality,
@@ -203,7 +224,15 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
       .single();
 
     if (applicantError) {
-      console.error('Error inserting applicant:', JSON.stringify(applicantError), JSON.stringify(data));
+      console.error('Error inserting applicant:', {
+        error: applicantError,
+        errorMessage: applicantError.message,
+        errorCode: applicantError.code,
+        errorDetails: applicantError.details,
+        errorHint: applicantError.hint,
+        applicationType: data.applicationType,
+        userId: user.id
+      });
       throw new Error(`Failed to create applicant record: ${applicantError.message || 'Unknown error'}`);
     }
     applicant_id = applicantData.applicant_id;  } else {
@@ -237,24 +266,48 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
         vote_on_ground_floor: data.voteOnGroundFloor,
       });
     if (specialSectorError) {
-      console.error('Error inserting special sector info:', specialSectorError, data);
+      console.error('Error inserting special sector info:', {
+        error: specialSectorError,
+        errorMessage: specialSectorError.message,
+        errorCode: specialSectorError.code,
+        applicationType: data.applicationType,
+        userId: user.id
+      });
       throw new Error('Failed to save special sector information.');
     }
   }
 
   // Step 4: Create the main application record to get the application_number
+  console.log('Inserting application with data:', {
+    applicant_id: applicant_id,
+    application_type: data.applicationType,
+    status: 'pending',
+    application_date: new Date().toISOString().split('T')[0] // Explicitly set the date
+  });
+  
   const { data: appData, error: appError } = await supabase
     .from('application')
     .insert({
       applicant_id: applicant_id,
       application_type: data.applicationType,
-      status: 'pending', // Corrected status
+      status: 'pending',
+      application_date: new Date().toISOString().split('T')[0] // Format: YYYY-MM-DD
     })
     .select('application_number, public_facing_id')
     .single();
 
+  console.log('Application insertion result:', { appData, appError });
+
   if (appError) {
-    console.error('Error inserting application:', appError, data);
+    console.error('Error inserting application:', {
+      error: appError,
+      errorMessage: appError.message,
+      errorCode: appError.code,
+      errorDetails: appError.details,
+      errorHint: appError.hint,
+      applicationType: data.applicationType,
+      userId: user.id
+    });
     throw new Error('Failed to create application record.');
   }
   const application_number = appData.application_number;
@@ -274,7 +327,13 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
             id_selfie_url: selfieWithIdUrl,
           });
           if (regError) {
-            console.error('Error inserting application_registration:', regError, data);
+            console.error('Error inserting application_registration:', {
+              error: regError,
+              errorMessage: regError.message,
+              errorCode: regError.code,
+              applicationType: data.applicationType,
+              userId: user.id
+            });
             throw new Error('Failed to save registration details.');
           }
         }
@@ -292,7 +351,13 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
             transfer_type: data.transferType,
           });
           if (transferError) {
-            console.error('Error inserting application_transfer:', transferError, data);
+            console.error('Error inserting application_transfer:', {
+              error: transferError,
+              errorMessage: transferError.message,
+              errorCode: transferError.code,
+              applicationType: data.applicationType,
+              userId: user.id
+            });
             throw new Error('Failed to save transfer details.');
           }
           const { error: reactError } = await supabase.from('application_reactivation').insert({
@@ -363,7 +428,15 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
         break;
     }
   } catch (e) {
-    console.error('Error in application-specific table insert:', e, data);
+    console.error('Error in application-specific table insert:', {
+      error: e instanceof Error ? {
+        message: e.message,
+        stack: e.stack,
+        name: e.name
+      } : e,
+      applicationType: data.applicationType,
+      userId: user.id
+    });
     throw e;
   }
 
@@ -382,7 +455,13 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
         months_of_residence_address: data.monthsOfResidenceAddress,
       });
     if (addressError) {
-      console.error('Error inserting application_declared_address:', addressError, data);
+      console.error('Error inserting application_declared_address:', {
+        error: addressError,
+        errorMessage: addressError.message,
+        errorCode: addressError.code,
+        applicationType: data.applicationType,
+        userId: user.id
+      });
       throw new Error('Failed to save address details.');
     }
   }
@@ -392,7 +471,11 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
 
   } catch (error) {
     console.error('Application submission failed:', {
-      error,
+      error: error instanceof Error ? {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      } : error,
       applicationType: data.applicationType,
       userId: user.id,
       timestamp: new Date().toISOString()

@@ -164,7 +164,17 @@ export function useApplicationForm() {
   const onSubmit = async (data: ApplicationFormValues) => {
     console.log('=== FORM SUBMISSION DEBUG ===');
     console.log('Application Type:', data.applicationType);
-    console.log('Form Data:', data);
+    console.log('Form Data keys:', Object.keys(data));
+    
+    // Validate required fields before submission
+    if (!data.applicationType) {
+      toast({
+        title: "Validation Error",
+        description: "Please select an application type.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (!user) {
       toast({
@@ -181,7 +191,24 @@ export function useApplicationForm() {
       registrationStatus: user.registrationStatus,
       email: user.email 
     });
+    
+    // Additional validation for registration applications
+    if (data.applicationType === 'register') {
+      const requiredFields = ['firstName', 'lastName', 'dateOfBirth', 'registrationType'];
+      const missingFields = requiredFields.filter(field => !data[field as keyof ApplicationFormValues]);
+      
+      if (missingFields.length > 0) {
+        toast({
+          title: "Validation Error",
+          description: `Please fill in all required fields: ${missingFields.join(', ')}`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     const normalizedData = normalizeFormData(data);
+    console.log('Normalized data keys:', Object.keys(normalizedData));
 
     // Remove only UI-only fields, submit all others (including filled optional fields)
     const submissionData = Object.fromEntries(
