@@ -592,6 +592,13 @@ export const updateApplicationStatus = async (
   reasonForDisapproval?: string
 ): Promise<boolean> => {
   try {
+    // Get current officer ID for assignment tracking
+    const officerId = await getCurrentOfficerId();
+    if (!officerId && status !== 'pending') {
+      console.error('Officer ID not found - cannot track assignment');
+      return false;
+    }
+
     const updateData: any = { 
       status,
       processing_date: status !== 'pending' ? new Date().toISOString() : null
@@ -617,6 +624,14 @@ export const updateApplicationStatus = async (
       return false;
     }
 
+    // Create officer assignment for status changes that involve officer action
+    if (officerId && status !== 'pending') {
+      const assignmentSuccess = await createOfficerAssignment(applicationId, officerId);
+      if (!assignmentSuccess) {
+        console.warn('Failed to create officer assignment, but status update succeeded');
+      }
+    }
+
     return true;
   } catch (error) {
     console.error('Failed to update application status:', error);
@@ -630,10 +645,17 @@ export const approveApplicationWithVoterRecord = async (
   reasonForDisapproval?: string
 ): Promise<boolean> => {
   try {
+    // Get current officer ID for assignment tracking
+    const officerId = await getCurrentOfficerId();
+    if (!officerId) {
+      console.error('Officer ID not found - cannot track assignment');
+      return false;
+    }
+
     // First, get the application to find the applicant_id
     const { data: applicationData, error: fetchError } = await supabase
       .from('application')
-      .select('applicant_id')
+      .select('applicant_id, application_number')
       .eq('public_facing_id', applicationId)
       .single();
 
@@ -658,7 +680,22 @@ export const approveApplicationWithVoterRecord = async (
       return false;
     }
 
-    // 2. Create voter record
+    // 2. Create officer assignment
+    const { error: assignmentError } = await supabase
+      .from('officer_assignment')
+      .upsert({
+        officer_id: officerId,
+        application_number: applicationData.application_number
+      }, {
+        onConflict: 'officer_id,application_number'
+      });
+
+    if (assignmentError) {
+      console.error('Error creating officer assignment:', assignmentError);
+      // Continue with voter record creation even if assignment fails
+    }
+
+    // 3. Create voter record
     const { error: voterError } = await supabase
       .from('applicant_voter_record')
       .upsert({
@@ -679,7 +716,7 @@ export const approveApplicationWithVoterRecord = async (
       return false;
     }
 
-    // 3. Update applicant voting status to Active
+    // 4. Update applicant voting status to Active
     const { error: applicantError } = await supabase
       .from('applicant')
       .update({ voting_status: 'Active' })
@@ -694,5 +731,104 @@ export const approveApplicationWithVoterRecord = async (
   } catch (error) {
     console.error('Failed to approve application with voter record:', error);
     return false;
+  }
+};
+
+// Helper function to get officer ID from current user
+const getCurrentOfficerId = async (): Promise<number | null> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const { data: officerData, error } = await supabase
+      .from('officer')
+      .select('officer_id')
+      .eq('auth_id', user.id)
+      .single();
+
+    if (error || !officerData) {
+      console.error('Error fetching officer ID:', error);
+      return null;
+    }
+
+    return officerData.officer_id;
+  } catch (error) {
+    console.error('Failed to get current officer ID:', error);
+    return null;
+  }
+};
+
+// Helper function to create officer assignment
+const createOfficerAssignment = async (applicationId: string, officerId: number): Promise<boolean> => {
+  try {
+    // First get the application_number from public_facing_id
+    const { data: applicationData, error: fetchError } = await supabase
+      .from('application')
+      .select('application_number')
+      .eq('public_facing_id', applicationId)
+      .single();
+
+    if (fetchError || !applicationData) {
+      console.error('Error fetching application number:', fetchError);
+      return false;
+    }
+
+    // Create or update officer assignment (upsert to handle multiple actions by same officer)
+    const { error: assignmentError } = await supabase
+      .from('officer_assignment')
+      .upsert({
+        officer_id: officerId,
+        application_number: applicationData.application_number
+      }, {
+        onConflict: 'officer_id,application_number'
+      });
+
+    if (assignmentError) {
+      console.error('Error creating officer assignment:', assignmentError);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Failed to create officer assignment:', error);
+    return false;
+  }
+};
+
+export const getOfficerAssignments = async (applicationId: string) => {
+  try {
+    const { data: applicationData, error: fetchError } = await supabase
+      .from('application')
+      .select('application_number')
+      .eq('public_facing_id', applicationId)
+      .single();
+
+    if (fetchError || !applicationData) {
+      console.error('Error fetching application number:', fetchError);
+      return [];
+    }
+
+    const { data: assignments, error } = await supabase
+      .from('officer_assignment')
+      .select(`
+        assignment_id,
+        officer:officer_id (
+          officer_id,
+          first_name,
+          last_name,
+          position
+        )
+      `)
+      .eq('application_number', applicationData.application_number);
+
+    if (error) {
+      console.error('Error fetching officer assignments:', error);
+      return [];
+    }
+
+    return assignments || [];
+  } catch (error) {
+    console.error('Failed to get officer assignments:', error);
+    return [];
   }
 };

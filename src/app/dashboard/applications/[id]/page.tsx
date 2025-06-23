@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getApplicationByPublicId, updateApplicationRemarks, updateApplicationStatus, approveApplicationWithVoterRecord } from '@/services/applicationService';
+import { getApplicationByPublicId, updateApplicationRemarks, updateApplicationStatus, approveApplicationWithVoterRecord, getOfficerAssignments } from '@/services/applicationService';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -82,6 +82,7 @@ export default function ApplicationDetailsPage() {
   const [showDisapprovalDialog, setShowDisapprovalDialog] = useState(false);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [voterInfo, setVoterInfo] = useState({ precinctNumber: '', voterId: '' });
+  const [officerAssignments, setOfficerAssignments] = useState<any[]>([]);
 
   const id = typeof params.id === 'string' ? params.id : '';
 
@@ -89,18 +90,24 @@ export default function ApplicationDetailsPage() {
     if (id) {
       setIsLoading(true);
       setError(null);
-      getApplicationByPublicId(id)
-        .then(appData => {
+      
+      Promise.all([
+        getApplicationByPublicId(id),
+        getOfficerAssignments(id)
+      ])
+        .then(([appData, assignments]) => {
           if (appData) {
             setApplication(appData);
             setRemarks(appData.remarks || '');
           } else {
             setApplication(null);
           }
+          setOfficerAssignments(assignments || []);
         })
         .catch(e => {
           setError('Failed to fetch application details.');
           setApplication(null);
+          setOfficerAssignments([]);
         })
         .finally(() => setIsLoading(false));
     }
@@ -135,6 +142,10 @@ export default function ApplicationDetailsPage() {
           setShowDisapprovalDialog(false);
           setDisapprovalReason('');
         }
+        
+        // Refresh officer assignments after status update
+        const assignments = await getOfficerAssignments(id);
+        setOfficerAssignments(assignments || []);
       } else {
         toast({ 
           title: 'Error', 
@@ -182,6 +193,10 @@ export default function ApplicationDetailsPage() {
         
         setShowApprovalDialog(false);
         setVoterInfo({ precinctNumber: '', voterId: '' });
+        
+        // Refresh officer assignments after approval
+        const assignments = await getOfficerAssignments(id);
+        setOfficerAssignments(assignments || []);
       } else {
         toast({ 
           title: 'Error', 
@@ -741,6 +756,43 @@ export default function ApplicationDetailsPage() {
               </div>
             </CardContent>
           </Card>
+          
+          {/* Officer Assignment History */}
+          {officerAssignments.length > 0 && (
+            <Card className="lg:col-span-3">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Users className="mr-2 h-5 w-5" />
+                  Officer Assignment History
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {officerAssignments.map((assignment, index) => (
+                    <div key={assignment.assignment_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-blue-100 rounded-full">
+                          <User className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {assignment.officer?.first_name} {assignment.officer?.last_name}
+                          </p>
+                          <p className="text-sm text-gray-600">{assignment.officer?.position}</p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                        Assigned Officer
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 text-xs text-muted-foreground">
+                  Officers listed have performed actions on this application (verification, approval, or disapproval).
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </CardContent>
       </Card>
     </div>
