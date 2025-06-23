@@ -17,12 +17,13 @@ export const RegistrationTypeFields: React.FC<RegistrationTypeFieldsProps> = ({ 
       control={control}
       name="registrationType"
       render={({ field }) => (
-        <FormItem className="space-y-3">
+        <FormItem className="space-y-3" data-field="registrationType">
           <FormControl>
             <RadioGroup
               onValueChange={field.onChange}
               value={field.value ?? ''}
               className="space-y-4"
+              data-testid="registrationType-radiogroup"
             >
               <FormItem className="flex items-start space-x-3 space-y-0">
                 <FormControl>

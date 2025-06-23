@@ -38,9 +38,77 @@ export function ApplicationFormFields() {
     clearDraft();
   };
 
+  const handleFormSubmit = async (data: any) => {
+    try {
+      await onSubmit(data);
+    } catch (error) {
+      // Handle any submission errors
+      console.error('Form submission error:', error);
+    }
+  };
+
+  const handleFormError = (errors: any) => {
+    // Handle validation errors - scroll to first error
+    const firstErrorField = Object.keys(errors)[0];
+    if (firstErrorField) {
+      setTimeout(() => {
+        // Try multiple selectors to find the form field
+        let firstErrorElement = 
+          document.querySelector(`[name="${firstErrorField}"]`) as HTMLElement ||
+          document.querySelector(`input[name="${firstErrorField}"]`) as HTMLElement ||
+          document.querySelector(`select[name="${firstErrorField}"]`) as HTMLElement ||
+          document.querySelector(`textarea[name="${firstErrorField}"]`) as HTMLElement ||
+          document.querySelector(`button[name="${firstErrorField}"]`) as HTMLElement ||
+          // For React Hook Form fields, try finding by data attribute or aria-label
+          document.querySelector(`[data-field="${firstErrorField}"]`) as HTMLElement ||
+          // Try finding the FormItem container and then any focusable element within it
+          document.querySelector(`[data-testid="${firstErrorField}"]`) as HTMLElement;
+        
+        // If we still can't find it, try looking for the FormMessage with the error
+        if (!firstErrorElement) {
+          const errorMessages = Array.from(document.querySelectorAll('[data-testid="form-message"]'));
+          for (const errorMsg of errorMessages) {
+            if (errorMsg.textContent && errorMsg.textContent.includes(errors[firstErrorField]?.message)) {
+              firstErrorElement = errorMsg.closest('[data-testid="form-item"]')?.querySelector('button, input, select, textarea') as HTMLElement;
+              break;
+            }
+          }
+        }
+        
+        // Last resort: find any element that might be related to the field name
+        if (!firstErrorElement) {
+          const allElements = Array.from(document.querySelectorAll('button, input, select, textarea'));
+          firstErrorElement = allElements.find(el => {
+            const element = el as HTMLElement;
+            return element.getAttribute('aria-describedby')?.includes(firstErrorField) ||
+                   element.id?.includes(firstErrorField) ||
+                   element.closest('[data-field]')?.getAttribute('data-field') === firstErrorField;
+          }) as HTMLElement;
+        }
+        
+        if (firstErrorElement) {
+          firstErrorElement.scrollIntoView({ 
+            behavior: 'auto', 
+            block: 'center' 
+          });
+          firstErrorElement.focus();
+        } else {
+          // If we can't find the specific field, jump to the top of the form
+          const formElement = document.querySelector('form');
+          if (formElement) {
+            formElement.scrollIntoView({ 
+              behavior: 'auto', 
+              block: 'start' 
+            });
+          }
+        }
+      }, 100); // Small delay to ensure DOM is updated
+    }
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleFormSubmit, handleFormError)} className="space-y-8">
         <ApplicationFormSections
           form={form}
           isRegistered={isRegistered}

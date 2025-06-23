@@ -18,8 +18,15 @@ export const applicationFormSchema = z.object({
   spouseName: z.string().optional(),
   sex: z.enum(["M", "F"]),
   dateOfBirth: z.string().min(1, "Date of birth is required").refine((val) => {
+    if (!val) return false;
     const today = new Date();
     const birthDate = new Date(val);
+    
+    // Check if the date is valid
+    if (isNaN(birthDate.getTime())) {
+      return false;
+    }
+    
     let age = today.getFullYear() - birthDate.getFullYear();
     const m = today.getMonth() - birthDate.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {

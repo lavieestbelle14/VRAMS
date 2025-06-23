@@ -38,12 +38,12 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <FormField
           control={control}
-          name="lastName"
+          name="firstName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Last Name</FormLabel>
+              <FormLabel>First Name</FormLabel>
               <FormControl>
-                <Input placeholder="Dela Cruz" {...field} value={field.value ?? ''} />
+                <Input placeholder="Juan" {...field} value={field.value ?? ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -51,12 +51,12 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
         />
         <FormField
           control={control}
-          name="firstName"
+          name="lastName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>First Name</FormLabel>
+              <FormLabel>Last Name</FormLabel>
               <FormControl>
-                <Input placeholder="Juan" {...field} value={field.value ?? ''} />
+                <Input placeholder="Dela Cruz" {...field} value={field.value ?? ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -102,7 +102,7 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
           control={control}
           name="dateOfBirth"
           render={({ field }) => (
-            <FormItem>
+            <FormItem data-field="dateOfBirth">
               <FormLabel>Date of Birth</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
@@ -113,6 +113,7 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
                         "w-full justify-start text-left font-normal",
                         !field.value && "text-muted-foreground"
                       )}
+                      data-testid="dateOfBirth-button"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {field.value

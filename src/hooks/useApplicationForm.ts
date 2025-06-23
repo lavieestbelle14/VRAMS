@@ -222,7 +222,8 @@ export function useApplicationForm() {
     toast,
   });
 
-  const onSubmit = async (data: ApplicationFormValues) => {    if (!user) {
+  const onSubmit = async (data: ApplicationFormValues) => {
+    if (!user) {
       toast({
         title: "Authentication Error",
         description: "You must be logged in to submit an application.",
