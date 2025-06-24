@@ -54,7 +54,7 @@ export function TransferFields({ control }: TransferFieldsProps) {
       }
     }
 
-    // Clear all transfer-related errors and trigger re-validation
+    // Clear all transfer-related errors without triggering validation
     setTimeout(() => {
       clearErrors([
         'previousPrecinctNumber', 
@@ -64,18 +64,8 @@ export function TransferFields({ control }: TransferFieldsProps) {
         'previousForeignPost',
         'previousCountry'
       ]);
-      
-      // Trigger re-validation of transfer fields after clearing
-      trigger([
-        'previousPrecinctNumber', 
-        'previousBarangay', 
-        'previousCityMunicipality', 
-        'previousProvince',
-        'previousForeignPost',
-        'previousCountry'
-      ]);
     }, 0);
-  }, [transferType, isWithinCity, isFromAnotherCity, isFromForeign, setValue, clearErrors, trigger]);
+  }, [transferType, isWithinCity, isFromAnotherCity, isFromForeign, setValue, clearErrors]);
 
   return (
     <div className="space-y-6">
@@ -115,33 +105,7 @@ export function TransferFields({ control }: TransferFieldsProps) {
               )}
             />
 
-            {/* Show required fields based on transfer type */}
-            {transferType && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <h4 className="font-medium text-blue-900 mb-2">Required fields for this transfer type:</h4>
-                <ul className="text-sm text-blue-700 space-y-1">
-                  {isWithinCity && (
-                    <>
-                      <li>• Previous Precinct Number</li>
-                      <li>• Previous Barangay</li>
-                    </>
-                  )}
-                  {isFromAnotherCity && (
-                    <>
-                      <li>• Previous Precinct Number</li>
-                      <li>• Previous Barangay</li>
-                      <li>• Previous City/Municipality</li>
-                    </>
-                  )}
-                  {isFromForeign && (
-                    <>
-                      <li>• Previous Foreign Post</li>
-                      <li>• Previous Country</li>
-                    </>
-                  )}
-                </ul>
-              </div>
-            )}
+
 
             {/* Domestic transfer fields - only show when not foreign transfer */}
             {transferType && !isFromForeign && (
