@@ -127,15 +127,15 @@ export default function PublicHomePage() {
 
       {/* Information Cards - Replaced Pinned Applications */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="shadow-md hover:shadow-lg transition-shadow">
+        <Card className="shadow-md hover:shadow-lg transition-shadow flex flex-col">
           <CardHeader>
             <CardTitle className="flex items-center text-lg">
               <Calendar className="mr-2 h-5 w-5 text-primary" />
               Election Calendar
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
+          <CardContent className="flex-1 flex flex-col">
+            <p className="text-muted-foreground flex-1">
               View important election dates and registration deadlines.
             </p>
             <Button variant="outline" className="w-full mt-4" asChild>
@@ -144,15 +144,15 @@ export default function PublicHomePage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-md hover:shadow-lg transition-shadow">
+        <Card className="shadow-md hover:shadow-lg transition-shadow flex flex-col">
           <CardHeader>
             <CardTitle className="flex items-center text-lg">
               <ShieldCheck className="mr-2 h-5 w-5 text-primary" />
               Voter's Guide
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
+          <CardContent className="flex-1 flex flex-col">
+            <p className="text-muted-foreground flex-1">
               Learn about your rights and responsibilities as a voter.
             </p>
             <Button variant="outline" className="w-full mt-4" asChild>
@@ -161,16 +161,16 @@ export default function PublicHomePage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-md hover:shadow-lg transition-shadow">
+        <Card className="shadow-md hover:shadow-lg transition-shadow flex flex-col">
           <CardHeader>
             <CardTitle className="flex items-center text-lg">
               <BookOpen className="mr-2 h-5 w-5 text-primary" />
               Election Laws
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              Access important election laws and regulations.
+          <CardContent className="flex-1 flex flex-col">
+            <p className="text-muted-foreground flex-1">
+              Access important election laws and regulations for voters.
             </p>
             <Button variant="outline" className="w-full mt-4" asChild>
               <Link href="/public/election-laws">View Laws</Link>
