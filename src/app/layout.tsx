@@ -4,6 +4,11 @@ import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Toaster } from '@/components/ui/toaster';
 
+// Import environment checker for development
+if (process.env.NODE_ENV === 'development') {
+  import('@/lib/env-check');
+}
+
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],

@@ -280,9 +280,14 @@ const handleSession = useCallback(async (session: Session | null): Promise<Authe
       data: {
         username: username,
       },
-      emailRedirectTo: `${window.location.origin}/auth`, // Ensure redirect is set correctly
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/auth`,
     },
   });
+
+  // Debug logging for development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Sign up redirect URL:', `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/auth`);
+  }
 
   if (error) {
     toast({ title: 'Sign Up Failed', description: error.message, variant: 'destructive' });
@@ -305,8 +310,14 @@ const handleSession = useCallback(async (session: Session | null): Promise<Authe
 
   const sendPasswordResetEmail = useCallback(async (email: string): Promise<boolean> => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/public/reset-password`,
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/public/reset-password`,
     });
+    
+    // Debug logging for development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Password reset redirect URL:', `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/public/reset-password`);
+    }
+    
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
       return false;
