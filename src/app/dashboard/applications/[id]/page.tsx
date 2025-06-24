@@ -94,8 +94,25 @@ export default function ApplicationDetailsPage() {
       Promise.all([
         getApplicationByPublicId(id),
         getOfficerAssignments(id)
-      ])
-        .then(([appData, assignments]) => {
+      ])        .then(([appData, assignments]) => {
+          console.log('[DEBUG] Application data received:', appData);
+          console.log('[DEBUG] Application address fields:', {
+            houseNumber: appData?.houseNumber,
+            street: appData?.street,
+            barangay: appData?.barangay,
+            cityMunicipality: appData?.cityMunicipality,
+            province: appData?.province
+          });
+          console.log('[DEBUG] Special sector data received:', {
+            isIlliterate: appData?.isIlliterate,
+            isSeniorCitizen: appData?.isSeniorCitizen,
+            voteOnGroundFloor: appData?.voteOnGroundFloor,
+            tribe: appData?.tribe,
+            typeOfDisability: appData?.typeOfDisability,
+            assistanceNeeded: appData?.assistanceNeeded,
+            assistorName: appData?.assistorName
+          });
+          
           if (appData) {
             setApplication(appData);
             setRemarks(appData.remarks || '');
@@ -268,8 +285,18 @@ export default function ApplicationDetailsPage() {
       </div>
     );
   }
-
   // Map application fields for display
+  console.log('Debug - Application object:', application);
+  console.log('Debug - Address fields:', {
+    houseNumber: application.houseNumber,
+    street: application.street,
+    barangay: application.barangay,
+    cityMunicipality: application.cityMunicipality,
+    province: application.province,
+    yearsOfResidenceAddress: application.yearsOfResidenceAddress,
+    monthsOfResidenceAddress: application.monthsOfResidenceAddress
+  });
+  
   const pi = {
     firstName: application.firstName,
     middleName: application.middleName,
@@ -288,16 +315,35 @@ export default function ApplicationDetailsPage() {
     residencyYearsCityMun: application.yearsOfResidenceMunicipality,
     residencyMonthsCityMun: application.monthsOfResidenceMunicipality,
     residencyYearsPhilippines: application.yearsInCountry,
-  };
-  const ad = {
-    houseNoStreet: `${application.houseNumber || ''} ${application.street || ''}`.trim(),
-    barangay: application.barangay,
-    cityMunicipality: application.cityMunicipality,
-    province: application.province,
+  };  const ad = {
+    houseNoStreet: `${application.houseNumber || ''} ${application.street || ''}`.trim() || 'Not provided',
+    barangay: application.barangay || 'Not provided',
+    cityMunicipality: application.cityMunicipality || 'Not provided',
+    province: application.province || 'Not provided',
     zipCode: '',
-    yearsOfResidency: application.yearsOfResidenceAddress,
-    monthsOfResidency: application.monthsOfResidenceAddress,
+    yearsOfResidency: application.yearsOfResidenceAddress || 0,
+    monthsOfResidency: application.monthsOfResidenceAddress || 0,
   };
+    // Check if this application type requires address information
+  const addressRequiredTypes = ['register', 'transfer', 'transfer_with_reactivation'];
+  const isAddressRequired = addressRequiredTypes.includes(application.applicationType);
+  const hasAddressData = application.barangay && application.cityMunicipality && application.province;
+  
+  // Debug logging for address data
+  console.log('[DEBUG] Address data check:', {
+    applicationType: application.applicationType,
+    isAddressRequired,
+    hasAddressData,
+    addressFields: {
+      houseNumber: application.houseNumber,
+      street: application.street,
+      barangay: application.barangay,
+      cityMunicipality: application.cityMunicipality,
+      province: application.province,
+      yearsOfResidenceAddress: application.yearsOfResidenceAddress,
+      monthsOfResidenceAddress: application.monthsOfResidenceAddress
+    }
+  });
   const cd = {
     civilStatus: application.civilStatus,
     spouseName: application.spouseName,
@@ -559,13 +605,37 @@ export default function ApplicationDetailsPage() {
                 </>
               )}
             </CardContent>
-          </Card>
-          <Card>
-            <CardHeader><CardTitle className="flex items-center"><MapPin className="mr-2"/>Current Address</CardTitle></CardHeader>
+          </Card>          <Card>
+            <CardHeader><CardTitle className="flex items-center"><MapPin className="mr-2"/>Declared Address</CardTitle></CardHeader>
             <CardContent>
-              <DetailItem label="Address" value={`${ad.houseNoStreet}, ${ad.barangay}, ${ad.cityMunicipality}, ${ad.province}`} />
-              <DetailItem label="Years at Current Address" value={ad.yearsOfResidency} />
-              <DetailItem label="Months at Current Address" value={ad.monthsOfResidency} />
+              <div className="space-y-2">
+                {/* Always show address fields, with fallbacks */}
+                <DetailItem label="House No./Street" value={ad.houseNoStreet !== 'Not provided' ? ad.houseNoStreet : 'Not provided'} />
+                <DetailItem label="Barangay" value={ad.barangay !== 'Not provided' ? ad.barangay : 'Not provided'} />
+                <DetailItem label="City/Municipality" value={ad.cityMunicipality !== 'Not provided' ? ad.cityMunicipality : 'Not provided'} />
+                <DetailItem label="Province" value={ad.province !== 'Not provided' ? ad.province : 'Not provided'} />
+                
+                {/* Show full address only if we have meaningful data */}
+                {hasAddressData && (
+                  <DetailItem label="Full Address" value={`${ad.houseNoStreet}, ${ad.barangay}, ${ad.cityMunicipality}, ${ad.province}`} />
+                )}
+                
+                <DetailItem label="Years at Current Address" value={ad.yearsOfResidency?.toString() || '0'} />
+                <DetailItem label="Months at Current Address" value={ad.monthsOfResidency?.toString() || '0'} />
+                
+                {/* Address requirement note */}
+                <div className="text-xs text-muted-foreground mt-4 p-3 bg-slate-50 rounded-lg">
+                  <p className="font-medium">
+                    {isAddressRequired 
+                      ? `✓ Address is required for ${applicationTypeLabels[application.applicationType as keyof typeof applicationTypeLabels]} applications`
+                      : `ⓘ Address is not required for ${applicationTypeLabels[application.applicationType as keyof typeof applicationTypeLabels]} applications`
+                    }
+                  </p>
+                  {!hasAddressData && isAddressRequired && (
+                    <p className="text-red-600 mt-1">⚠ Address information appears to be incomplete or missing</p>
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -575,8 +645,7 @@ export default function ApplicationDetailsPage() {
               <DetailItem label="Months in City/Municipality" value={pi.residencyMonthsCityMun} />
               <DetailItem label="Years in Philippines" value={pi.residencyYearsPhilippines} />
             </CardContent>
-          </Card>
-          <Card>
+          </Card>          <Card>
             <CardHeader><CardTitle className="flex items-center"><Users className="mr-2"/>Civil & Family Details</CardTitle></CardHeader>
             <CardContent>
               <DetailItem label="Civil Status" value={cd.civilStatus} />
@@ -585,12 +654,127 @@ export default function ApplicationDetailsPage() {
               <DetailItem label="Mother's Full Name" value={`${cd.motherFirstName} ${cd.motherLastName}`} />
             </CardContent>
           </Card>
-          <Card className="lg:col-span-1">
+            {/* Special Sector Information */}
+          <Card>
+            <CardHeader><CardTitle className="flex items-center"><Accessibility className="mr-2"/>Special Sector Information</CardTitle></CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {/* Basic special sector flags */}
+                <DetailItem 
+                  label="Illiterate" 
+                  value={application.isIlliterate === true ? 'Yes' : application.isIlliterate === false ? 'No' : 'Not specified'} 
+                />
+                <DetailItem 
+                  label="Senior Citizen" 
+                  value={application.isSeniorCitizen === true ? 'Yes' : application.isSeniorCitizen === false ? 'No' : 'Not specified'} 
+                />
+                <DetailItem 
+                  label="Prefers Ground Floor Voting" 
+                  value={application.voteOnGroundFloor === true ? 'Yes' : application.voteOnGroundFloor === false ? 'No' : 'Not specified'} 
+                />
+                
+                {/* Indigenous Person Information */}
+                <DetailItem 
+                  label="Indigenous Person" 
+                  value={application.tribe ? 'Yes' : 'No'} 
+                />
+                {application.tribe && (
+                  <DetailItem label="Tribe" value={application.tribe} />
+                )}
+                
+                {/* Person with Disability Information */}
+                <DetailItem 
+                  label="Person with Disability (PWD)" 
+                  value={application.typeOfDisability ? 'Yes' : 'No'} 
+                />
+                {application.typeOfDisability && (
+                  <DetailItem label="Type of Disability" value={application.typeOfDisability} />
+                )}
+                
+                {/* Assistance Information */}
+                {application.assistanceNeeded && (
+                  <DetailItem label="Assistance Needed" value={application.assistanceNeeded} />
+                )}
+                {application.assistorName && (
+                  <DetailItem label="Assistor Name" value={application.assistorName} />
+                )}
+                
+                {/* Show message if no special sector information */}
+                {!application.isIlliterate && !application.isSeniorCitizen && !application.voteOnGroundFloor && 
+                 !application.tribe && !application.typeOfDisability && !application.assistanceNeeded && !application.assistorName && (
+                  <div className="text-center py-4">
+                    <p className="text-muted-foreground">No special sector information provided</p>
+                    <div className="text-xs text-muted-foreground mt-2">
+                      Special sector information includes: illiteracy status, senior citizen status, ground floor voting preference, indigenous status, disability status, and assistance requirements
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card><Card className="lg:col-span-1">
             <CardHeader><CardTitle className="flex items-center"><FileText className="mr-2"/>Application Type</CardTitle></CardHeader>
             <CardContent>
               <DetailItem label="Application Type" value={applicationTypeLabels[application.applicationType as keyof typeof applicationTypeLabels] || 'Unknown Type'} />
             </CardContent>
           </Card>
+          
+          {/* Transfer Application Details */}
+          {(application.applicationType === 'transfer' || application.applicationType === 'transfer_with_reactivation') && application.previousPrecinctNumber && (
+            <Card className="lg:col-span-3">
+              <CardHeader><CardTitle className="flex items-center"><MapPin className="mr-2"/>Transfer Details</CardTitle></CardHeader>
+              <CardContent>
+                <DetailItem label="Transfer Type" value={application.transferType || 'N/A'} />
+                <DetailItem label="Previous Precinct Number" value={application.previousPrecinctNumber || 'N/A'} />
+                <DetailItem label="Previous Address" value={
+                  [
+                    application.previousBarangay,
+                    application.previousCityMunicipality,
+                    application.previousProvince
+                  ].filter(Boolean).join(', ') || 'N/A'
+                } />
+                {application.previousCountry && (
+                  <DetailItem label="Previous Country" value={application.previousCountry} />
+                )}
+                {application.previousForeignPost && (
+                  <DetailItem label="Previous Foreign Post" value={application.previousForeignPost} />
+                )}
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Reactivation Application Details */}
+          {(application.applicationType === 'reactivation' || application.applicationType === 'transfer_with_reactivation') && application.reasonForDeactivation && (
+            <Card className="lg:col-span-3">
+              <CardHeader><CardTitle className="flex items-center"><ShieldCheck className="mr-2"/>Reactivation Details</CardTitle></CardHeader>
+              <CardContent>
+                <DetailItem label="Reason for Deactivation" value={application.reasonForDeactivation || 'N/A'} />
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Correction Application Details */}
+          {application.applicationType === 'correction_of_entry' && application.targetField && (
+            <Card className="lg:col-span-3">
+              <CardHeader><CardTitle className="flex items-center"><Edit className="mr-2"/>Correction Details</CardTitle></CardHeader>
+              <CardContent>
+                <DetailItem label="Field to Correct" value={application.targetField || 'N/A'} />
+                <DetailItem label="Current Value" value={application.currentValue || 'N/A'} />
+                <DetailItem label="Requested Value" value={application.requestedValue || 'N/A'} />
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Reinstatement Application Details */}
+          {application.applicationType === 'reinstatement' && application.reinstatementType && (
+            <Card className="lg:col-span-3">
+              <CardHeader><CardTitle className="flex items-center"><ShieldCheck className="mr-2"/>Reinstatement Details</CardTitle></CardHeader>
+              <CardContent>
+                <DetailItem label="Reinstatement Type" value={application.reinstatementType || 'N/A'} />
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Registration Application Details - ID & Selfie Preview */}
           {application.applicationType === 'register' && (
             <Card className="lg:col-span-3">
               <CardHeader><CardTitle className="flex items-center"><FileText className="mr-2"/>ID & Selfie Preview</CardTitle></CardHeader>
@@ -786,8 +970,7 @@ export default function ApplicationDetailsPage() {
                       </Badge>
                     </div>
                   ))}
-                </div>
-                <div className="mt-4 text-xs text-muted-foreground">
+                </div>                <div className="mt-4 text-xs text-muted-foreground">
                   Officers listed have performed actions on this application (verification, approval, or disapproval).
                 </div>
               </CardContent>
@@ -795,6 +978,16 @@ export default function ApplicationDetailsPage() {
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+// Helper component for displaying detail items
+function DetailItem({ label, value }: { label: string; value: string | number | null | undefined }) {
+  return (
+    <div className="flex justify-between py-2 border-b border-gray-100 last:border-b-0">
+      <span className="text-sm font-medium text-gray-600">{label}:</span>
+      <span className="text-sm text-gray-900 text-right max-w-xs truncate">{value || 'N/A'}</span>
     </div>
   );
 }

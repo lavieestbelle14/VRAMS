@@ -146,13 +146,32 @@ export default function DashboardPage() {
             months_of_residence_municipality,
             years_of_residence_municipality,
             years_in_country
-          ),
-          application_registration (
+          ),          application_registration (
             registration_type,
             adult_registration_consent,
             government_id_front_url,
             government_id_back_url,
             id_selfie_url
+          ),
+          application_transfer (
+            previous_precinct_number,
+            previous_barangay,
+            previous_city_municipality,
+            previous_province,
+            previous_foreign_post,
+            previous_country,
+            transfer_type
+          ),
+          application_reactivation (
+            reason_for_deactivation
+          ),
+          application_correction (
+            target_field,
+            requested_value,
+            current_value
+          ),
+          application_reinstatement (
+            reinstatement_type
           )
         `)
         .order('application_date', { ascending: false });
@@ -160,12 +179,15 @@ export default function DashboardPage() {
       if (error) {
         console.error('Error fetching applications:', error);
         setApplications([]);
-      } else {
-        // Map DB data to Application type
+      } else {        // Map DB data to Application type
         const mapped: Application[] = (data || []).map((app: any) => {
           const applicant = Array.isArray(app.applicant) ? app.applicant[0] : app.applicant;
           const address = Array.isArray(app.application_declared_address) ? app.application_declared_address[0] : app.application_declared_address;
           const registration = Array.isArray(app.application_registration) ? app.application_registration[0] : app.application_registration;
+          const transfer = Array.isArray(app.application_transfer) ? app.application_transfer[0] : app.application_transfer;
+          const reactivation = Array.isArray(app.application_reactivation) ? app.application_reactivation[0] : app.application_reactivation;
+          const correction = Array.isArray(app.application_correction) ? app.application_correction[0] : app.application_correction;
+          const reinstatement = Array.isArray(app.application_reinstatement) ? app.application_reinstatement[0] : app.application_reinstatement;
 
           return {
             id: app.public_facing_id || `APP-${String(app.application_number).padStart(6, '0')}`,
@@ -223,8 +245,41 @@ export default function DashboardPage() {
               fatherFirstName: applicant?.father_name?.split(' ')[0] || '',
               fatherLastName: applicant?.father_name?.split(' ').slice(1).join(' ') || '',
               motherFirstName: applicant?.mother_maiden_name?.split(' ')[0] || '',
-              motherLastName: applicant?.mother_maiden_name?.split(' ').slice(1).join(' ') || ''
-            },
+              motherLastName: applicant?.mother_maiden_name?.split(' ').slice(1).join(' ') || ''            },
+            
+            // Application type-specific data
+            registration: registration ? {
+              registrationType: registration.registration_type || 'Regular',
+              adultRegistrationConsent: registration.adult_registration_consent,
+              governmentIdFrontUrl: registration.government_id_front_url || '',
+              governmentIdBackUrl: registration.government_id_back_url || '',
+              idSelfieUrl: registration.id_selfie_url || ''
+            } : undefined,
+            
+            transfer: transfer ? {
+              previousPrecinctNumber: transfer.previous_precinct_number,
+              previousBarangay: transfer.previous_barangay,
+              previousCityMunicipality: transfer.previous_city_municipality,
+              previousProvince: transfer.previous_province,
+              previousForeignPost: transfer.previous_foreign_post,
+              previousCountry: transfer.previous_country,
+              transferType: transfer.transfer_type
+            } : undefined,
+            
+            reactivation: reactivation ? {
+              reasonForDeactivation: reactivation.reason_for_deactivation
+            } : undefined,
+            
+            correction: correction ? {
+              targetField: correction.target_field,
+              requestedValue: correction.requested_value,
+              currentValue: correction.current_value
+            } : undefined,
+            
+            reinstatement: reinstatement ? {
+              reinstatementType: reinstatement.reinstatement_type
+            } : undefined,
+            
             documents: [
               ...(registration?.government_id_front_url ? [{
                 name: 'Government ID (Front)',

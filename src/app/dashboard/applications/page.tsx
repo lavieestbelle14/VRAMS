@@ -62,83 +62,123 @@ export default function AllApplicationsPage() {
             months_of_residence_municipality,
             years_of_residence_municipality,
             years_in_country
-          ),
-          application_registration (
+          ),          application_registration (
             registration_type,
             adult_registration_consent,
             government_id_front_url,
             government_id_back_url,
             id_selfie_url
+          ),
+          application_transfer (
+            previous_precinct_number,
+            previous_barangay,
+            previous_city_municipality,
+            previous_province,
+            previous_foreign_post,
+            previous_country,
+            transfer_type
+          ),
+          application_reactivation (
+            reason_for_deactivation
+          ),
+          application_correction (
+            target_field,
+            requested_value,
+            current_value
+          ),
+          application_reinstatement (
+            reinstatement_type
           )
         `)
         .order('application_date', { ascending: false });
 
       if (error) throw error;
-      
-      // Map DB data to Application type (same as dashboard)
+        // Map DB data to Application type (same as dashboard)
       const mapped: Application[] = (data || []).map((app: any) => {
         const applicant = Array.isArray(app.applicant) ? app.applicant[0] : app.applicant;
         const address = Array.isArray(app.application_declared_address) ? app.application_declared_address[0] : app.application_declared_address;
         const registration = Array.isArray(app.application_registration) ? app.application_registration[0] : app.application_registration;
+        const transfer = Array.isArray(app.application_transfer) ? app.application_transfer[0] : app.application_transfer;
+        const reactivation = Array.isArray(app.application_reactivation) ? app.application_reactivation[0] : app.application_reactivation;
+        const correction = Array.isArray(app.application_correction) ? app.application_correction[0] : app.application_correction;
+        const reinstatement = Array.isArray(app.application_reinstatement) ? app.application_reinstatement[0] : app.application_reinstatement;
 
         return {
           id: app.public_facing_id || `APP-${String(app.application_number).padStart(6, '0')}`,
           applicationType: app.application_type,
           status: app.status,
           submissionDate: app.application_date,
-          remarks: app.remarks || '',
-          personalInfo: {
+          applicationDate: app.application_date, // Add this required field
+          remarks: app.remarks || '',          personalInfo: {
             firstName: applicant?.first_name || '',
             lastName: applicant?.last_name || '',
             middleName: applicant?.middle_name || '',
             suffix: applicant?.suffix || '',
-            sex: applicant?.sex || '',
-            dob: applicant?.date_of_birth || '',
-            birthDate: applicant?.date_of_birth || '',
-            civilStatus: applicant?.civil_status || '',
-            mobileNumber: applicant?.contact_number || '',
-            phoneNumber: applicant?.contact_number || '',
+            sex: applicant?.sex || 'M',
+            dateOfBirth: applicant?.date_of_birth || '',
+            civilStatus: applicant?.civil_status || 'Single',
             contactNumber: applicant?.contact_number || '',
-            email: applicant?.email_address || '',
-            fatherFirstName: applicant?.father_name?.split(' ')[0] || '',
-            fatherLastName: applicant?.father_name?.split(' ').slice(1).join(' ') || '',
-            motherFirstName: applicant?.mother_maiden_name?.split(' ')[0] || '',
-            motherLastName: applicant?.mother_maiden_name?.split(' ').slice(1).join(' ') || '',
-            spouseName: applicant?.spouse_name || '',
-            isPwd: false,
-            isSenior: false,
-            isIndigenousPerson: false,
-            indigenousTribe: '',
-            isIlliterate: false,
-            placeOfBirthProvince: '',
-            citizenshipType: applicant?.citizenship_type || '',
+            emailAddress: applicant?.email_address || '',
+            citizenshipType: applicant?.citizenship_type || 'By Birth',
+            dateOfNaturalization: applicant?.date_of_naturalization,
+            certificateNumber: applicant?.certificate_number,
             professionOccupation: applicant?.profession_occupation || '',
-            residencyYearsCityMun: address?.years_of_residence_municipality || 0,
-            residencyMonthsCityMun: address?.months_of_residence_municipality || 0,
-            residencyYearsPhilippines: address?.years_in_country || 0
+            spouseName: applicant?.spouse_name || '',
+            placeOfBirthMunicipality: applicant?.place_of_birth_municipality || '',
+            placeOfBirthProvince: applicant?.place_of_birth_province || '',
+            fatherName: applicant?.father_name || '',            motherMaidenName: applicant?.mother_maiden_name || ''
           },
-          addressInfo: {
-            houseNoStreet: address?.house_number_street || '',
-            barangay: address?.barangay || '',
-            cityMunicipality: address?.city_municipality || '',
-            province: address?.province || ''
-          },
-          addressDetails: {
-            houseNoStreet: address?.house_number_street || '',
-            barangay: address?.barangay || '',
-            cityMunicipality: address?.city_municipality || '',
-            province: address?.province || '',
-            zipCode: '',
-            yearsOfResidency: address?.years_of_residence_address || 0,
-            monthsOfResidency: address?.months_of_residence_address || 0
-          },
-          civilDetails: {
-            civilStatus: applicant?.civil_status || '',
-            fatherFirstName: applicant?.father_name?.split(' ')[0] || '',
-            fatherLastName: applicant?.father_name?.split(' ').slice(1).join(' ') || '',
-            motherFirstName: applicant?.mother_maiden_name?.split(' ')[0] || '',
-            motherLastName: applicant?.mother_maiden_name?.split(' ').slice(1).join(' ') || ''
-          },
+          
+          addressDetails: address ? {
+            houseNumberStreet: address.house_number_street || '',
+            barangay: address.barangay || '',
+            cityMunicipality: address.city_municipality || '',
+            province: address.province || '',
+            monthsOfResidenceAddress: address.months_of_residence_address || 0,
+            yearsOfResidenceAddress: address.years_of_residence_address || 0,
+            monthsOfResidenceMunicipality: address.months_of_residence_municipality || 0,
+            yearsOfResidenceMunicipality: address.years_of_residence_municipality || 0,
+            yearsInCountry: address.years_in_country || 0
+          } : undefined,
+          
+          // Registration details
+          registration: registration ? {
+            registrationType: registration.registration_type || 'Regular',
+            adultRegistrationConsent: registration.adult_registration_consent,
+            governmentIdFrontUrl: registration.government_id_front_url || '',
+            governmentIdBackUrl: registration.government_id_back_url || '',
+            idSelfieUrl: registration.id_selfie_url || ''
+          } : undefined,
+          
+          // Transfer details
+          transfer: transfer ? {
+            previousPrecinctNumber: transfer.previous_precinct_number,
+            previousBarangay: transfer.previous_barangay,
+            previousCityMunicipality: transfer.previous_city_municipality,
+            previousProvince: transfer.previous_province,
+            previousForeignPost: transfer.previous_foreign_post,
+            previousCountry: transfer.previous_country,
+            transferType: transfer.transfer_type
+          } : undefined,
+          
+          // Reactivation details
+          reactivation: reactivation ? {
+            reasonForDeactivation: reactivation.reason_for_deactivation
+          } : undefined,
+          
+          // Correction details
+          correction: correction ? {
+            targetField: correction.target_field,
+            requestedValue: correction.requested_value,
+            currentValue: correction.current_value
+          } : undefined,
+          
+          // Reinstatement details
+          reinstatement: reinstatement ? {
+            reinstatementType: reinstatement.reinstatement_type
+          } : undefined,
+
+          // Documents array
           documents: [
             ...(registration?.government_id_front_url ? [{
               name: 'Government ID (Front)',

@@ -34,6 +34,7 @@ export interface AddressDetails {
 }
 
 export interface SpecialSector {
+  // Current schema properties
   isIlliterate: boolean; // is_illiterate
   isSeniorCitizen: boolean; // is_senior_citizen
   tribe?: string; // tribe (for indigenous persons)
@@ -41,6 +42,17 @@ export interface SpecialSector {
   assistanceNeeded?: string; // assistance_needed
   assistorName?: string; // assistor_name
   voteOnGroundFloor?: boolean; // vote_on_ground_floor
+  
+  // Extended schema properties (when schema includes more fields)
+  isIndigenousPeople?: boolean; // is_indigenous_people
+  isPersonWithDisability?: boolean; // is_person_with_disability
+  requiresAssistance?: boolean; // requires_assistance
+  requiresBiometricsCapture?: boolean; // requires_biometrics_capture
+  requiresSpecialTemplate?: boolean; // requires_special_template
+  assistanceType?: string; // assistance_type
+  disabilityType?: string; // disability_type
+  indigenousCommunity?: string; // indigenous_community
+  otherDetails?: string; // other_details
 }
 
 export interface ApplicationRegistration {

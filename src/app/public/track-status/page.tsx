@@ -49,8 +49,7 @@ export default function TrackStatusPage() {
 
         // Fetch applications with all related data
         console.log('Fetching applications for applicant_id:', applicantData[0].applicant_id);
-        
-        const { data: userApplications, error } = await supabase
+          const { data: userApplications, error } = await supabase
           .from('application')          .select(`
             application_number,
             public_facing_id,
@@ -60,8 +59,7 @@ export default function TrackStatusPage() {
             status,
             reason_for_disapproval,
             erb_hearing_date,
-            remarks,
-            applicant (
+            remarks,            applicant:applicant_id (
               applicant_id,
               first_name,
               last_name,
@@ -78,9 +76,17 @@ export default function TrackStatusPage() {
               sex,
               date_of_birth,
               place_of_birth_municipality,
-              place_of_birth_province,
-              father_name,
-              mother_maiden_name
+              place_of_birth_province,              father_name,
+              mother_maiden_name,
+              special_sector:applicant_special_sector (
+                is_illiterate,
+                is_senior_citizen,
+                tribe,
+                type_of_disability,
+                assistance_needed,
+                assistor_name,
+                vote_on_ground_floor
+              )
             ),
             application_declared_address (
               house_number_street,
@@ -92,13 +98,29 @@ export default function TrackStatusPage() {
               months_of_residence_municipality,
               years_of_residence_municipality,
               years_in_country
-            ),
-            application_registration (
+            ),            application_registration (
               registration_type,
               adult_registration_consent,
               government_id_front_url,
               government_id_back_url,
               id_selfie_url
+            ),
+            application_transfer (
+              previous_precinct_number,
+              previous_barangay,
+              previous_city_municipality,
+              previous_province,
+              previous_foreign_post,
+              previous_country,
+              transfer_type
+            ),
+            application_reactivation (
+              reason_for_deactivation
+            ),
+            application_correction (
+              target_field,
+              requested_value,
+              current_value
             ),
             application_reinstatement (
               reinstatement_type
@@ -108,18 +130,22 @@ export default function TrackStatusPage() {
           .order('application_date', { ascending: false });
 
         console.log('Raw applications data:', userApplications);
-        console.log('Query error:', error);
-
-        if (error) {
+        console.log('Query error:', error);        if (error) {
           console.error('Error fetching user applications:', error);
           setApplications([]);
         } else {
           // Transform the data
           const transformedApps: Application[] = (userApplications || []).map(app => {
-            const applicant = Array.isArray(app.applicant) ? app.applicant[0] : app.applicant;
+            const applicant = Array.isArray(app.applicant) ? app.applicant[0] : app.applicant;            const specialSector = applicant?.special_sector ? 
+              (Array.isArray(applicant.special_sector) ? applicant.special_sector[0] : applicant.special_sector) : null;
             const address = Array.isArray(app.application_declared_address) ? app.application_declared_address[0] : app.application_declared_address;
             const registration = Array.isArray(app.application_registration) ? app.application_registration[0] : app.application_registration;
+            const transfer = Array.isArray(app.application_transfer) ? app.application_transfer[0] : app.application_transfer;
+            const reactivation = Array.isArray(app.application_reactivation) ? app.application_reactivation[0] : app.application_reactivation;
+            const correction = Array.isArray(app.application_correction) ? app.application_correction[0] : app.application_correction;
             const reinstatement = Array.isArray(app.application_reinstatement) ? app.application_reinstatement[0] : app.application_reinstatement;
+            
+            console.log('Special sector data for application:', app.application_number, specialSector);
             
             return {
               // Main application data
@@ -154,9 +180,7 @@ export default function TrackStatusPage() {
                 placeOfBirthProvince: applicant?.place_of_birth_province || '',
                 fatherName: applicant?.father_name || '',
                 motherMaidenName: applicant?.mother_maiden_name || ''
-              },
-
-              // Address details from application_declared_address table
+              },              // Address details from application_declared_address table
               addressDetails: address ? {
                 houseNumberStreet: address.house_number_street || '',
                 barangay: address.barangay || '',
@@ -167,15 +191,53 @@ export default function TrackStatusPage() {
                 monthsOfResidenceMunicipality: address.months_of_residence_municipality || 0,
                 yearsOfResidenceMunicipality: address.years_of_residence_municipality || 0,
                 yearsInCountry: address.years_in_country || 0
-              } : undefined,
-
-              // Registration details
+              } : undefined,              // Special sector details from applicant_special_sector table
+              specialSector: specialSector ? {
+                isIlliterate: specialSector.is_illiterate || false,
+                isSeniorCitizen: specialSector.is_senior_citizen || false,
+                tribe: specialSector.tribe || '',
+                typeOfDisability: specialSector.type_of_disability || '',
+                assistanceNeeded: specialSector.assistance_needed || '',
+                assistorName: specialSector.assistor_name || '',
+                voteOnGroundFloor: specialSector.vote_on_ground_floor || false
+              } : {
+                isIlliterate: false,
+                isSeniorCitizen: false,
+                tribe: '',
+                typeOfDisability: '',
+                assistanceNeeded: '',
+                assistorName: '',
+                voteOnGroundFloor: false
+              },// Registration details
               registration: registration ? {
                 registrationType: registration.registration_type || 'Regular',
                 adultRegistrationConsent: registration.adult_registration_consent,
                 governmentIdFrontUrl: registration.government_id_front_url || '',
                 governmentIdBackUrl: registration.government_id_back_url || '',
                 idSelfieUrl: registration.id_selfie_url || ''
+              } : undefined,
+
+              // Transfer details
+              transfer: transfer ? {
+                previousPrecinctNumber: transfer.previous_precinct_number,
+                previousBarangay: transfer.previous_barangay,
+                previousCityMunicipality: transfer.previous_city_municipality,
+                previousProvince: transfer.previous_province,
+                previousForeignPost: transfer.previous_foreign_post,
+                previousCountry: transfer.previous_country,
+                transferType: transfer.transfer_type
+              } : undefined,
+              
+              // Reactivation details
+              reactivation: reactivation ? {
+                reasonForDeactivation: reactivation.reason_for_deactivation
+              } : undefined,
+              
+              // Correction details
+              correction: correction ? {
+                targetField: correction.target_field,
+                requestedValue: correction.requested_value,
+                currentValue: correction.current_value
               } : undefined,
 
               // Reinstatement details

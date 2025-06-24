@@ -332,9 +332,7 @@ export function ApplicationDetailsModal({ application, isOpen, onClose }: Applic
                         </div>
                       )}
                     </div>
-                  </div>
-
-                  {/* Other Information */}
+                  </div>                  {/* Other Information */}
                   <div>
                     <h3 className="font-semibold mb-3">Other Information</h3>
                     <div className="grid grid-cols-2 gap-4 text-sm">
@@ -350,7 +348,62 @@ export function ApplicationDetailsModal({ application, isOpen, onClose }: Applic
                         </p>
                       </div>
                     </div>
-                  </div>
+                  </div>                  {/* Special Sector Information */}
+                  {application.specialSector && (
+                    <div>
+                      <h3 className="font-semibold mb-3">Special Sector Information</h3>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-500">Senior Citizen:</span>
+                          <p className="font-medium">{application.specialSector.isSeniorCitizen ? "Yes" : "No"}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Illiterate:</span>
+                          <p className="font-medium">{application.specialSector.isIlliterate ? "Yes" : "No"}</p>
+                        </div>
+                        
+                        {/* Show tribe information if present */}
+                        {application.specialSector.tribe && (
+                          <div>
+                            <span className="text-gray-500">Indigenous Community/Tribe:</span>
+                            <p className="font-medium">{application.specialSector.tribe}</p>
+                          </div>
+                        )}
+                        
+                        {/* Show disability information if present */}
+                        {application.specialSector.typeOfDisability && (
+                          <div>
+                            <span className="text-gray-500">Type of Disability:</span>
+                            <p className="font-medium">{application.specialSector.typeOfDisability}</p>
+                          </div>
+                        )}
+                        
+                        {/* Show assistance information if present */}
+                        {application.specialSector.assistanceNeeded && (
+                          <div>
+                            <span className="text-gray-500">Assistance Needed:</span>
+                            <p className="font-medium">{application.specialSector.assistanceNeeded}</p>
+                          </div>
+                        )}
+                        
+                        {/* Show assistor information if present */}
+                        {application.specialSector.assistorName && (
+                          <div>
+                            <span className="text-gray-500">Assistor Name:</span>
+                            <p className="font-medium">{application.specialSector.assistorName}</p>
+                          </div>
+                        )}
+                        
+                        {/* Show voting preference if specified */}
+                        {application.specialSector.voteOnGroundFloor !== undefined && (
+                          <div>
+                            <span className="text-gray-500">Prefer Ground Floor Voting:</span>
+                            <p className="font-medium">{application.specialSector.voteOnGroundFloor ? "Yes" : "No"}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
 
