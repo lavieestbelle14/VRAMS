@@ -162,8 +162,8 @@ CREATE TABLE IF NOT EXISTS application (
 
     application_type TEXT NOT NULL CHECK (application_type IN ('register', 'transfer', 'reactivation', 'transfer_with_reactivation', 'correction_of_entry', 'reinstatement')),
 
-    application_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    processing_date DATE,
+    application_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    processing_date TIMESTAMPTZ,
 
     status TEXT NOT NULL CHECK (status IN ('pending', 'verified', 'approved', 'disapproved')),
 

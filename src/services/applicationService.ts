@@ -282,7 +282,7 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
     applicant_id: applicant_id,
     application_type: data.applicationType,
     status: 'pending',
-    application_date: new Date().toISOString().split('T')[0] // Explicitly set the date
+    application_date: new Date().toISOString() // Full timestamp
   });
   
   const { data: appData, error: appError } = await supabase
@@ -291,7 +291,7 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
       applicant_id: applicant_id,
       application_type: data.applicationType,
       status: 'pending',
-      application_date: new Date().toISOString().split('T')[0] // Format: YYYY-MM-DD
+      application_date: new Date().toISOString() // Full timestamp with timezone
     })
     .select('application_number, public_facing_id')
     .single();
