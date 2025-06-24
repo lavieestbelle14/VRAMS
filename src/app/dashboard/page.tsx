@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ApplicationDataTable } from '@/components/dashboard/ApplicationDataTable';
 import { 
   Files, BarChart3, PieChartIcon, RefreshCw, Download, 
-  Filter, Search, Bell, FileText, ShieldCheck, Calendar, 
+  Filter, Search, FileText, ShieldCheck, Calendar, 
   CheckCircle, XCircle, Clock, AlertCircle, HelpCircle
 } from 'lucide-react';
 
@@ -376,39 +376,6 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <Bell className="h-[1.2rem] w-[1.2rem]" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <div className="max-h-80 overflow-auto">
-                <div className="flex items-start gap-4 p-3 hover:bg-muted/50 rounded-md">
-                  <div className="mt-1 bg-blue-100 p-2 rounded-full">
-                    <FileText className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">New application submitted</p>
-                    <p className="text-xs text-muted-foreground">Juan Dela Cruz has submitted a new application</p>
-                    <p className="text-xs text-muted-foreground mt-1">Just now</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4 p-3 hover:bg-muted/50 rounded-md">
-                  <div className="mt-1 bg-green-100 p-2 rounded-full">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Application approved</p>
-                    <p className="text-xs text-muted-foreground">You approved Maria Santos's application</p>
-                    <p className="text-xs text-muted-foreground mt-1">2 hours ago</p>
-                  </div>
-                </div>
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
           <Button variant="outline" onClick={refreshData}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
