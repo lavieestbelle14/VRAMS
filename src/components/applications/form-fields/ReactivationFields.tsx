@@ -16,14 +16,14 @@ export function ReactivationFields({ control }: ReactivationFieldsProps) {
     <div className="space-y-4">
       <FormField
         control={control}
-        name={"reasonForDeactivation" as any}
+        name="reasonForDeactivation"
         render={({ field }) => (
           <FormItem className="space-y-3">
             <FormControl>
               <RadioGroup onValueChange={field.onChange} value={field.value ?? ''} className="space-y-3">
                 <FormItem className="flex items-start space-x-3 space-y-0">
                   <FormControl>
-                    <RadioGroupItem value="sentenced" />
+                    <RadioGroupItem value="Sentenced by final judgment to suffer imprisonment for not less than one (1) year" />
                   </FormControl>
                   <FormLabel className="font-normal text-sm leading-relaxed">
                     1. Sentenced by final judgment to suffer imprisonment for not less than one (1) year;
@@ -32,7 +32,7 @@ export function ReactivationFields({ control }: ReactivationFieldsProps) {
 
                 <FormItem className="flex items-start space-x-3 space-y-0">
                   <FormControl>
-                    <RadioGroupItem value="convicted" />
+                    <RadioGroupItem value="Convicted by final judgment of a crime involving disloyalty to the duly constituted government, etc;" />
                   </FormControl>
                   <FormLabel className="font-normal text-sm leading-relaxed">
                     2. Convicted by final judgment of a crime involving disloyalty to the duly constituted government, etc.;
@@ -41,7 +41,7 @@ export function ReactivationFields({ control }: ReactivationFieldsProps) {
 
                 <FormItem className="flex items-start space-x-3 space-y-0">
                   <FormControl>
-                    <RadioGroupItem value="declared-insane" />
+                    <RadioGroupItem value="Declared by competent authority to be insane or incompetent;" />
                   </FormControl>
                   <FormLabel className="font-normal text-sm leading-relaxed">
                     3. Declared by competent authority to be insane or incompetent;
@@ -50,7 +50,7 @@ export function ReactivationFields({ control }: ReactivationFieldsProps) {
 
                 <FormItem className="flex items-start space-x-3 space-y-0">
                   <FormControl>
-                    <RadioGroupItem value="failed-to-vote" />
+                    <RadioGroupItem value="Failed to vote in two (2) successive preceding regular elections;" />
                   </FormControl>
                   <FormLabel className="font-normal text-sm leading-relaxed">
                     4. Failed to vote in two (2) successive preceding regular elections;
@@ -59,7 +59,7 @@ export function ReactivationFields({ control }: ReactivationFieldsProps) {
 
                 <FormItem className="flex items-start space-x-3 space-y-0">
                   <FormControl>
-                    <RadioGroupItem value="loss-citizenship" />
+                    <RadioGroupItem value="Loss of Filipino citizenship;" />
                   </FormControl>
                   <FormLabel className="font-normal text-sm leading-relaxed">
                     5. Loss of Filipino citizenship; or
@@ -68,7 +68,7 @@ export function ReactivationFields({ control }: ReactivationFieldsProps) {
 
                 <FormItem className="flex items-start space-x-3 space-y-0">
                   <FormControl>
-                    <RadioGroupItem value="exclusion" />
+                    <RadioGroupItem value="Exclusion by a court order; or" />
                   </FormControl>
                   <FormLabel className="font-normal text-sm leading-relaxed">
                     6. Exclusion by a court order;
@@ -77,7 +77,7 @@ export function ReactivationFields({ control }: ReactivationFieldsProps) {
 
                 <FormItem className="flex items-start space-x-3 space-y-0">
                   <FormControl>
-                    <RadioGroupItem value="failure-validate" />
+                    <RadioGroupItem value="Failure to Validate" />
                   </FormControl>
                   <FormLabel className="font-normal text-sm leading-relaxed">
                     7. Failure to Validate.
