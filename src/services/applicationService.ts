@@ -194,10 +194,84 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
 
     if (existingApplicant) {
       console.log('Found existing applicant:', existingApplicant);
-      throw new Error(`You already have an existing application. Please use transfer, correction, or other application types.`);
-    }
+      
+      // Check if they have any existing registration applications
+      const { data: existingApplications, error: appCheckError } = await supabase
+        .from('application')
+        .select('status, application_type')
+        .eq('applicant_id', existingApplicant.applicant_id)
+        .eq('application_type', 'register');
 
-    const { data: applicantData, error: applicantError } = await supabase
+      if (appCheckError) {
+        console.error('Error checking existing applications:', appCheckError);
+        throw new Error('Failed to verify existing applications. Please try again.');
+      }
+
+      // If they have pending or verified registration, block submission
+      const pendingOrVerified = existingApplications?.find(app => 
+        app.status === 'pending' || app.status === 'verified'
+      );
+      
+      if (pendingOrVerified) {
+        throw new Error(`You already have a ${pendingOrVerified.status} registration application. Please wait for it to be processed.`);
+      }
+
+      // If they only have disapproved applications, allow re-registration using updated applicant info
+      const hasOnlyDisapproved = existingApplications?.length > 0 && 
+        existingApplications.every(app => app.status === 'disapproved');
+      
+      if (hasOnlyDisapproved) {
+        console.log('Allowing re-registration for user with disapproved application - updating applicant info');
+        // Use UPSERT to update existing applicant with new information
+        const { data: applicantData, error: applicantError } = await supabase
+          .from('applicant')
+          .upsert({
+            applicant_id: existingApplicant.applicant_id, // Include the ID for upsert
+            auth_id: user.id,
+            first_name: data.firstName,
+            last_name: data.lastName,
+            middle_name: data.middleName,
+            suffix: data.suffix,
+            citizenship_type: data.citizenshipType,
+            date_of_naturalization: data.dateOfNaturalization,
+            certificate_number: data.certificateNumber,
+            profession_occupation: data.professionOccupation,
+            contact_number: data.contactNumber,
+            email_address: data.emailAddress,
+            civil_status: data.civilStatus,
+            spouse_name: data.civilStatus === 'Married' ? (data.spouseName || '') : null,
+            sex: data.sex,
+            date_of_birth: data.dateOfBirth,
+            place_of_birth_municipality: data.placeOfBirthMunicipality,
+            place_of_birth_province: data.placeOfBirthProvince,
+            father_name: `${data.fatherFirstName} ${data.fatherLastName}`.trim(),
+            mother_maiden_name: `${data.motherFirstName} ${data.motherMaidenLastName}`.trim(),
+          }, {
+            onConflict: 'auth_id' // Handle conflict on auth_id
+          })
+          .select('applicant_id')
+          .single();
+
+        if (applicantError) {
+          console.error('Error upserting applicant for re-registration:', {
+            error: applicantError,
+            errorMessage: applicantError.message,
+            errorCode: applicantError.code,
+            applicationType: data.applicationType,
+            userId: user.id
+          });
+          throw new Error(`Failed to update applicant record: ${applicantError.message || 'Unknown error'}`);
+        }
+        applicant_id = applicantData.applicant_id;
+      } else if (existingApplications?.some(app => app.status === 'approved')) {
+        throw new Error(`You already have an approved registration. Please use transfer, correction, or other application types.`);
+      } else {
+        // This case shouldn't happen, but fallback to using existing applicant
+        applicant_id = existingApplicant.applicant_id;
+      }
+    } else {
+      // No existing applicant, create new one with INSERT
+      const { data: applicantData, error: applicantError } = await supabase
       .from('applicant')
       .insert({
         auth_id: user.id,
@@ -224,7 +298,7 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
       .single();
 
     if (applicantError) {
-      console.error('Error inserting applicant:', {
+      console.error('Error inserting new applicant:', {
         error: applicantError,
         errorMessage: applicantError.message,
         errorCode: applicantError.code,
@@ -235,7 +309,9 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
       });
       throw new Error(`Failed to create applicant record: ${applicantError.message || 'Unknown error'}`);
     }
-    applicant_id = applicantData.applicant_id;  } else {
+    applicant_id = applicantData.applicant_id;
+    }
+  } else {
     // Fetch existing applicant for this user
     const { data: applicantData, error: fetchError } = await supabase
       .from('applicant')
@@ -249,13 +325,13 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
     applicant_id = applicantData.applicant_id;
   }
 
-  // Step 3: Insert special sector info if provided (only for registration)
+  // Step 3: Insert/Update special sector info if provided (only for registration)
   if (data.applicationType === 'register' && 
       (data.isIlliterate || data.isSeniorCitizen || data.isIndigenousPerson || 
        data.isPwd || data.voteOnGroundFloor || data.assistanceNeeded || data.assistorName)) {
     const { error: specialSectorError } = await supabase
       .from('applicant_special_sector')
-      .insert({
+      .upsert({
         applicant_id: applicant_id,
         is_illiterate: data.isIlliterate,
         is_senior_citizen: data.isSeniorCitizen,
@@ -264,6 +340,8 @@ export const submitApplication = async (data: ApplicationFormValues, user: Authe
         assistance_needed: data.assistanceNeeded,
         assistor_name: data.assistorName,
         vote_on_ground_floor: data.voteOnGroundFloor,
+      }, {
+        onConflict: 'applicant_id' // Handle conflict on primary key
       });
     if (specialSectorError) {
       console.error('Error inserting special sector info:', {
