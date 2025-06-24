@@ -6,6 +6,8 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/comp
 import { z } from 'zod';
 import { applicationFormSchema } from '@/schemas/applicationSchema';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePendingApplications } from '@/hooks/usePendingApplications';
+import { AlertCircle } from 'lucide-react';
 
 type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
 
@@ -20,21 +22,63 @@ export const ApplicationTypeFields: React.FC<ApplicationTypeFieldsProps> = ({
   form, 
   isRegistered 
 }) => {
-  const { user } = useAuth();    // Check if user has pending registration
-  const hasPendingRegistration = user?.registrationStatus && 
-    ['pending', 'verified'].includes(user.registrationStatus);
+  const { user } = useAuth();
+  const { pendingApplications, hasPendingApplications, isLoading } = usePendingApplications();
 
-  // Users with pending registration should not see the form at all
-  if (hasPendingRegistration) {
+  // Show loading state while checking for pending applications
+  if (isLoading) {
+    return (
+      <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg">
+        <div className="flex items-center space-x-2">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+          <p className="text-gray-600">Checking application status...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Users with any pending applications should not be able to submit new ones
+  if (hasPendingApplications) {
+    const pendingList = pendingApplications.map(app => ({
+      id: app.public_facing_id,
+      type: app.application_type,
+      date: new Date(app.application_date).toLocaleDateString(),
+      status: app.status
+    }));
+
     return (
       <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
-        <h3 className="text-lg font-semibold text-yellow-800 mb-2">Registration Application Pending</h3>
-        <p className="text-yellow-700">
-          You have a pending registration application. Please wait for approval before submitting new applications.
-        </p>
-        <p className="text-sm text-yellow-600 mt-2">
-          You can track your application status in the "Track Application Status" section.
-        </p>
+        <div className="flex items-start space-x-3">
+          <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-yellow-800 mb-2">Pending Application(s) Found</h3>
+            <p className="text-yellow-700 mb-3">
+              You have {pendingApplications.length} pending application{pendingApplications.length > 1 ? 's' : ''}. 
+              Please wait for approval before submitting new applications.
+            </p>
+            
+            <div className="space-y-2 mb-3">
+              {pendingList.map((app, index) => (
+                <div key={app.id} className="bg-yellow-100 p-3 rounded border border-yellow-300">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium text-yellow-800">
+                        {app.id} - {app.type.replace('_', ' ').toUpperCase()}
+                      </p>
+                      <p className="text-sm text-yellow-600">
+                        Submitted: {app.date} | Status: {app.status.toUpperCase()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <p className="text-sm text-yellow-600">
+              You can track your application status in the "Track Application Status" section.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }

@@ -36,19 +36,30 @@ export default function PublicNewApplicationPage() {
           return;
         }
 
-        // Check for approved registration applications
+        // Check for any existing registration applications (all statuses)
         const { data: applications, error: appError } = await supabase
           .from('application')
           .select('status, application_type')
           .eq('applicant_id', applicantData[0].applicant_id)
-          .eq('application_type', 'register')
-          .eq('status', 'approved');
+          .eq('application_type', 'register');
 
         if (appError) {
           console.error('Error checking registration status:', appError);
           setHasApprovedRegistration(false);
         } else {
-          setHasApprovedRegistration(applications && applications.length > 0);
+          // Check if any registration exists (approved or not)
+          const hasAnyRegistration = applications && applications.length > 0;
+          const hasApprovedReg = applications && applications.some(app => app.status === 'approved');
+          setHasApprovedRegistration(hasApprovedReg);
+          
+          // If user has any registration (even disapproved), redirect to track status
+          if (hasAnyRegistration && !hasApprovedReg) {
+            const disapprovedApp = applications.find(app => app.status === 'disapproved');
+            if (disapprovedApp) {
+              // Allow them to re-apply by not blocking the form
+              setHasApprovedRegistration(false);
+            }
+          }
         }
       } catch (error) {
         console.error('Error checking registration status:', error);

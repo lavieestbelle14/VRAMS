@@ -35,6 +35,10 @@ DROP POLICY IF EXISTS "Public select own" ON app_user;
 DROP POLICY IF EXISTS "Public insert own" ON app_user;
 DROP POLICY IF EXISTS "Public update own" ON app_user;
 
+-- Drop specific policies for applicant table
+DROP POLICY IF EXISTS "Public update own applicant" ON applicant;
+DROP POLICY IF EXISTS "Public select own applicant" ON applicant;
+
 DO $$
 DECLARE
   tbl TEXT;
@@ -92,6 +96,21 @@ BEGIN
       )
     );';
 
+    -- Public UPDATE - allow users to update their own records (for re-applications)
+    EXECUTE 'CREATE POLICY "Public update" ON ' || quote_ident(tbl) || ' FOR UPDATE TO authenticated USING (
+      EXISTS (
+        SELECT 1 FROM app_user 
+        WHERE auth_id = auth.uid() 
+        AND role = ''public''
+      )
+    ) WITH CHECK (
+      EXISTS (
+        SELECT 1 FROM app_user 
+        WHERE auth_id = auth.uid() 
+        AND role = ''public''
+      )
+    );';
+
   END LOOP;
 END $$;
 
@@ -130,3 +149,17 @@ CREATE POLICY "Public update own" ON app_user
   TO authenticated
   USING (auth_id = auth.uid())
   WITH CHECK (auth_id = auth.uid());
+
+-- Additional specific policies for applicant table to support UPSERT operations
+-- Public users can only update their own applicant record
+CREATE POLICY "Public update own applicant" ON applicant
+  FOR UPDATE
+  TO authenticated
+  USING (auth_id = auth.uid())
+  WITH CHECK (auth_id = auth.uid());
+
+-- Public users can only select their own applicant record  
+CREATE POLICY "Public select own applicant" ON applicant
+  FOR SELECT
+  TO authenticated
+  USING (auth_id = auth.uid());

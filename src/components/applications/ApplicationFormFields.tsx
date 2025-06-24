@@ -11,10 +11,12 @@ import { DeclarationDialog } from './form-fields/DeclarationDialog';
 import { ApplicationFormSections } from './ApplicationFormSections';
 import { useApplicationForm } from '@/hooks/useApplicationForm';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePendingApplications } from '@/hooks/usePendingApplications';
 
 export function ApplicationFormFields() {
   const { form, onSubmit, clearDraft } = useApplicationForm();
   const [isDeclarationDialogOpen, setDeclarationDialogOpen] = useState(false);
+  const { hasPendingApplications } = usePendingApplications();
 
   const declarationAccepted = form.watch('declarationAccepted');
   const applicationType = form.watch('applicationType');
@@ -157,7 +159,7 @@ export function ApplicationFormFields() {
             <Button type="button" onClick={handleClearDraft} className="btn-outline">
               <Trash2 className="mr-2 h-4 w-4" /> Clear Draft & Reset
             </Button>
-            <Button type="submit" disabled={form.formState.isSubmitting || !declarationAccepted}>
+            <Button type="submit" disabled={form.formState.isSubmitting || !declarationAccepted || hasPendingApplications}>
               {form.formState.isSubmitting ? (
                 <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { applicationFormSchema, ApplicationFormValues } from '@/schemas/applicationSchema';
 import { submitApplication } from '@/services/applicationService';
 import { useFormDraft } from './useFormDraft';
+import { usePendingApplications } from './usePendingApplications';
 import { useMemo } from 'react';
 
 const DRAFT_STORAGE_KEY = 'vrams_application_draft_v2';
@@ -180,6 +181,7 @@ export function useApplicationForm() {
   const { toast } = useToast();
   const router = useRouter();
   const { user, refreshUser } = useAuth();
+  const { hasPendingApplications, pendingApplications } = usePendingApplications();
 
   // Set default values, using user.precinct if available
   const defaultValues = useMemo(() => ({
@@ -204,6 +206,20 @@ export function useApplicationForm() {
     console.log('=== FORM SUBMISSION DEBUG ===');
     console.log('Application Type:', data.applicationType);
     console.log('Form Data keys:', Object.keys(data));
+    
+    // Check for pending applications before allowing submission
+    if (hasPendingApplications) {
+      const pendingList = pendingApplications.map(app => 
+        `${app.public_facing_id} (${app.application_type})`
+      ).join(', ');
+      
+      toast({
+        title: "Cannot Submit Application",
+        description: `You have pending applications: ${pendingList}. Please wait for approval before submitting new applications.`,
+        variant: "destructive",
+      });
+      return;
+    }
     
     // Validate required fields before submission
     if (!data.applicationType) {
