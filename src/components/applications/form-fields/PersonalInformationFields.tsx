@@ -121,17 +121,16 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
                         : <span>Pick a date</span>}
                     </Button>
                   </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                </PopoverTrigger>                <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
                     selected={field.value ? new Date(field.value) : undefined}
                     onSelect={(date) =>
                       field.onChange(date ? format(date, "yyyy-MM-dd") : "")
                     }
-                    captionLayout="dropdown"
-                    startMonth={new Date(1900, 0)}
-                    endMonth={new Date()}
+                    captionLayout="dropdown-buttons"
+                    fromYear={1900}
+                    toYear={new Date().getFullYear()}
                     initialFocus
                   />
                 </PopoverContent>
@@ -243,15 +242,14 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
                           {field.value ? format(new Date(field.value), "MMMM d, yyyy") : <span>Pick a date</span>}
                         </Button>
                       </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    </PopoverTrigger>                    <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
                         selected={field.value ? new Date(field.value) : undefined}
                         onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : '')}
-                        captionLayout="dropdown"
-                        startMonth={new Date(1900, 0)}
-                        endMonth={new Date()}
+                        captionLayout="dropdown-buttons"
+                        fromYear={1900}
+                        toYear={new Date().getFullYear()}
                         initialFocus
                       />
                     </PopoverContent>
