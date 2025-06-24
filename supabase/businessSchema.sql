@@ -93,7 +93,7 @@ CREATE TABLE applicant_biometrics (
 CREATE TABLE IF NOT EXISTS applicant_voter_record (
     applicant_id INTEGER PRIMARY KEY,
     precinct_number VARCHAR(10) NOT NULL,
-    voter_id VARCHAR(20) NOT NULL,
+    voter_id VARCHAR(30) NOT NULL,
 
     CONSTRAINT fk_applicant_voter
         FOREIGN KEY (applicant_id)
@@ -209,7 +209,7 @@ CREATE TABLE IF NOT EXISTS application_transfer (
 
     transfer_type TEXT NOT NULL CHECK (transfer_type IN (
         'Within the same City/Municipality/District.',
-        'From another City/Municipality/District (Accomplish Personal Information at the back).',
+        'From another City/Municipality/District.',
         'From foreign post to local CEO other than original place of registration.'
     )),
 

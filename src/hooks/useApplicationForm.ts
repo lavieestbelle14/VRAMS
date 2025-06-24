@@ -90,6 +90,50 @@ const normalizeFormData = (data: ApplicationFormValues): ApplicationFormValues =
   const normalizeRequiredNumber = (val: any) => (val === '' || val === undefined || val === null ? 0 : Number(val));
   const normalizeDate = (val: any) => (val && typeof val === 'string' && val.length >= 10 ? val.slice(0, 10) : undefined);
 
+  // Normalize transfer fields based on transfer type
+  let normalizedTransferFields = {
+    previousPrecinctNumber: normalizeString(data.previousPrecinctNumber),
+    previousBarangay: normalizeString(data.previousBarangay),
+    previousCityMunicipality: normalizeString(data.previousCityMunicipality),
+    previousProvince: normalizeString(data.previousProvince),
+    previousForeignPost: normalizeString(data.previousForeignPost),
+    previousCountry: normalizeString(data.previousCountry),
+  };
+
+  // Clear irrelevant transfer fields based on transfer type
+  if (data.transferType) {
+    const isWithinCity = data.transferType === 'Within the same City/Municipality/District.';
+    const isFromAnotherCity = data.transferType === 'From another City/Municipality/District.';
+    const isFromForeign = data.transferType === 'From foreign post to local CEO other than original place of registration.';
+
+    if (isFromForeign) {
+      // For foreign transfers, only keep foreign fields
+      normalizedTransferFields = {
+        ...normalizedTransferFields,
+        previousPrecinctNumber: undefined,
+        previousBarangay: undefined,
+        previousCityMunicipality: undefined,
+        previousProvince: undefined,
+      };
+    } else {
+      // For domestic transfers, clear foreign fields
+      normalizedTransferFields = {
+        ...normalizedTransferFields,
+        previousForeignPost: undefined,
+        previousCountry: undefined,
+      };
+
+      if (isWithinCity) {
+        // For within city transfers, clear inter-city fields
+        normalizedTransferFields = {
+          ...normalizedTransferFields,
+          previousCityMunicipality: undefined,
+          previousProvince: undefined,
+        };
+      }
+    }
+  }
+
   return {
     ...data,
     firstName: data.firstName?.trim() || '',
@@ -113,12 +157,7 @@ const normalizeFormData = (data: ApplicationFormValues): ApplicationFormValues =
     typeOfDisability: normalizeString(data.typeOfDisability),
     assistanceNeeded: normalizeString(data.assistanceNeeded),
     assistorName: normalizeString(data.assistorName),
-    previousPrecinctNumber: normalizeString(data.previousPrecinctNumber),
-    previousBarangay: normalizeString(data.previousBarangay),
-    previousCityMunicipality: normalizeString(data.previousCityMunicipality),
-    previousProvince: normalizeString(data.previousProvince),
-    previousForeignPost: normalizeString(data.previousForeignPost),
-    previousCountry: normalizeString(data.previousCountry),
+    ...normalizedTransferFields,
     currentValue: normalizeString(data.currentValue),
     requestedValue: normalizeString(data.requestedValue),
     houseNumber: data.houseNumber?.trim() || '',

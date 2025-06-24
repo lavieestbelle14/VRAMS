@@ -59,7 +59,7 @@ export interface ApplicationTransfer {
   previousForeignPost?: string; // previous_foreign_post
   previousCountry?: string; // previous_country
   transferType: 'Within the same City/Municipality/District.' | 
-               'From another City/Municipality/District (Accomplish Personal Information at the back).' |
+               'From another City/Municipality/District.' |
                'From foreign post to local CEO other than original place of registration.'; // transfer_type
 }
 

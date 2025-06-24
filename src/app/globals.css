@@ -160,4 +160,21 @@ body {
       linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
     background-size: 20px 20px;
   }
+
+  /* Remove browser default red borders on invalid form inputs */
+  input[aria-invalid="true"],
+  select[aria-invalid="true"],
+  textarea[aria-invalid="true"] {
+    border-color: hsl(var(--border)) !important;
+    box-shadow: none !important;
+  }
+
+  /* Prevent focus rings from showing red on invalid fields */
+  input[aria-invalid="true"]:focus,
+  select[aria-invalid="true"]:focus,
+  textarea[aria-invalid="true"]:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 2px hsl(var(--ring)) !important;
+    border-color: hsl(var(--ring)) !important;
+  }
 }

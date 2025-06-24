@@ -55,62 +55,50 @@ export function ApplicationFormFields() {
   };
 
   const handleFormError = (errors: any) => {
-    // Handle validation errors - scroll to first error
-    const firstErrorField = Object.keys(errors)[0];
-    if (firstErrorField) {
-      setTimeout(() => {
+    // Handle validation errors - scroll to first visible error field only
+    const errorFields = Object.keys(errors);
+    console.log('Form validation errors:', errors);
+    console.log('Error fields:', errorFields);
+    
+    if (errorFields.length === 0) return;
+
+    setTimeout(() => {
+      let firstVisibleErrorElement: HTMLElement | null = null;
+      
+      // Try to find the first visible error field
+      for (const fieldName of errorFields) {
         // Try multiple selectors to find the form field
-        let firstErrorElement = 
-          document.querySelector(`[name="${firstErrorField}"]`) as HTMLElement ||
-          document.querySelector(`input[name="${firstErrorField}"]`) as HTMLElement ||
-          document.querySelector(`select[name="${firstErrorField}"]`) as HTMLElement ||
-          document.querySelector(`textarea[name="${firstErrorField}"]`) as HTMLElement ||
-          document.querySelector(`button[name="${firstErrorField}"]`) as HTMLElement ||
-          // For React Hook Form fields, try finding by data attribute or aria-label
-          document.querySelector(`[data-field="${firstErrorField}"]`) as HTMLElement ||
-          // Try finding the FormItem container and then any focusable element within it
-          document.querySelector(`[data-testid="${firstErrorField}"]`) as HTMLElement;
+        const fieldElement = 
+          document.querySelector(`[name="${fieldName}"]`) as HTMLElement ||
+          document.querySelector(`input[name="${fieldName}"]`) as HTMLElement ||
+          document.querySelector(`select[name="${fieldName}"]`) as HTMLElement ||
+          document.querySelector(`textarea[name="${fieldName}"]`) as HTMLElement ||
+          document.querySelector(`button[name="${fieldName}"]`) as HTMLElement;
         
-        // If we still can't find it, try looking for the FormMessage with the error
-        if (!firstErrorElement) {
-          const errorMessages = Array.from(document.querySelectorAll('[data-testid="form-message"]'));
-          for (const errorMsg of errorMessages) {
-            if (errorMsg.textContent && errorMsg.textContent.includes(errors[firstErrorField]?.message)) {
-              firstErrorElement = errorMsg.closest('[data-testid="form-item"]')?.querySelector('button, input, select, textarea') as HTMLElement;
-              break;
-            }
+        // Check if the field is visible (not hidden by display:none or visibility:hidden)
+        if (fieldElement) {
+          const isVisible = fieldElement.offsetParent !== null && 
+                           window.getComputedStyle(fieldElement).visibility !== 'hidden' &&
+                           window.getComputedStyle(fieldElement).display !== 'none';
+          
+          if (isVisible) {
+            firstVisibleErrorElement = fieldElement;
+            break;
           }
         }
-        
-        // Last resort: find any element that might be related to the field name
-        if (!firstErrorElement) {
-          const allElements = Array.from(document.querySelectorAll('button, input, select, textarea'));
-          firstErrorElement = allElements.find(el => {
-            const element = el as HTMLElement;
-            return element.getAttribute('aria-describedby')?.includes(firstErrorField) ||
-                   element.id?.includes(firstErrorField) ||
-                   element.closest('[data-field]')?.getAttribute('data-field') === firstErrorField;
-          }) as HTMLElement;
-        }
-        
-        if (firstErrorElement) {
-          firstErrorElement.scrollIntoView({ 
-            behavior: 'auto', 
-            block: 'center' 
-          });
-          firstErrorElement.focus();
-        } else {
-          // If we can't find the specific field, jump to the top of the form
-          const formElement = document.querySelector('form');
-          if (formElement) {
-            formElement.scrollIntoView({ 
-              behavior: 'auto', 
-              block: 'start' 
-            });
-          }
-        }
-      }, 100); // Small delay to ensure DOM is updated
-    }
+      }
+      
+      if (firstVisibleErrorElement) {
+        firstVisibleErrorElement.scrollIntoView({ 
+          behavior: 'auto', 
+          block: 'center' 
+        });
+        firstVisibleErrorElement.focus();
+      } else {
+        // If no visible error fields found, don't scroll anywhere
+        console.log('No visible error fields found, skipping scroll');
+      }
+    }, 100); // Small delay to ensure DOM is updated
   };
 
   return (
@@ -122,8 +110,8 @@ export function ApplicationFormFields() {
           shouldDisableSection={shouldDisableSection}
           shouldDisableOath={shouldDisableOath}
           registrationType={registrationType ?? ''}
-          citizenshipType={citizenshipType}
-          civilStatus={civilStatus}
+          citizenshipType={citizenshipType ?? ''}
+          civilStatus={civilStatus ?? ''}
           assistorName={assistorName}
           isIndigenousPerson={isIndigenousPerson}
           isPwd={isPwd}

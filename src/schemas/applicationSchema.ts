@@ -78,7 +78,7 @@ export const applicationFormSchema = z.object({
   previousCountry: z.string().optional(),
   transferType: z.enum([
       'Within the same City/Municipality/District.',
-      'From another City/Municipality/District (Accomplish Personal Information at the back).',
+      'From another City/Municipality/District.',
       'From foreign post to local CEO other than original place of registration.'
   ]).optional(),
 
@@ -173,20 +173,8 @@ export const applicationFormSchema = z.object({
     if (!data.idSelfieUrl) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Selfie with ID is required for registration", path: ["idSelfieUrl"] });
   }
   
-  // Transfer-specific validations
-  if (applicationType === 'transfer') {
-    if (!data.previousPrecinctNumber?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous precinct number is required", path: ["previousPrecinctNumber"] });
-    if (!data.previousBarangay?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous barangay is required", path: ["previousBarangay"] });
-    if (!data.previousCityMunicipality?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous city/municipality is required", path: ["previousCityMunicipality"] });
-    if (!data.previousProvince?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous province is required", path: ["previousProvince"] });
-    if (!data.transferType) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Transfer type is required", path: ["transferType"] });
-    // Also require current address fields
-    if (!data.houseNumber?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "House number is required", path: ["houseNumber"] });
-    if (!data.street?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Street is required", path: ["street"] });
-    if (!data.barangay?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Barangay is required", path: ["barangay"] });
-    if (!data.cityMunicipality?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "City/Municipality is required", path: ["cityMunicipality"] });
-    if (!data.province?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Province is required", path: ["province"] });
-  }
+  // Note: Transfer-specific validations are handled in the conditional section below
+  // based on transfer type to ensure only relevant fields are required
   
   // Reactivation-specific validations
   if (applicationType === 'reactivation') {
@@ -207,6 +195,64 @@ export const applicationFormSchema = z.object({
     if (!data.targetField) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Target field is required", path: ["targetField"] });
     if (!data.currentValue?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Current value is required", path: ["currentValue"] });
     if (!data.requestedValue?.trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Requested value is required", path: ["requestedValue"] });
+  }
+  
+  // Transfer-specific validations
+  if (applicationType === 'transfer' || applicationType === 'transfer_with_reactivation') {
+    if (!data.transferType) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Transfer type is required", path: ["transferType"] });
+    } else {
+      // Normalize transfer fields based on transfer type to ensure irrelevant fields don't cause validation errors
+      const isWithinCity = data.transferType === 'Within the same City/Municipality/District.';
+      const isFromAnotherCity = data.transferType === 'From another City/Municipality/District.';
+      const isFromForeign = data.transferType === 'From foreign post to local CEO other than original place of registration.';
+
+      // Clear irrelevant fields during validation to prevent errors
+      if (isFromForeign) {
+        // For foreign transfers, clear domestic fields
+        data.previousPrecinctNumber = undefined;
+        data.previousBarangay = undefined;
+        data.previousCityMunicipality = undefined;
+        data.previousProvince = undefined;
+      } else {
+        // For domestic transfers, clear foreign fields
+        data.previousForeignPost = undefined;
+        data.previousCountry = undefined;
+        
+        if (isWithinCity) {
+          // For within city transfers, clear inter-city fields
+          data.previousCityMunicipality = undefined;
+          data.previousProvince = undefined;
+        }
+      }
+
+      // Validate required fields based on transfer type
+      if (isWithinCity) {
+        if (!data.previousPrecinctNumber?.trim()) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous precinct number is required for within city transfers", path: ["previousPrecinctNumber"] });
+        }
+        if (!data.previousBarangay?.trim()) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous barangay is required for within city transfers", path: ["previousBarangay"] });
+        }
+      } else if (isFromAnotherCity) {
+        if (!data.previousPrecinctNumber?.trim()) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous precinct number is required for inter-city transfers", path: ["previousPrecinctNumber"] });
+        }
+        if (!data.previousBarangay?.trim()) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous barangay is required for inter-city transfers", path: ["previousBarangay"] });
+        }
+        if (!data.previousCityMunicipality?.trim()) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous city/municipality is required for inter-city transfers", path: ["previousCityMunicipality"] });
+        }
+      } else if (isFromForeign) {
+        if (!data.previousForeignPost?.trim()) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous foreign post is required for foreign transfers", path: ["previousForeignPost"] });
+        }
+        if (!data.previousCountry?.trim()) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Previous country is required for foreign transfers", path: ["previousCountry"] });
+        }
+      }
+    }
   }
   
   // Common validations for all application types
