@@ -126,6 +126,25 @@ export function ApplicationDetailsModal({ application, isOpen, onClose }: Applic
               </div>
             )}
 
+            {/* ERB Hearing Date section - shown when assigned */}
+            {application.erbHearingDate && (
+              <div className="border rounded-lg p-4 bg-blue-50 border-blue-200">
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4 text-blue-700" />
+                  ERB Hearing Date
+                </h3>
+                <p className="text-sm text-gray-700">
+                  Your hearing has been scheduled for{" "}
+                  <span className="font-medium">
+                    {format(new Date(application.erbHearingDate), "EEEE, MMMM d, yyyy")}
+                  </span>
+                </p>
+                <p className="text-xs text-gray-600 mt-1">
+                  Please attend the Election Registration Board hearing at the scheduled date and time.
+                </p>
+              </div>
+            )}
+
             {/* Timeline */}
             <div>
               <h3 className="font-semibold mb-4">Application Progress Timeline</h3>
