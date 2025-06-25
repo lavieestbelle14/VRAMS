@@ -699,6 +699,7 @@ export async function getApplicationByPublicId(publicId: string) {
     approvalDate: data.processing_date,
     remarks: data.remarks,
     reasonForDisapproval: data.reason_for_disapproval,
+    erbHearingDate: data.erb_hearing_date,
     // Applicant info
     firstName: applicant.first_name,
     lastName: applicant.last_name,
@@ -1055,5 +1056,27 @@ export const getOfficerAssignments = async (applicationId: string) => {
   } catch (error) {
     console.error('Failed to get officer assignments:', error);
     return [];
+  }
+};
+
+// Function to update ERB hearing date
+export const updateErbHearingDate = async (applicationId: string, hearingDate: string | null): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('application')
+      .update({ 
+        erb_hearing_date: hearingDate
+      })
+      .eq('public_facing_id', applicationId);
+
+    if (error) {
+      console.error('Error updating ERB hearing date:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Failed to update ERB hearing date:', error);
+    return false;
   }
 };
