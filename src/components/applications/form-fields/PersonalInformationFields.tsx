@@ -35,46 +35,67 @@ export const PersonalInformationFields: React.FC<PersonalInformationFieldsProps>
   return (
     <div className="space-y-8">
       {/* From PersonalInfoFields.tsx */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <FormField
-          control={control}
-          name="firstName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>First Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Juan" {...field} value={field.value ?? ''} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name="lastName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Last Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Dela Cruz" {...field} value={field.value ?? ''} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name="middleName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Middle Name (Optional)</FormLabel>
-              <FormControl>
-                <Input placeholder="Santos" {...field} value={field.value ?? ''} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <div className="grid grid-cols-1 md:grid-cols-11 gap-4">
+        <div className="md:col-span-3">
+          <FormField
+            control={control}
+            name="firstName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>First Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Juan" {...field} value={field.value ?? ''} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="md:col-span-3">
+          <FormField
+            control={control}
+            name="lastName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Dela Cruz" {...field} value={field.value ?? ''} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="md:col-span-3">
+          <FormField
+            control={control}
+            name="middleName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Middle Name (Optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="Santos" {...field} value={field.value ?? ''} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="md:col-span-2">
+          <FormField
+            control={control}
+            name="suffix"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Suffix</FormLabel>
+                <FormControl>
+                  <Input placeholder="Jr." {...field} value={field.value ?? ''} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <FormField

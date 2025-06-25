@@ -321,6 +321,7 @@ CREATE TABLE officer_assignment (
     assignment_id SERIAL PRIMARY KEY,
     officer_id INTEGER NOT NULL,
     application_number INTEGER NOT NULL,
+    action TEXT NOT NULL CHECK (action IN ('set_pending', 'verify', 'approve', 'disapprove')),
 
     CONSTRAINT fk_officer FOREIGN KEY (officer_id) REFERENCES officer(officer_id) ON DELETE CASCADE,
     CONSTRAINT fk_application FOREIGN KEY (application_number) REFERENCES application(application_number) ON DELETE CASCADE,
