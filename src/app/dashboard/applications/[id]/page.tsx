@@ -952,26 +952,49 @@ export default function ApplicationDetailsPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {officerAssignments.map((assignment, index) => (
-                    <div key={assignment.assignment_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
-                      <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-blue-100 rounded-full">
-                          <User className="h-4 w-4 text-blue-600" />
+                  {officerAssignments.map((assignment, index) => {
+                    // Get action display info
+                    const getActionInfo = (action: string) => {
+                      switch (action) {
+                        case 'set_pending':
+                          return { label: 'Set to Pending', color: 'bg-yellow-50 text-yellow-700 border-yellow-200' };
+                        case 'verify':
+                          return { label: 'Verified', color: 'bg-blue-50 text-blue-700 border-blue-200' };
+                        case 'approve':
+                          return { label: 'Approved', color: 'bg-green-50 text-green-700 border-green-200' };
+                        case 'disapprove':
+                          return { label: 'Disapproved', color: 'bg-red-50 text-red-700 border-red-200' };
+                        default:
+                          return { label: action, color: 'bg-gray-50 text-gray-700 border-gray-200' };
+                      }
+                    };
+
+                    const actionInfo = getActionInfo(assignment.action);
+
+                    return (
+                      <div key={assignment.assignment_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-blue-100 rounded-full">
+                            <User className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {assignment.officer?.first_name} {assignment.officer?.last_name}
+                            </p>
+                            <p className="text-sm text-gray-600">{assignment.officer?.position}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            {assignment.officer?.first_name} {assignment.officer?.last_name}
-                          </p>
-                          <p className="text-sm text-gray-600">{assignment.officer?.position}</p>
+                        <div className="flex items-center space-x-2">
+                          <Badge variant="outline" className={`${actionInfo.color}`}>
+                            {actionInfo.label}
+                          </Badge>
                         </div>
                       </div>
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                        Assigned Officer
-                      </Badge>
-                    </div>
-                  ))}
-                </div>                <div className="mt-4 text-xs text-muted-foreground">
-                  Officers listed have performed actions on this application (verification, approval, or disapproval).
+                    );
+                  })}
+                </div>
+                <div className="mt-4 text-xs text-muted-foreground">
+                  Officers listed have performed actions on this application. The most recent action taken by each officer is shown.
                 </div>
               </CardContent>
             </Card>

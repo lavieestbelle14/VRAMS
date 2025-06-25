@@ -106,6 +106,23 @@ export interface DocumentInfo {
   uploadDate?: string;
 }
 
+// Officer and Assignment types
+export interface Officer {
+  officer_id: number;
+  first_name: string;
+  last_name: string;
+  position: 'Election Officer' | 'Board Member';
+  auth_id: string;
+}
+
+export interface OfficerAssignment {
+  assignment_id: number;
+  officer_id: number;
+  application_number: number;
+  action: 'set_pending' | 'verify' | 'approve' | 'disapprove';
+  officer?: Officer;
+}
+
 // Main Application interface reflecting the database structure
 export interface Application {
   // From application table

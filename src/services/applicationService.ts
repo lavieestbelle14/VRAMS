@@ -823,9 +823,28 @@ export const updateApplicationStatus = async (
       return false;
     }
 
-    // Create officer assignment for status changes that involve officer action
-    if (officerId && status !== 'pending') {
-      const assignmentSuccess = await createOfficerAssignment(applicationId, officerId);
+    // Create officer assignment for all status changes that involve officer action
+    if (officerId) {
+      // Map status to action
+      let action: 'set_pending' | 'verify' | 'approve' | 'disapprove';
+      switch (status) {
+        case 'pending':
+          action = 'set_pending';
+          break;
+        case 'verified':
+          action = 'verify';
+          break;
+        case 'approved':
+          action = 'approve';
+          break;
+        case 'disapproved':
+          action = 'disapprove';
+          break;
+        default:
+          action = 'set_pending';
+      }
+      
+      const assignmentSuccess = await createOfficerAssignment(applicationId, officerId, action);
       if (!assignmentSuccess) {
         console.warn('Failed to create officer assignment, but status update succeeded');
       }
@@ -879,12 +898,13 @@ export const approveApplicationWithVoterRecord = async (
       return false;
     }
 
-    // 2. Create officer assignment
+    // 2. Create officer assignment with 'approve' action
     const { error: assignmentError } = await supabase
       .from('officer_assignment')
       .upsert({
         officer_id: officerId,
-        application_number: applicationData.application_number
+        application_number: applicationData.application_number,
+        action: 'approve'
       }, {
         onConflict: 'officer_id,application_number'
       });
@@ -957,8 +977,12 @@ const getCurrentOfficerId = async (): Promise<number | null> => {
   }
 };
 
-// Helper function to create officer assignment
-const createOfficerAssignment = async (applicationId: string, officerId: number): Promise<boolean> => {
+// Helper function to create officer assignment with specific action
+const createOfficerAssignment = async (
+  applicationId: string, 
+  officerId: number, 
+  action: 'set_pending' | 'verify' | 'approve' | 'disapprove'
+): Promise<boolean> => {
   try {
     // First get the application_number from public_facing_id
     const { data: applicationData, error: fetchError } = await supabase
@@ -977,7 +1001,8 @@ const createOfficerAssignment = async (applicationId: string, officerId: number)
       .from('officer_assignment')
       .upsert({
         officer_id: officerId,
-        application_number: applicationData.application_number
+        application_number: applicationData.application_number,
+        action: action
       }, {
         onConflict: 'officer_id,application_number'
       });
@@ -1011,6 +1036,7 @@ export const getOfficerAssignments = async (applicationId: string) => {
       .from('officer_assignment')
       .select(`
         assignment_id,
+        action,
         officer:officer_id (
           officer_id,
           first_name,
