@@ -652,7 +652,9 @@ export default function DashboardPage() {
             <CardTitle className="flex items-center text-lg">
               <Calendar className="mr-2 h-5 w-5"/>Recent Activities
             </CardTitle>
-            <Button variant="ghost" size="sm">View All</Button>
+            <Link href="/dashboard/applications">
+              <Button variant="ghost" size="sm">View All</Button>
+            </Link>
           </div>
           <CardDescription>Latest actions and application submissions</CardDescription>
         </CardHeader>
