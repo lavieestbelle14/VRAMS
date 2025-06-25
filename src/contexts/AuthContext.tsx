@@ -67,6 +67,7 @@ const isPublicPath = (pathname: string): boolean => {
 export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPasswordUpdateFlow, setIsPasswordUpdateFlow] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
@@ -139,7 +140,9 @@ const handleSession = useCallback(async (session: Session | null): Promise<Authe
         .eq('auth_id', supabaseUser.id)
         .single();
 
-      console.log('Fetch result:', { appUser, fetchError });      if (fetchError) {
+      console.log('Fetch result:', { appUser, fetchError });      
+      
+      if (fetchError) {
         if (fetchError.code === 'PGRST116') { // "single() row not found"
           console.warn(`No user profile found for auth_id: ${supabaseUser.id}. Creating user profile...`);
           
@@ -183,13 +186,28 @@ const handleSession = useCallback(async (session: Session | null): Promise<Authe
               };
               setUser(existingAuthUser);
               return existingAuthUser;
+            } else if (createError.code === '42501') {
+              // RLS policy violation - likely during auth transition
+              console.log('RLS policy violation during auth transition - using temporary user profile');
+              const tempUser: AuthenticatedUser = {
+                id: supabaseUser.id,
+                email: supabaseUser.email!,
+                username: supabaseUser.user_metadata?.username || '',
+                role: 'public',
+                registrationStatus: null,
+              };
+              setUser(tempUser);
+              return tempUser;
             } else {
               console.error('Error creating user profile:', createError);
-              toast({
-                title: 'Error',
-                description: 'Could not create user profile. Please try again.',
-                variant: 'destructive',
-              });
+              // Don't show error toast during password update flow
+              if (!isPasswordUpdateFlow) {
+                toast({
+                  title: 'Error',
+                  description: 'Could not create user profile. Please try again.',
+                  variant: 'destructive',
+                });
+              }
               setUser(null);
               return null;
             }
@@ -208,12 +226,32 @@ const handleSession = useCallback(async (session: Session | null): Promise<Authe
           setUser(newUser);
           return newUser;
         } else {
+          // Handle other fetch errors (like 406 Not Acceptable during auth transitions)
+          console.warn('Error fetching user profile (possibly during auth transition):', fetchError.message);
+          
+          // For certain errors during auth transitions, create a temporary user profile
+          if (fetchError.code === '406' || fetchError.message.includes('Not Acceptable')) {
+            console.log('406 error during auth transition - using temporary user profile');
+            const tempUser: AuthenticatedUser = {
+              id: supabaseUser.id,
+              email: supabaseUser.email!,
+              username: supabaseUser.user_metadata?.username || '',
+              role: 'public',
+              registrationStatus: null,
+            };
+            setUser(tempUser);
+            return tempUser;
+          }
+          
           console.error('Error fetching user profile:', fetchError.message);
-          toast({
-            title: 'Error',
-            description: 'Could not fetch user profile.',
-            variant: 'destructive',
-          });
+          // Don't show error toast during password update flow
+          if (!isPasswordUpdateFlow) {
+            toast({
+              title: 'Error',
+              description: 'Could not fetch user profile.',
+              variant: 'destructive',
+            });
+          }
           setUser(null);
           return null;
         }
@@ -377,25 +415,52 @@ const handleSession = useCallback(async (session: Session | null): Promise<Authe
 
   const updateUserPassword = useCallback(async (oldPass: string, newPass: string): Promise<boolean> => {
     if (!user) return false;
-    // If oldPass is provided, require re-authentication (profile change)
-    if (oldPass) {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: oldPass,
-      });
-      if (signInError) {
-        toast({ title: 'Incorrect Old Password', description: signInError.message, variant: 'destructive' });
+    
+    try {
+      // Mark that we're in a password update flow
+      setIsPasswordUpdateFlow(true);
+      
+      // If oldPass is provided, require re-authentication (profile change)
+      if (oldPass) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: user.email,
+          password: oldPass,
+        });
+        if (signInError) {
+          toast({ title: 'Incorrect Old Password', description: signInError.message, variant: 'destructive' });
+          return false;
+        }
+      }
+      
+      // Update password (for both reset and profile change)
+      const { error } = await supabase.auth.updateUser({ password: newPass });
+      if (error) {
+        toast({ title: 'Update Failed', description: error.message, variant: 'destructive' });
         return false;
       }
-    }
-    // Update password (for both reset and profile change)
-    const { error } = await supabase.auth.updateUser({ password: newPass });
-    if (error) {
-      toast({ title: 'Update Failed', description: error.message, variant: 'destructive' });
+      
+      // Show success message
+      toast({ title: 'Password Updated', description: 'Your password has been successfully updated.' });
+      
+      // Note: Supabase will automatically sign out and sign back in the user
+      // Our auth state handler will manage this transition
+      
+      // Clear the password update flow flag after a delay
+      setTimeout(() => {
+        setIsPasswordUpdateFlow(false);
+      }, 3000);
+      
+      return true;
+    } catch (error: any) {
+      console.error('Error updating password:', error);
+      setIsPasswordUpdateFlow(false);
+      toast({ 
+        title: 'Update Failed', 
+        description: error.message || 'An unexpected error occurred.',
+        variant: 'destructive' 
+      });
       return false;
     }
-    toast({ title: 'Password Updated', description: 'Your password has been successfully updated.' });
-    return true;
   }, [toast, user]);
 
   const updateUserProfile = useCallback(async (updates: { username?: string }): Promise<boolean> => {
@@ -480,6 +545,7 @@ const login = useCallback(async (email: string, passwordAttempt: string): Promis
 
 useEffect(() => {
     let timeoutId: NodeJS.Timeout;
+    let isProcessingPasswordUpdate = false;
     
     const {
       data: { subscription },
@@ -489,10 +555,28 @@ useEffect(() => {
       // Handle specific auth events
       if (event === 'TOKEN_REFRESHED') {
         console.log('Token refreshed successfully');
+        return;
+      } else if (event === 'USER_UPDATED') {
+        console.log('User updated - likely password change');
+        isProcessingPasswordUpdate = true;
+        // Don't process session immediately, wait for subsequent events
+        setTimeout(() => {
+          isProcessingPasswordUpdate = false;
+        }, 2000);
+        return;
       } else if (event === 'SIGNED_OUT') {
         console.log('User signed out');
+        // If this is part of a password update flow, don't clear user state
+        if (isProcessingPasswordUpdate) {
+          console.log('Sign out detected during password update - ignoring');
+          return;
+        }
         setUser(null);
         return;
+      } else if (event === 'SIGNED_IN' && isProcessingPasswordUpdate) {
+        console.log('User signed back in after password update');
+        // Reset the flag and process normally
+        isProcessingPasswordUpdate = false;
       }
       
       // Debounce rapid auth state changes to prevent race conditions
@@ -503,8 +587,8 @@ useEffect(() => {
         } catch (error: any) {
           console.error('Error in auth state change handler:', error);
           
-          // Handle refresh token errors specifically
-          if (error?.message?.includes('refresh') || error?.message?.includes('token')) {
+          // Handle refresh token errors specifically (but not during password updates)
+          if (!isProcessingPasswordUpdate && (error?.message?.includes('refresh') || error?.message?.includes('token'))) {
             await handleRefreshTokenError();
           }
         }
