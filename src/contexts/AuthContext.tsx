@@ -112,6 +112,26 @@ const handleSession = useCallback(async (session: Session | null): Promise<Authe
     try {
       console.log('Processing session for user:', supabaseUser.id);
       
+      // Check if session is valid and not expired
+      if (session && session.expires_at && session.expires_at < Date.now() / 1000) {
+        console.warn('Session expired, attempting to refresh...');
+        const { data: refreshedSession, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError) {
+          console.error('Failed to refresh session:', refreshError);
+          // Clear invalid session
+          await supabase.auth.signOut();
+          setUser(null);
+          return null;
+        }
+        
+        if (refreshedSession.session) {
+          console.log('Session refreshed successfully');
+          // Use the refreshed session
+          session = refreshedSession.session;
+        }
+      }
+      
       // First, just get the basic app_user record
       const { data: appUser, error: fetchError } = await supabase
         .from('app_user')
@@ -136,14 +156,43 @@ const handleSession = useCallback(async (session: Session | null): Promise<Authe
             .single();
 
           if (createError) {
-            console.error('Error creating user profile:', createError);
-            toast({
-              title: 'Error',
-              description: 'Could not create user profile. Please try again.',
-              variant: 'destructive',
-            });
-            setUser(null);
-            return null;
+            // Check if it's a duplicate key error (user was created by another concurrent request)
+            if (createError.code === '23505') {
+              console.log('User profile already exists (created by concurrent request), fetching existing profile...');
+              // Retry fetching the existing profile
+              const { data: existingUser, error: refetchError } = await supabase
+                .from('app_user')
+                .select('role, username')
+                .eq('auth_id', supabaseUser.id)
+                .single();
+              
+              if (refetchError) {
+                console.error('Error fetching existing user profile:', refetchError);
+                setUser(null);
+                return null;
+              }
+              
+              console.log('Found existing user profile:', existingUser);
+              // Continue with the existing user data
+              const existingAuthUser: AuthenticatedUser = {
+                id: supabaseUser.id,
+                email: supabaseUser.email!,
+                username: existingUser.username || '',
+                role: existingUser.role as UserRole,
+                registrationStatus: null,
+              };
+              setUser(existingAuthUser);
+              return existingAuthUser;
+            } else {
+              console.error('Error creating user profile:', createError);
+              toast({
+                title: 'Error',
+                description: 'Could not create user profile. Please try again.',
+                variant: 'destructive',
+              });
+              setUser(null);
+              return null;
+            }
           }
 
           console.log('Created user profile:', createdUser);
@@ -392,26 +441,91 @@ const login = useCallback(async (email: string, passwordAttempt: string): Promis
   }
   setIsLoading(false);
 }, [toast, handleSession, router]);  const refreshUser = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error('Error getting session:', error);
+        // If we can't get session, try to refresh it
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) {
+          console.error('Failed to refresh session:', refreshError);
+          // Clear the invalid session
+          await supabase.auth.signOut();
+          setUser(null);
+          return;
+        }
+      }
       await handleSession(session);
+    } catch (error) {
+      console.error('Error refreshing user:', error);
+      setUser(null);
     }
   }, [handleSession]);
 
+  // Add a function to handle refresh token errors
+  const handleRefreshTokenError = useCallback(async () => {
+    console.log('Handling refresh token error - clearing session');
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      toast({
+        title: 'Session Expired',
+        description: 'Please log in again.',
+        variant: 'destructive',
+      });
+    } catch (error) {
+      console.error('Error during sign out:', error);
+    }
+  }, [toast]);
+
 useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      handleSession(session);
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change:', event);
+      
+      // Handle specific auth events
+      if (event === 'TOKEN_REFRESHED') {
+        console.log('Token refreshed successfully');
+      } else if (event === 'SIGNED_OUT') {
+        console.log('User signed out');
+        setUser(null);
+        return;
+      }
+      
+      // Debounce rapid auth state changes to prevent race conditions
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(async () => {
+        try {
+          await handleSession(session);
+        } catch (error: any) {
+          console.error('Error in auth state change handler:', error);
+          
+          // Handle refresh token errors specifically
+          if (error?.message?.includes('refresh') || error?.message?.includes('token')) {
+            await handleRefreshTokenError();
+          }
+        }
+      }, 100);
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-        handleSession(session).finally(() => setIsLoading(false));
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+        if (error) {
+          console.error('Error getting initial session:', error);
+          if (error.message?.includes('refresh') || error.message?.includes('token')) {
+            handleRefreshTokenError();
+          }
+        } else {
+          handleSession(session).finally(() => setIsLoading(false));
+        }
     });
 
     handleEmailConfirmation();
 
     return () => {
+      clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, [handleSession, handleEmailConfirmation]);
