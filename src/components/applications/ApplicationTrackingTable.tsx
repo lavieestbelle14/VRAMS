@@ -5,7 +5,7 @@ import { ApplicationDetailsModal } from "./ApplicationDetailsModal";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Clock, XCircle, Info } from "lucide-react";
+import { CheckCircle2, Clock, XCircle, FileText, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import type { Application } from "@/types";
 
@@ -16,15 +16,15 @@ interface ApplicationTrackingTableProps {
 const getStatusInfo = (status: string) => {
   switch (status) {
     case 'pending':
-      return { icon: Clock, color: 'bg-yellow-100 text-yellow-800', text: 'Pending Review' };
-    case 'reviewing':
-      return { icon: Info, color: 'bg-blue-100 text-blue-800', text: 'Under Review' };
+      return { icon: Clock, color: 'bg-yellow-100 text-yellow-800 border-yellow-200', text: 'Pending Review' };
+    case 'verified':
+      return { icon: FileText, color: 'bg-blue-100 text-blue-800 border-blue-200', text: 'Verified' };
     case 'approved':
-      return { icon: CheckCircle2, color: 'bg-green-100 text-green-800', text: 'Approved' };
-    case 'rejected':
-      return { icon: XCircle, color: 'bg-red-100 text-red-800', text: 'Rejected' };
+      return { icon: CheckCircle2, color: 'bg-green-100 text-green-800 border-green-200', text: 'Approved' };
+    case 'disapproved':
+      return { icon: XCircle, color: 'bg-red-100 text-red-800 border-red-200', text: 'Disapproved' };
     default:
-      return { icon: Info, color: 'bg-gray-100 text-gray-800', text: status };
+      return { icon: AlertCircle, color: 'bg-gray-100 text-gray-800 border-gray-200', text: status };
   }
 };
 
