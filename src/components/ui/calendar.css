@@ -1,0 +1,40 @@
+/* Custom styles for react-day-picker v9 to fix duplicate text issue */
+
+/* Hide caption label specifically when dropdowns are present */
+.calendar-with-dropdowns .rdp-caption_label,
+.calendar-with-dropdowns [class*="caption_label"],
+.calendar-with-dropdowns [data-testid="caption-label"] {
+  display: none !important;
+}
+
+/* Hide the screen reader accessibility span that shows duplicate month/year */
+.calendar-with-dropdowns span[role="status"][aria-live="polite"],
+.calendar-with-dropdowns [aria-live="polite"] {
+  display: none !important;
+}
+
+/* Hide any month/year text that appears outside of dropdowns */
+.calendar-with-dropdowns .rdp-month_caption > span:not([class*="dropdown"]):not(.rdp-dropdowns),
+.calendar-with-dropdowns .rdp-month_caption > *:not([class*="dropdown"]):not(.rdp-dropdowns):not(select) {
+  display: none !important;
+}
+
+/* Ensure dropdowns container is properly positioned */
+.calendar-with-dropdowns .rdp-dropdowns {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 0.25rem !important;
+}
+
+/* Hide any duplicate text elements that might leak through */
+.calendar-with-dropdowns .rdp-month_caption span:not([class*="rdp-dropdowns"]):not([class*="dropdown"]) {
+  visibility: hidden !important;
+}
+
+/* Show only the actual dropdown selects */
+.calendar-with-dropdowns select,
+.calendar-with-dropdowns .rdp-dropdowns select,
+.calendar-with-dropdowns [class*="dropdown"] select {
+  display: block !important;
+  visibility: visible !important;
+}
