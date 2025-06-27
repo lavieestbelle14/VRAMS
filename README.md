@@ -4,6 +4,8 @@
   <img src="public/vrams_logo.png" alt="VRAMS Logo" width="200"/>
 
   **eRehistroPH**
+  
+  *Voter Registration and Application Management System*
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.x-38BDF8.svg?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
