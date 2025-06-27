@@ -1,12 +1,14 @@
-# Voter Registration and Application Management System (VRAMS)
+# eRehistroPH
 
 <div align="center">
   <img src="public/vrams_logo.png" alt="VRAMS Logo" width="200"/>
 
-  **Voter Registration and Application Management System**
+  **eRehistroPH**
 
-  [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-  [![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.x-38BDF8.svg?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.x-38BDF8.svg?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-20.x-339933.svg?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+  
 
   *Register smart. Apply easy. Vote ready — with eRehistroPh.*
 
@@ -16,7 +18,7 @@
 
 ## Our Logo
 
-The VRAMS logo is more than just a seal — it’s a symbol of civic duty, empowerment, and digital innovation in public service.
+The eRehistroPH logo is more than just a seal — it’s a symbol of civic duty, empowerment, and digital innovation in public service.
 
 **The Ballot Box with the Check Mark** — At the heart of the logo is a stylized ballot box marked with a golden check. It represents every vote cast — a voice heard, a choice made. It’s the centerpiece of democracy, where every tick matters.
 
@@ -28,13 +30,13 @@ The VRAMS logo is more than just a seal — it’s a symbol of civic duty, empow
 
 ---
 
-## About VRAMS
+## About eRehistroPH
 
-The **Voter Registration and Application Management System (VRAMS)** is a secure, web-based platform designed to modernize the Philippine voter registration process. This project aims to address the inefficiencies of the traditional system and support COMELEC's goal of inclusive, fast, and accessible electoral participation.
+**eRehistroPH** is a secure, web-based platform designed to modernize the Philippine voter registration process. This project aims to address the inefficiencies of the traditional system and support COMELEC's goal of inclusive, fast, and accessible electoral participation.
 
 Designed to make the voter registration process faster, more accessible, and more transparent for all Filipino citizens. Whether you’re registering for the first time, updating your records, or checking your application status, VRAMS is here to serve you — securely and efficiently.
 
-With a user-friendly interface and status tracking features, VRAMS aims to minimize long queues and paperwork, help citizens avoid missed deadlines, and ensure fair, inclusive participation in elections.
+With a user-friendly interface and status tracking features, eRehistroPH aims to minimize long queues and paperwork, help citizens avoid missed deadlines, and ensure fair, inclusive participation in elections.
 
 **Because in a democracy, every vote counts — and every voter matters.**
 
