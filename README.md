@@ -35,7 +35,7 @@ The eRehistroPH logo is more than just a seal — it’s a symbol of civic duty,
 
 **eRehistroPH** is a secure, web-based platform designed to modernize the Philippine voter registration process. This project aims to address the inefficiencies of the traditional system and support COMELEC's goal of inclusive, fast, and accessible electoral participation.
 
-Designed to make the voter registration process faster, more accessible, and more transparent for all Filipino citizens. Whether you’re registering for the first time, updating your records, or checking your application status, VRAMS is here to serve you — securely and efficiently.
+Designed to make the voter registration process faster, more accessible, and more transparent for all Filipino citizens. Whether you’re registering for the first time, updating your records, or checking your application status, eRehistroPH is here to serve you — securely and efficiently.
 
 With a user-friendly interface and status tracking features, eRehistroPH aims to minimize long queues and paperwork, help citizens avoid missed deadlines, and ensure fair, inclusive participation in elections.
 
