@@ -46,3 +46,6 @@ firestore-debug.log
 
 .env.local
 .env.*.local
+
+# IDE settings
+.vscode/
